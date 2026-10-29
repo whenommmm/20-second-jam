@@ -36,3 +36,6 @@ Thumbs.db
 
 # Brainstorming companion scratch (the reference mockup is copied into docs/reference/)
 .superpowers/
+
+# Web build output
+web/later/dist/
