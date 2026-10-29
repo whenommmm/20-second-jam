@@ -35,8 +35,86 @@ const MODES = {
   noaudio: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
     [20600, () => expect(visible($("timeov")), "TIME! not shown at 20.6 s without audio")]
+  ],
+
+  // ---- the ending (timings: TIME! at 20 s, lock screen ~26 s, her words from ~29 s, TURN BACK TIME ~38–39 s) ----
+  late: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [30000, () => {
+      expect(topWho() === "John" && topText().startsWith("Funeral's on Saturday."), "top message: " + topWho() + " " + topText());
+      expect(capHeader() === "VOICEMAIL · MOM · MAR 28", "caption header: " + capHeader());
+    }],
+    [40500, () => { expect(visible($("again")), "TURN BACK TIME not shown"); expect(!visible($("restart")), "PLAY AGAIN before TURN BACK TIME"); $("again").click(); }],
+    [42500, () => {
+      const t = $("again").textContent, n = L().round().missed;
+      expect(t.startsWith(`YOU SAID LATER ${n} TIMES.`) && t.endsWith("She would have taken any one of them."), "response: " + t);
+      expect(!visible($("restart")), "PLAY AGAIN too early");
+    }],
+    [45600, () => expect(visible($("restart")), "PLAY AGAIN not shown 3 s after the soft line")]
+  ],
+  home: [
+    ["start", () => { L().start(); steer(r => chaseTarget(r)); }],
+    [30000, () => {
+      expect(topWho() === "Dad" && topText().startsWith("Thank you for coming home, kiddo."), "top message: " + topWho() + " " + topText());
+      expect(capHeader() === "CALL · MOM · MAR 28 · 4:12", "caption header: " + capHeader());
+    }],
+    [39500, () => $("again").click()],
+    [41500, () => expect($("again").textContent === "THERE'S NEVER ENOUGH TIME.But you were there.", "response: " + $("again").textContent)]
+  ],
+  lastonly: [
+    ["start", () => { L().start(); steer(r => (r.calls[13].spawned ? chaseTarget(r, p => p.ci === 13) : dodgeTarget(r, 340))); }],
+    [30000, () => expect(topWho() === "Dad" && topText().startsWith("She told everyone you called."), "top message: " + topWho() + " " + topText())],
+    [39500, () => $("again").click()],
+    [41500, () => expect($("again").textContent === "YOU GAVE HER FOUR MINUTES.She'd waited all month for them.", "response: " + $("again").textContent)]
+  ],
+  thread: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [31000, () => { const card = document.querySelector("#items .n.tap"); card.click(); card.click(); }],
+    [31600, () => {
+      expect(document.querySelectorAll("#sheet.on").length === 1, "sheet not open once");
+      const cards = document.querySelectorAll("#sheetList .n");
+      expect(cards.length === 14, "messages in the sheet: " + cards.length);
+      expect(cards[0] && cards[0].querySelector("b").textContent === "John", "first message isn't John's");
+      $("sheetClose").click();
+    }],
+    [32000, () => expect(!visible($("sheet")), "Show less didn't close the sheet")]
+  ],
+  doubletap: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [30000, () => { tap(); setTimeout(tap, 150); }],
+    [30400, () => expect(document.querySelectorAll("#caption p").length === 9, "lines after a double tap: " + document.querySelectorAll("#caption p").length)],
+    [31800, () => expect(visible($("again")), "TURN BACK TIME not shown after the double tap")]
+  ],
+  fallback: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [53000, () => expect(!visible($("restart")), "PLAY AGAIN showed before the 15 s fallback")],
+    [55000, () => expect(visible($("restart")), "PLAY AGAIN fallback didn't show")]
+  ],
+  dblturnback: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [40500, () => { $("again").click(); $("again").click(); }],
+    [43000, () => expect(document.querySelectorAll("#again .soft").length === 1, "soft lines: " + document.querySelectorAll("#again .soft").length)]
+  ],
+  restart: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [40500, () => $("again").click()],
+    [45600, () => $("restart").click()],
+    ...[47600, 55600, 63600].map(ms => [ms, () => {
+      expect(L().state() === "play", "not playing " + (ms - 45600) + " ms into the new round");
+      expect(!visible($("card")) && !$("caption").textContent && !visible($("again")) && !visible($("restart")), "old ending still showing at " + (ms - 45600) + " ms");
+      expect(!document.querySelector(".flyer") && !document.querySelector("#sheet.on") && !visible($("timeov")), "leftover flyer, sheet or TIME! at " + (ms - 45600) + " ms");
+    }])
   ]
 };
+
+const topCard = () => document.querySelector("#items .n.tap");
+const topWho = () => topCard()?.querySelector("b")?.textContent || "none";
+const topText = () => topCard()?.lastElementChild?.childNodes[1]?.textContent || "";
+const capHeader = () => document.querySelector("#caption .who")?.textContent || "none";
+function tap() {
+  const r = $("stage").getBoundingClientRect();
+  $("stage").dispatchEvent(new PointerEvent("pointerdown", { clientX: r.left + r.width * 0.85, clientY: r.top + r.height * 0.3, bubbles: true }));
+}
 
 function report() {
   if (document.title.startsWith("ERR")) return;

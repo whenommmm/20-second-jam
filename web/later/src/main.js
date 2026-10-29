@@ -3,13 +3,14 @@ import { W, H, DEFAULT_PILL_W } from "./data.js";
 import { createRound, stepRound } from "./round.js";
 import { createPlayView, measurePillWidths } from "./view.js";
 import { createSound } from "./sound.js";
+import { playEnding } from "./ending.js";
 
 const $ = id => document.getElementById(id);
 const stage = $("stage"), world = $("world");
 const sound = createSound();
 const view = createPlayView(sound);
 
-let state = "title", round = createRound(), pillW = DEFAULT_PILL_W;
+let state = "title", round = createRound(), pillW = DEFAULT_PILL_W, ending = null, lastTap = 0;
 let scale = 1, last = 0, target = null, forcedTarget = null;
 const keys = { x: 0, y: 0 }, held = new Set();
 
@@ -25,12 +26,13 @@ fit();
 document.fonts.ready.then(() => { pillW = measurePillWidths(); });
 
 function start() {
+  if (ending) { ending.dispose(); ending = null; }
   sound.unlock();
   round = createRound(pillW);
   view.reset();
   target = null; forcedTarget = null;
   state = "play";
-  $("title").classList.remove("on"); $("timeov").classList.remove("on");
+  $("title").classList.remove("on");
   stage.classList.add("playing");
   last = performance.now();
 }
@@ -39,7 +41,7 @@ function endRound() {
   state = "over";
   stage.classList.remove("playing");
   sound.silence();
-  $("timeov").classList.add("on");
+  ending = playEnding(round, { onRestart: start });
 }
 
 function toWorld(e) {
@@ -49,6 +51,12 @@ function toWorld(e) {
 
 stage.addEventListener("pointermove", e => { target = toWorld(e); });
 stage.addEventListener("click", () => { if (state === "title") start(); });
+// double-tap (or double-click) during the ending shows the rest of her words at once
+stage.addEventListener("pointerdown", () => {
+  const now = performance.now();
+  if (state === "over" && ending && now - lastTap < 350) ending.tapTwice();
+  lastTap = now;
+});
 
 const KEYMAP = { ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0], ArrowUp: [0, -1], w: [0, -1], ArrowDown: [0, 1], s: [0, 1] };
 function readKeys() {
@@ -84,6 +92,7 @@ if (location.hash.startsWith("#test")) {
     state: () => state,
     round: () => round,
     setTarget: (x, y) => { forcedTarget = { x, y }; },
+    ending: () => ending,
     start
   };
 }

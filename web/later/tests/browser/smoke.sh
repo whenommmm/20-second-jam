@@ -15,6 +15,14 @@ CHECKS=(
   "title 2000"
   "dodge 22000"
   "noaudio 22000"
+  "late 46500"
+  "home 42500"
+  "lastonly 42500"
+  "thread 33000"
+  "doubletap 32500"
+  "fallback 56000"
+  "dblturnback 44000"
+  "restart 64500"
 )
 
 failed=0
