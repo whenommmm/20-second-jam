@@ -1,6 +1,7 @@
 // Boot, scaling, input, title screen, the main loop, pausing, fullscreen.
 import { W, H, TOP, BOTTOM, DEFAULT_PILL_W, CALLS } from "./data.js";
 import { createRound, stepRound } from "./round.js";
+import { worldWidth } from "./rules.js";
 import { createPlayView, measurePillWidths } from "./view.js";
 import { createSound } from "./sound.js";
 import { playEnding } from "./ending.js";
@@ -11,20 +12,23 @@ const sound = createSound();
 const view = createPlayView(sound);
 
 let state = "title", round = createRound(), pillW = DEFAULT_PILL_W, ending = null, lastTap = 0;
-let scale = 1, last = 0, target = null, forcedTarget = null, drag = null;
+let scale = 1, ww = W, last = 0, target = null, forcedTarget = null, drag = null;
 const keys = { x: 0, y: 0 }, held = new Set();
 const upright = matchMedia("(orientation: portrait) and (max-width: 900px)"); // the rotate overlay is showing
 
-// one 960×540 world, scaled to the largest 16:9 box that fits inside the safe area
-function fit() {
+// one world 540 tall, scaled to fit inside the safe area. On wide screens (phones on their side) the world is wider
+// (up to 1280) so play fills the screen instead of leaving dead bars at the sides. Its width only changes between rounds.
+function fit(widen = state === "title") {
   const cs = getComputedStyle(frame);
   const w = frame.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const h = frame.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-  scale = Math.min(w / W, h / H);
-  stage.style.width = W * scale + "px"; stage.style.height = H * scale + "px";
+  if (widen) ww = worldWidth(w, h);
+  scale = Math.min(w / ww, h / H);
+  stage.style.width = ww * scale + "px"; stage.style.height = H * scale + "px";
+  world.style.width = ww + "px";
   world.style.transform = `scale(${scale})`;
 }
-addEventListener("resize", fit);
+addEventListener("resize", () => fit());
 fit();
 
 document.fonts.ready.then(() => { pillW = measurePillWidths(); });
@@ -34,7 +38,8 @@ function start() {
   if (ending) { ending.dispose(); ending = null; }
   sound.unlock();
   sound.ringStart(); // the phone rings softly under play
-  round = createRound(pillW);
+  fit(true);
+  round = createRound(pillW, ww);
   view.reset();
   target = null; forcedTarget = null; drag = null;
   state = "play";
@@ -70,7 +75,7 @@ frame.addEventListener("pointermove", e => {
   if (e.pointerType !== "touch" || !drag || e.pointerId !== drag.id) return;
   const f = toWorld(e);
   const want = { x: drag.moon.x + f.x - drag.finger.x, y: drag.moon.y + f.y - drag.finger.y };
-  target = { x: Math.max(26, Math.min(W - 26, want.x)), y: Math.max(TOP, Math.min(BOTTOM, want.y)) };
+  target = { x: Math.max(26, Math.min(round.w - 26, want.x)), y: Math.max(TOP, Math.min(BOTTOM, want.y)) };
   // past an edge, move the anchor instead, so turning back responds straight away
   drag.finger.x += want.x - target.x; drag.finger.y += want.y - target.y;
 });

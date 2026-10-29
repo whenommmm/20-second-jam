@@ -26,7 +26,7 @@ CHECKS=(
   "restart 66000"
   "ring 18000"
   "widths 2000"
-  "touchmargin 3000 1200,627"
+  "touchmargin 3000 1500,627"
   "touchclamp 4600"
   "pendingcard 30500"
   "taptargets 48400 844,477"
@@ -38,6 +38,7 @@ CHECKS=(
   "touch 3000"
   "fullscreen 22000"
   "smallphone 32500 844,477"
+  "widephone 48000 844,477"
 )
 
 failed=0

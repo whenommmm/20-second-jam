@@ -8,10 +8,12 @@ const STEP = 1 / 60; // long frames are split into steps this small, so nothing 
 const clamp = (lo, hi, v) => Math.max(lo, Math.min(hi, v));
 const nearestLane = y => LANES.reduce((b, l) => (Math.abs(l - y) < Math.abs(b - y) ? l : b));
 
-export function createRound(pillW = DEFAULT_PILL_W) {
+// w is the world's width (960 up to W_MAX); calls cross a wider world faster, so they arrive on the same clock.
+export function createRound(pillW = DEFAULT_PILL_W, w = W) {
+  const k = w / W;
   return {
-    pillW, t: 0, me: { x: 220, y: 270 }, vel: { x: 0, y: 0 }, tilt: 0,
-    calls: CALLS.map(c => ({ ...c, spawned: 0, alive: 0, answered: false, missedN: 0, band: null, start: 0, gap: 0 })),
+    pillW, w, k, t: 0, me: { x: 220, y: 270 }, vel: { x: 0, y: 0 }, tilt: 0,
+    calls: CALLS.map(c => ({ ...c, v: c.v * k, spawned: 0, alive: 0, answered: false, missedN: 0, band: null, start: 0, gap: 0 })),
     pills: [], nextId: 1, nextCall: 0, quietIdx: 0,
     score: 0, combo: 0, best: 0, closeN: 0, missed: 0, dodged: 0, hits: 0, bonus: 0, paperK: 0, over: false
   };
@@ -49,7 +51,7 @@ function move(r, dt, { target, keys }) {
   }
   const a = 1 - Math.exp(-dt * T.FOLLOW_EASE);
   r.vel.x += (want.x - r.vel.x) * a; r.vel.y += (want.y - r.vel.y) * a;
-  r.me.x = clamp(26, W - 26, r.me.x + r.vel.x * dt);
+  r.me.x = clamp(26, r.w - 26, r.me.x + r.vel.x * dt);
   r.me.y = clamp(TOP, BOTTOM, r.me.y + r.vel.y * dt);
   r.tilt += (clamp(-20, 20, r.vel.x * 0.03) - r.tilt) * (1 - Math.exp(-dt * 8));
 }
@@ -79,7 +81,7 @@ function spawnPills(r, ev) {
   r.calls.forEach((c, ci) => {
     if (!c.band || c.answered) return;
     while (c.spawned < c.n && (c.spawned === 0 || r.t >= c.start + c.spawned * c.gap)) {
-      const w = r.pillW[c.who], x = W + w / 2 + 10, id = r.nextId++;
+      const w = r.pillW[c.who], x = r.w + w / 2 + 10, id = r.nextId++;
       // pills of one call follow each other a fixed distance apart, whatever their speed
       if (!c.gap) c.gap = (w + T.PILL_SPACE) / c.v;
       const pill = { id, ci, who: c.who, first: c.spawned === 0, x, y: c.home ? (c.y0 ?? clamp(TOP, BOTTOM, r.me.y)) : c.band[0], w, h: T.PILL_H,
@@ -95,8 +97,8 @@ function movePills(r, dt, ev) {
     if (p.dead) continue;
     const c = r.calls[p.ci];
     // Mom's last call drifts toward you until the middle of the screen, then commits to a gentler straight line you can dodge
-    if (c.home && p.x > T.HOME_LOCK_X && p.x - r.me.x > T.HOME_LOCK_DIST) p.vy = clamp(-T.HOME_MAX_VY, T.HOME_MAX_VY, (r.me.y - p.y) * T.HOME_STEER);
-    else if (c.home && !p.locked) { p.locked = true; p.vy *= 0.5; }
+    if (c.home && p.x > T.HOME_LOCK_X * r.k && p.x - r.me.x > T.HOME_LOCK_DIST * r.k) p.vy = clamp(-T.HOME_MAX_VY, T.HOME_MAX_VY, (r.me.y - p.y) * T.HOME_STEER);
+    else if (c.home && !p.locked) { p.locked = true; p.vy = 0; }
     p.x += p.vx * dt; p.y = clamp(TOP, BOTTOM, p.y + p.vy * dt);
     const d = capsuleDist(p, r.me.x, r.me.y);
     p.minD = Math.min(p.minD, d);
@@ -143,8 +145,8 @@ function laneFree(r, y, v) {
   for (const p of r.pills) if (!p.dead && r.calls[p.ci].band.includes(y) && (!tail || p.x > tail.x)) tail = p;
   if (!tail) return true;
   const back = tail.x + tail.w / 2, u = -tail.vx;
-  if (back > W - 40) return false;
-  return v <= u || (W + 10 - back) / (v - u) > back / u;
+  if (back > r.w - 40) return false;
+  return v <= u || (r.w + 10 - back) / (v - u) > back / u;
 }
 
 // When, counting from now, a lane's pills cover the column you're in: [[from, to], ...] in seconds.
@@ -158,7 +160,7 @@ function laneWindows(r, y) {
     const gap = c.gap || (100 + T.PILL_SPACE) / c.v;
     for (let k = c.spawned; k < c.n; k++) {
       const ts = c.start + k * gap - r.t;
-      out.push([ts + (W + 10 - xp - 40) / c.v, ts + (W + 110 - xp + 40) / c.v]);
+      out.push([ts + (r.w + 10 - xp - 40) / c.v, ts + (r.w + 110 - xp + 40) / c.v]);
     }
   }
   // Mom's last call leaves the lanes, so it blocks whichever lane it's in right now
@@ -173,7 +175,7 @@ const clearDuring = (r, y, a, b) => y !== undefined && laneWindows(r, y).every((
 function fair(r, lane, c) {
   const mine = LANES.indexOf(nearestLane(r.me.y)), i = LANES.indexOf(lane);
   if (Math.abs(i - mine) > 1) return true;
-  const reach = (W + 10 - r.me.x - 40) / c.v;
+  const reach = (r.w + 10 - r.me.x - 40) / c.v;
   if (reach < T.REACT_MIN) return false;
   const b = reach + (c.n * 100 + (c.n - 1) * T.PILL_SPACE + 80) / c.v;
   return [mine - 1, mine, mine + 1].some(j => j !== i && clearDuring(r, LANES[j], 0, b));

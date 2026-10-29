@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { shortDate, clarity, paperRGB, rankFor, endingFor, buildThread, turnBackLines, capsuleDist } from "../src/rules.js";
+import { shortDate, clarity, paperRGB, rankFor, endingFor, buildThread, turnBackLines, capsuleDist, worldWidth } from "../src/rules.js";
 import { CALLS, PENDING, FOLLOW_UP, FINAL } from "../src/data.js";
 
 test("shortDate", () => {
@@ -68,4 +68,11 @@ test("ringNotes: a slow two-note ring, then a pause, repeating", async () => {
   assert.deepEqual(ringNotes(cycle - 0.01, cycle + 0.01).map(n => +n.at.toFixed(3)), [+cycle.toFixed(3)]);
   assert.ok(RING.STEP >= 0.25, "not slow");
   assert.ok(RING.VOLUME <= 0.06, "not slight");
+});
+
+test("worldWidth: wide screens get a wider world instead of empty bars at the sides", () => {
+  assert.equal(worldWidth(960, 540), 960);
+  assert.equal(worldWidth(800, 600), 960); // taller than 16:9 stays 960 (bars above and below, as before)
+  assert.equal(worldWidth(844, 390), 1169); // an iPhone on its side
+  assert.equal(worldWidth(2000, 540), 1280); // never wider than this
 });

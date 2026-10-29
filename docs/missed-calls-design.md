@@ -48,7 +48,8 @@ The emotion comes from the player's own actions. The reveal changes what **they 
   - **The Unity version is the jam entry** (the user's decision).
   - The web version is built first (my call): it's closest to the mockup, so it's quick, and it becomes the finished reference the Unity version is checked against. Where the web version is published is up to the user later; it is not the jam entry.
 - **No content warning**, in the game or on the page (the user's decision).
-- Plays in the browser on itch.io. The game area is 960×540 (16:9) and scales to fit the frame. Include a fullscreen button.
+- Plays in the browser on itch.io. The game area is 540 tall and 960 wide (16:9), scaled to fit the frame. Include a fullscreen button.
+- **Wide screens get a wider world, not empty bars** (the user's request, for phones on their side): the world is as wide as the screen's shape allows, from 960 up to 1280 (a phone on its side is about 1169). Pills cross it faster in proportion, so every call arrives on the same clock. The width is chosen when a round starts and stays fixed until the next one. The results screen stays a 960-wide layout in the middle, and the phone, her words, TURN BACK TIME and PLAY AGAIN are placed relative to the middle of the screen.
 - Browsers block audio until the player interacts, so the game starts with a click-to-start screen. It doesn't count toward the 20 seconds.
 - Controls: mouse, touch, and keyboard (arrow keys or WASD) all move the player.
 - Platforms (my call, unchanged): desktop browsers and touch devices held landscape. Phones held portrait get a "rotate your device" message, and the itch.io page says "best on desktop".
@@ -119,7 +120,7 @@ Callers, saved in the phone exactly like this (the user's choice):
 - **Aimed at the player.** A call takes the free lane closest to the player when it starts, so standing still loses.
 - **Pills never overlap.** A lane takes a new call only after the previous one has fully slid in, and only if the new one can't catch up with it.
 - **Calls pass underneath the score and date**, so there's nowhere to hide.
-- **Mom's last call (#14)** is the one exception. It enters at the player's height and drifts gently toward the player (at most 90 px/s sideways) **until it reaches the middle of the screen**, or until it's within 240 px of the player, whichever comes first. Then it commits to a straight line (its sideways speed halves) the player can dodge. If the player stands still, it reaches them. (The user found the earlier, stronger following too much.)
+- **Mom's last call (#14)** is the one exception. It enters at the player's height and drifts gently toward the player (at most 90 px/s sideways) **until it reaches the middle of the screen**, or until it's within 240 px of the player, whichever comes first. Then it commits to a dead-straight line (no more sideways drift) the player can dodge. (It used to keep half its drift, which could pin a player against the bottom edge just right of the middle; a careful-dodger sweep every 15 px across the screen found it.) If the player stands still, it reaches them. (The user found the earlier, stronger following too much.)
 - All calls are off screen by 17 s. Seconds 17–20 are quiet.
 
 ### Fairness (no forced touches)

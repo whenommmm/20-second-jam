@@ -2,6 +2,9 @@
 // No logic lives here, so the Unity version can read the same values.
 
 export const W = 960, H = 540;
+// Wide screens (phones on their side) get a wider world, up to this, instead of empty bars at the sides.
+// Horizontal speeds and distances scale with it, so a round plays out on the same clock.
+export const W_MAX = 1280;
 
 // 8 lanes covering the full height; the moon can move between TOP and BOTTOM.
 export const LANES = Array.from({ length: 8 }, (_, i) => 54 + i * 62);

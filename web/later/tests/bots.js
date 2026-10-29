@@ -1,5 +1,5 @@
 // Test players, shared by the Node tests and the browser harness. They read the round directly (world units).
-import { TOP, BOTTOM, W } from "../src/data.js";
+import { TOP, BOTTOM } from "../src/data.js";
 
 // How long (in px of approach) until a pill reaches the moon at height y; -1 means off the play area.
 function safety(round, y, ignore = () => false) {
@@ -17,7 +17,9 @@ function safety(round, y, ignore = () => false) {
 function bestHeight(round, score, ignore) {
   const my = round.me.y;
   let best = score(my, safety(round, my, ignore)) + 40, ty = my;
-  for (const d of [-93, -62, -31, -15, 15, 31, 62, 93]) {
+  for (const step of [-93, -62, -31, -15, 15, 31, 62, 93]) {
+    const d = Math.max(TOP, Math.min(BOTTOM, my + step)) - my; // pressing against the top or bottom edge is a move too
+    if (!d) continue;
     let route = 2000;
     for (let k = 1; k <= Math.abs(d) / 10; k++) route = Math.min(route, safety(round, my + Math.sign(d) * k * 10, ignore));
     const v = score(my + d, Math.min(safety(round, my + d, ignore), route * 3)) - Math.abs(d) * 0.5;
@@ -34,7 +36,7 @@ export function dodgeTarget(round, x) {
 // Go for the leftmost wanted pill on screen. If some pills are unwanted, steer toward the wanted one's
 // height only along routes that stay clear of the others.
 export function chaseTarget(round, wants = () => true) {
-  const goal = round.pills.filter(p => p.x - p.w / 2 < W && wants(p)).sort((a, b) => a.x - b.x)[0];
+  const goal = round.pills.filter(p => p.x - p.w / 2 < round.w && wants(p)).sort((a, b) => a.x - b.x)[0];
   if (!goal) return { x: 200, y: 300 };
   if (round.pills.every(wants)) return { x: goal.x, y: goal.y };
   const avoid = p => wants(p);

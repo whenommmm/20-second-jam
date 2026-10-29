@@ -1,7 +1,7 @@
 // Everything from "TIME!" to PLAY AGAIN: the results screen, the shrink into the phone, the three flights,
 // the lock screen and its Messages sheet, her words beside the phone, TURN BACK TIME.
 // Ported from the mockup (endRound, morph, fly, endingMessages, playCaption, turnBack).
-import { W, CALLS, VOICEMAIL, LAST_CALL, CAPTION_HEADERS, LESSON } from "./data.js";
+import { W, H, CALLS, VOICEMAIL, LAST_CALL, CAPTION_HEADERS, LESSON } from "./data.js";
 import { rankFor, endingFor, buildThread, turnBackLines, shortDate } from "./rules.js";
 
 const $ = id => document.getElementById(id);
@@ -13,7 +13,7 @@ export function playEnding(round, { onRestart }) {
   const ending = endingFor(round.calls);
   const later = (ms, fn) => timers.push(setTimeout(() => { if (!disposed) fn(); }, ms));
   const animate = (el, frames, opts) => { const a = el.animate(frames, opts); anims.push(a); return a; };
-  const scale = () => $("world").getBoundingClientRect().width / W;
+  const scale = () => $("world").getBoundingClientRect().height / H; // the world is always 540 tall, not always 960 wide
 
   // ---- TIME! and the results screen ----
   function countUp(el, to, ms) {
@@ -31,10 +31,10 @@ export function playEnding(round, { onRestart }) {
     $("timeov").classList.remove("on");
     $("card").className = "on";
     $("play").style.opacity = 0;
-    // the moon glides over to sit beside your score
+    // the moon glides over to sit beside your score (the results are laid out 960 wide, in the middle of the world)
     const w = $("mewrap");
     w.style.transition = "transform .7s cubic-bezier(.3,0,.2,1)";
-    w.style.transform = `translate(calc(-50% + ${720 - round.me.x}px), calc(-50% + ${170 - round.me.y}px)) scale(1.7)`;
+    w.style.transform = `translate(calc(-50% + ${720 + (round.w - W) / 2 - round.me.x}px), calc(-50% + ${170 - round.me.y}px)) scale(1.7)`;
     $("resnum").textContent = "0";
     later(150, () => countUp($("resnum"), round.score, 900));
     $("r1").textContent = `${round.dodged} / ${TOTAL_PILLS}`; $("r2").textContent = round.closeN; $("r3").textContent = `×${round.best}`;

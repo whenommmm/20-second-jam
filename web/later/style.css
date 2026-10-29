@@ -5,7 +5,7 @@
 html, body { height: 100%; overflow: hidden; }
 body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.5; background: var(--paper, rgb(253,220,172)); }
 
-/* the page: one 16:9 stage, letterboxed and centred inside the safe area (notches, home bars); main.js sizes it */
+/* the page: one stage, 540 world px tall and 960–1280 wide to match the screen, centred inside the safe area (notches, home bars); main.js sizes it */
 html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 #frame { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
@@ -29,7 +29,7 @@ html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -web
 #play { position: absolute; inset: 0; }
 #score { position: absolute; left: 34px; top: 22px; font-size: 64px; line-height: 1; }
 #combo { position: absolute; left: 36px; top: 92px; font-size: 22px; color: #FF3B30; }
-#caption { position: absolute; left: 642px; top: 84px; width: 285px; z-index: 4; display: none; color: #141414; font-family: "Newsreader", Georgia, serif; font-style: italic; }
+#caption { position: absolute; left: calc(50% + 162px); top: 84px; width: 285px; z-index: 4; display: none; color: #141414; font-family: "Newsreader", Georgia, serif; font-style: italic; }
 #caption.on { display: block; }
 #caption .who { font-style: normal; font-family: "Archivo Black", sans-serif; font-size: 11px; letter-spacing: 2px; opacity: .55; margin-bottom: 12px; }
 #caption p { font-size: 19px; line-height: 1.25; margin: 0 0 4px; animation: capin .6s ease-out both; }
@@ -143,12 +143,12 @@ html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -web
 #fly { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
 .flyer { position: absolute; display: grid; place-items: center; transform-origin: 50% 50%; white-space: nowrap; will-change: transform; }
 .flyer svg { width: 100%; height: 100%; display: block; }
-#again { position: absolute; right: 40px; bottom: 30px; font-size: 26px; display: none; cursor: pointer; border-bottom: 3px solid #141414; line-height: 1.1; z-index: 6; }
+#again { position: absolute; right: calc(50% - 440px); bottom: 26px; font-size: 26px; display: none; cursor: pointer; border-bottom: 3px solid #141414; line-height: 1.1; z-index: 6; }
 #again.on { display: block; }
 #again.tried { cursor: default; border-bottom-color: transparent; text-align: right; max-width: 290px; text-wrap: balance; }
 #again .soft { display: block; margin-top: 8px; font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.2; text-wrap: balance; animation: capin .9s ease-out both; }
 #again .lesson { display: block; margin-top: 14px; font-size: 19px; letter-spacing: .5px; text-wrap: balance; animation: capin .9s ease-out both; }
-#restart { position: absolute; left: 40px; bottom: 34px; z-index: 6; display: none; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 2px; opacity: .55; cursor: pointer; border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+#restart { position: absolute; left: calc(50% - 440px); bottom: 34px; z-index: 6; display: none; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 2px; opacity: .55; cursor: pointer; border-bottom: 2px solid currentColor; padding-bottom: 2px; }
 #restart.on { display: block; animation: capin .8s ease-out both; }
 #restart:hover { opacity: .9; }
 

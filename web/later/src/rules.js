@@ -1,5 +1,8 @@
 // Small pure rules shared by the round, the view and the ending.
-import { PAPER_WARM, PAPER_COLD, FOLLOW_UP, PENDING, FINAL, TURN_BACK, RING } from "./data.js";
+import { W, W_MAX, H, PAPER_WARM, PAPER_COLD, FOLLOW_UP, PENDING, FINAL, TURN_BACK, RING } from "./data.js";
+
+// How wide the world is (it is always 540 tall) for a w×h screen area: as wide as the screen, between 960 and W_MAX.
+export const worldWidth = (w, h) => Math.min(W_MAX, Math.max(W, Math.round(H * w / h)));
 
 // "MAR 05" → "Mar 5"
 export const shortDate = d => d[0] + d.slice(1, 3).toLowerCase() + " " + +d.slice(4);

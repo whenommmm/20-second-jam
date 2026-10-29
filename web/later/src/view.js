@@ -1,5 +1,5 @@
 // Draws a round into the page: pills, moon, badge, score, streak, the date pile, the paper, blurred names, shake.
-// Ported from the mockup's drawing code. Sizes and positions are world units (960×540).
+// Ported from the mockup's drawing code. Sizes and positions are world units (540 tall, 960 or more wide).
 import { CALLS, START_DATE } from "./data.js";
 import { clarity, paperRGB } from "./rules.js";
 

@@ -102,7 +102,7 @@ const MODES = {
       const lr = l.getBoundingClientRect(), cr = lastCard.getBoundingClientRect(), sr = $("lock").getBoundingClientRect();
       expect(lastCard.querySelector("b").textContent === "Mom", "last message isn't Mom's first text");
       expect(cr.bottom <= lr.bottom + 0.5, `last message cut off: card bottom ${cr.bottom.toFixed(1)} > list bottom ${lr.bottom.toFixed(1)} (scrollTop ${l.scrollTop}, scrollHeight ${l.scrollHeight}, clientHeight ${l.clientHeight})`);
-      const scale = $("world").getBoundingClientRect().width / 960;
+      const scale = $("world").getBoundingClientRect().height / 540;
       expect(sr.bottom - cr.bottom >= 20 * scale, `last message ends ${((sr.bottom - cr.bottom) / scale).toFixed(1)} px from the screen's rounded bottom (needs 20)`);
       expect(getComputedStyle(l).touchAction === "pan-y", "Messages can't be scrolled by touch: touch-action " + getComputedStyle(l).touchAction);
     }]
@@ -155,7 +155,7 @@ const MODES = {
     }],
     [1200, () => { window.__m0 = { ...L().round().me }; touchScreen("pointerdown", 1, 40, 300); touchScreen("pointermove", 1, 40, 340); }],
     [2400, () => {
-      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      const me = L().round().me, s = $("stage").getBoundingClientRect().height / 540;
       expect($("stage").getBoundingClientRect().left > 60, "no margin beside the stage in this window");
       expect(Math.abs(me.y - (window.__m0.y + 40 / s)) < 4, `a drag started in the margin didn't move the moon (y ${me.y.toFixed(1)}, expected ${(window.__m0.y + 40 / s).toFixed(1)})`);
     }]
@@ -165,14 +165,14 @@ const MODES = {
     [1200, () => { touchAt("pointerdown", 0.5, 0.8, 0, 1); touchAt("pointermove", 0.5, 0.8, 0, 1, -600); }],
     [2200, () => { touchAt("pointermove", 0.5, 0.8, 0, 1, -560); }],
     [3200, () => {
-      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      const me = L().round().me, s = $("stage").getBoundingClientRect().height / 540;
       expect(me.y > TOP + 40 / s - 4, `after overshooting the top and coming back 40 px the moon is at y ${me.y.toFixed(1)} (dead zone)`);
       window.__m1 = { ...me };
       touchAt("pointerdown", 0.2, 0.2, 0, 2); touchAt("pointerup", 0.2, 0.2, 0, 2); // a second finger taps and lifts
       touchAt("pointermove", 0.5, 0.8, 0, 1, -520);
     }],
     [4200, () => {
-      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      const me = L().round().me, s = $("stage").getBoundingClientRect().height / 540;
       expect(Math.abs(me.y - (window.__m1.y + 40 / s)) < 4, `a second finger broke the drag (y ${me.y.toFixed(1)}, expected ${(window.__m1.y + 40 / s).toFixed(1)})`);
     }]
   ],
@@ -199,13 +199,13 @@ const MODES = {
       const fs = $("fs").getBoundingClientRect(), go = document.querySelector("#title .go").getBoundingClientRect(), d = document.querySelector("#dates .slip")?.getBoundingClientRect();
       expect(visible($("fs")) && fs.top > go.bottom && Math.abs((fs.left + fs.right) / 2 - (go.left + go.right) / 2) < 6, "fullscreen isn't centred under the start text on the title screen");
       expect($("fs").textContent.includes("FULLSCREEN"), "fullscreen button isn't labelled on the title screen");
-      const s = $("stage").getBoundingClientRect().width / 960;
+      const s = $("stage").getBoundingClientRect().height / 540;
       expect(fs.height >= 40 * s, "fullscreen button too small to tap: " + (fs.height / s).toFixed(0) + " world px tall");
       expect(!d || fs.right < d.left || fs.bottom < d.top || fs.top > d.bottom, "fullscreen button overlaps the date card");
     }],
     ["start", () => setTimeout(() => { L().start(); steer(r => dodgeTarget(r, 340)); }, 700)],
     [21600, () => {
-      const fs = $("fs").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), s = st.width / 960;
+      const fs = $("fs").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), s = st.height / 540;
       expect(visible($("fs")) && fs.left - st.left < 60 * s && fs.top - st.top < 60 * s, "fullscreen button isn't in the top-left corner after TIME!");
     }]
   ],
@@ -253,7 +253,7 @@ const MODES = {
     }],
     [1200, () => { window.__m0 = { ...L().round().me }; touchAt("pointerdown", 0.8, 0.8); touchAt("pointermove", 0.8, 0.8, 40); }],
     [2400, () => {
-      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960, want = window.__m0.x + 40 / s;
+      const me = L().round().me, s = $("stage").getBoundingClientRect().height / 540, want = window.__m0.x + 40 / s;
       expect(Math.abs(me.x - want) < 4 && Math.abs(me.y - window.__m0.y) < 4, `moon at ${me.x.toFixed(1)},${me.y.toFixed(1)}; expected ${want.toFixed(1)},${window.__m0.y.toFixed(1)}`);
     }]
   ],
@@ -263,10 +263,35 @@ const MODES = {
     [5300, () => expect(!visible($("fs")), "fullscreen button showing during play")],
     [21500, () => expect(visible($("fs")), "fullscreen button hidden after TIME!")]
   ],
+  // a phone on its side: the world widens to fill the screen, so there are no dead bars at the sides
+  widephone: [
+    [500, () => {
+      const st = $("stage").getBoundingClientRect();
+      expect(Math.abs(st.width - innerWidth) < 1.5 && Math.abs(st.height - innerHeight) < 1.5, `stage is ${st.width.toFixed(0)}×${st.height.toFixed(0)} in a ${innerWidth}×${innerHeight} window`);
+    }],
+    ["start", () => setTimeout(() => { L().start(); steer(r => dodgeTarget(r, r.w - 60)); }, 600)],
+    [4000, () => {
+      const r = L().round(), st = $("stage").getBoundingClientRect(), me = $("mesvg").getBoundingClientRect();
+      expect(r.w > 1100, "the round is only " + r.w + " wide");
+      expect(r.me.x > 1000 && me.right > st.right - 70, `the moon can't get over to the right edge (x ${r.me.x.toFixed(0)})`);
+    }],
+    [20600, () => expect(L().round().hits === 0, "a careful dodger at the far right had to answer " + L().round().hits)],
+    [40500, () => $("again").click()],
+    [47400, () => {
+      const world = $("world").getBoundingClientRect(), phone = $("card").getBoundingClientRect(), cap = $("caption").getBoundingClientRect();
+      const again = $("again").getBoundingClientRect(), restart = $("restart").getBoundingClientRect();
+      const apart = (a, b) => a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top;
+      expect(Math.abs((phone.left + phone.right) / 2 - (world.left + world.right) / 2) < 2, "the phone isn't in the middle of the screen");
+      expect(cap.left > phone.right + 10 && cap.right < world.right, "her words aren't beside the phone");
+      expect(visible($("restart")) && restart.right < phone.left && restart.left > world.left, "PLAY AGAIN isn't to the left of the phone");
+      const at = r => `${r.left.toFixed(0)}–${r.right.toFixed(0)} × ${r.top.toFixed(0)}–${r.bottom.toFixed(0)}`;
+      expect(again.left > phone.right && again.right < world.right && apart(again, cap), `the TURN BACK response (${at(again)}) isn't beside the phone (${at(phone)}), under her words (${at(cap)})`);
+    }]
+  ],
   smallphone: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
     [32000, () => {
-      const s = $("world").getBoundingClientRect().width / 960;
+      const s = $("world").getBoundingClientRect().height / 540;
       const body = document.querySelector("#items .n");
       const px = body ? parseFloat(getComputedStyle(body).fontSize) * s : 0;
       expect(px >= 8, `notification text renders at ${px.toFixed(2)} CSS px (scale ${s.toFixed(3)})`);
