@@ -106,6 +106,13 @@ const MODES = {
     }])
   ],
 
+  // ---- the ringing under play: rings while calls are coming, stops once her last call has gone ----
+  ring: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [5000, () => expect(L().sound().ringing(), "not ringing at 5 s")],
+    [17500, () => expect(!L().sound().ringing(), "still ringing after the last call has gone")]
+  ],
+
   // ---- itch.io and mobile ----
   hidden: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],

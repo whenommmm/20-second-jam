@@ -23,6 +23,7 @@ CHECKS=(
   "fallback 56000"
   "dblturnback 44000"
   "restart 64500"
+  "ring 18000"
   "hidden 9500"
   "touch 3000"
   "fullscreen 22000"

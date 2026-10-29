@@ -57,3 +57,15 @@ test("capsuleDist", () => {
   assert.equal(capsuleDist(p, 100, 150), 29);
   assert.equal(capsuleDist(p, 200, 100), 50);
 });
+
+test("ringNotes: a slow two-note ring, then a pause, repeating", async () => {
+  const { ringNotes } = await import("../src/rules.js");
+  const { RING } = await import("../src/data.js");
+  const first = ringNotes(0, RING.STEP * RING.MOTIF.length + RING.REST);
+  assert.deepEqual(first.map(n => n.midi), RING.MOTIF);
+  assert.deepEqual(first.map(n => +n.at.toFixed(3)), RING.MOTIF.map((_, i) => +(i * RING.STEP).toFixed(3)));
+  const cycle = RING.STEP * RING.MOTIF.length + RING.REST;
+  assert.deepEqual(ringNotes(cycle - 0.01, cycle + 0.01).map(n => +n.at.toFixed(3)), [+cycle.toFixed(3)]);
+  assert.ok(RING.STEP >= 0.25, "not slow");
+  assert.ok(RING.VOLUME <= 0.06, "not slight");
+});

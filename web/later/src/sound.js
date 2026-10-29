@@ -1,8 +1,11 @@
-// Sound, made on the fly: no voices, no music, and everything goes quiet at TIME!
-// Ported from the mockup. Every method is a silent no-op if Web Audio is missing or fails.
+// Sound, made on the fly: no voices, a soft ringing under play, and everything goes quiet at TIME!
+// Every method is a silent no-op if Web Audio is missing or fails.
+import { RING } from "./data.js";
+import { ringNotes } from "./rules.js";
 
 export function createSound() {
   let ac = null, master = null, noise = null;
+  let ring = null; // { bus, start, until, timer } while the phone is ringing
   const safe = fn => (...args) => { if (!ac) return; try { fn(...args); } catch (e) { /* sound is optional */ } };
 
   function env(g, t0, peak, attack, hold, release) {
@@ -26,8 +29,48 @@ export function createSound() {
     } catch (e) { ac = null; return false; }
   }
 
+  // one soft marimba note: a sine with a quick, bright knock on top
+  function marimba(bus, midi, t0) {
+    const f = 440 * Math.pow(2, (midi - 69) / 12);
+    for (const [mult, peak, decay] of [[1, 1, 0.7], [4, 0.25, 0.07]]) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.value = f * mult; o.connect(g); g.connect(bus);
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + decay);
+      o.start(t0); o.stop(t0 + decay + 0.05);
+    }
+  }
+
+  function stopRing(fade) {
+    if (!ring) return;
+    clearInterval(ring.timer);
+    const now = ac.currentTime;
+    ring.bus.gain.cancelScheduledValues(now);
+    ring.bus.gain.setValueAtTime(ring.bus.gain.value, now);
+    ring.bus.gain.linearRampToValueAtTime(0, now + fade);
+    ring = null;
+  }
+
   return {
     wake,
+    // the slow ringing under play; schedules a little ahead so it never stutters
+    ringStart: safe(() => {
+      stopRing(0);
+      const bus = ac.createGain(); bus.gain.value = RING.VOLUME; bus.connect(master);
+      ring = { bus, start: ac.currentTime + 0.05, until: 0, timer: 0 };
+      const schedule = () => {
+        if (!ring) return;
+        const ahead = ac.currentTime - ring.start + 0.4;
+        for (const n of ringNotes(ring.until, ahead)) marimba(ring.bus, n.midi, ring.start + n.at);
+        ring.until = Math.max(ring.until, ahead);
+      };
+      schedule(); ring.timer = setInterval(schedule, 100);
+    }),
+    // the phone stops ringing (a gentle fade)
+    ringStop: safe((fade = 1.5) => stopRing(fade)),
+    ringing: () => !!ring,
+    // a hidden tab pauses everything; waking the context resumes it
+    suspend: safe(() => ac.suspend()),
     // wake, and turn the volume back up for a new round
     unlock() {
       try {
@@ -41,7 +84,7 @@ export function createSound() {
         }
       } catch (e) { ac = null; }
     },
-    silence: safe(() => { master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0, ac.currentTime); }),
+    silence: safe(() => { stopRing(0); master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0, ac.currentTime); }),
     // a phone vibrating on a table, once as each call comes in: a soft, low double pulse (bzz… bzz)
     buzz: safe(() => {
       const t0 = ac.currentTime, o = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();

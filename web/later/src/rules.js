@@ -1,5 +1,5 @@
 // Small pure rules shared by the round, the view and the ending.
-import { PAPER_WARM, PAPER_COLD, FOLLOW_UP, PENDING, FINAL, TURN_BACK } from "./data.js";
+import { PAPER_WARM, PAPER_COLD, FOLLOW_UP, PENDING, FINAL, TURN_BACK, RING } from "./data.js";
 
 // "MAR 05" → "Mar 5"
 export const shortDate = d => d[0] + d.slice(1, 3).toLowerCase() + " " + +d.slice(4);
@@ -37,4 +37,15 @@ export function capsuleDist(p, px, py) {
   const half = p.w / 2 - p.h / 2;
   const dx = Math.max(Math.abs(px - p.x) - half, 0), dy = py - p.y;
   return Math.hypot(dx, dy) - p.h / 2;
+}
+
+// When the ring's notes fall between `from` and `to` (seconds since the ringing started).
+export function ringNotes(from, to) {
+  const cycle = RING.STEP * RING.MOTIF.length + RING.REST, notes = [];
+  for (let k = Math.max(0, Math.floor(from / cycle)); k * cycle < to; k++)
+    RING.MOTIF.forEach((midi, i) => {
+      const at = k * cycle + i * RING.STEP;
+      if (at >= from && at < to) notes.push({ at, midi });
+    });
+  return notes;
 }

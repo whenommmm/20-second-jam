@@ -155,8 +155,9 @@ With these, a careful automated dodger finished every test round untouched. Any 
 - Large chunky number. A pill that passes the player gives +10, or +25 with a red "CLOSE!" if it passed close.
 - "PERFECT ×n" in red under the score counts pills dodged in a row.
 
-### Sound (no voices, no music for now)
+### Sound (no voices)
 - Each **call** (not each pill) makes one soft phone-vibration double pulse as it comes in (*bzz… bzz*): 14 over the round, roughly one a second. A buzz on every pill (29, often a third of a second apart) sounded like constant droning, and the user asked for it to be fixed.
+- **A soft, slow phone ringing plays under play** (the user's request): an original marimba "ring-ring" (G5–D5, six notes 0.28 s apart, then 2 s of silence, repeating) at low volume. It is **not** Apple's ringtone, which is copyrighted. It starts with the round and **fades out once every call has come and gone** (my call), so the quiet seconds at the end are truly quiet: the phone has stopped ringing.
 - A small blip as each pill passes the player, one semitone higher for each pill in the streak.
 - A brighter double blip on CLOSE!, and a dull thud on a touch.
 - **At "TIME!" everything cuts to silence.** The results and the phone stay silent (the phone's notifications are silenced).
@@ -249,7 +250,7 @@ In every ending, she still dies. The better endings are about whether the player
 
 ## Open questions (for the user)
 
-1. **Music.** The user wants it sad and will decide later. Sad music during play would hint at the twist, so it may belong only after "TIME!". Who makes it is also open (the jam prefers human-made).
+1. **Music.** During play, the soft ringing is the background music for now. Whether anything else (sad music after "TIME!"?) is added, and who makes it, is still open (the jam prefers human-made).
 2. **Recorded voice.** Her voicemail and her last call are text only right now. Should someone record them to play after the timer? (Never during play.)
 
 Not open, just a reminder: the itch.io page's AI-generation disclosure must be filled in at submission.

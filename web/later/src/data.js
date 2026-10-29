@@ -96,3 +96,7 @@ export const TURN_BACK = {
   home: ["THERE'S NEVER ENOUGH TIME.", "But you were there."],
   last: ["YOU GAVE HER FOUR MINUTES.", "She'd waited all month for them."]
 };
+
+// The ringing under play: an original, soft marimba "ring-ring" (not Apple's ringtone), slow and quiet.
+// MOTIF is MIDI notes played STEP seconds apart, then REST seconds of silence, repeating.
+export const RING = { MOTIF: [79, 74, 79, 74, 79, 74], STEP: 0.28, REST: 2.0, VOLUME: 0.05 };

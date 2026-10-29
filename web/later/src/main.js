@@ -1,5 +1,5 @@
 // Boot, scaling, input, title screen, the main loop, pausing, fullscreen.
-import { W, H, DEFAULT_PILL_W } from "./data.js";
+import { W, H, DEFAULT_PILL_W, CALLS } from "./data.js";
 import { createRound, stepRound } from "./round.js";
 import { createPlayView, measurePillWidths } from "./view.js";
 import { createSound } from "./sound.js";
@@ -32,6 +32,7 @@ document.fonts.ready.then(() => { pillW = measurePillWidths(); });
 function start() {
   if (ending) { ending.dispose(); ending = null; }
   sound.unlock();
+  sound.ringStart(); // the phone rings softly under play
   round = createRound(pillW);
   view.reset();
   target = null; forcedTarget = null; drag = null;
@@ -100,13 +101,18 @@ $("fs").addEventListener("click", e => {
 });
 
 // A hidden tab or an upright phone pauses play; the first frame back starts from a fresh timestamp.
-document.addEventListener("visibilitychange", () => { last = performance.now(); });
+document.addEventListener("visibilitychange", () => {
+  last = performance.now();
+  if (document.hidden) sound.suspend(); else sound.wake();
+});
 
 function loop(now) {
   const dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
   if (state === "play" && !document.hidden && !upright.matches) {
     const events = stepRound(round, dt, { target: forcedTarget || target, keys });
     view.handle(events, round);
+    // once every call has come and gone, the phone stops ringing: the last seconds are quiet
+    if (sound.ringing() && round.nextCall === CALLS.length && round.pills.length === 0) sound.ringStop();
     if (events.some(e => e.type === "time")) endRound();
   }
   if (state !== "over") view.draw(round);
@@ -123,6 +129,7 @@ if (location.hash.startsWith("#test")) {
     round: () => round,
     setTarget: (x, y) => { forcedTarget = { x, y }; },
     ending: () => ending,
+    sound: () => sound,
     start
   };
 }
