@@ -74,3 +74,18 @@ test("each call buzzes once, on its first pill, not every pill", () => {
   assert.equal(spawns.length, 29);
   assert.equal(spawns.filter(e => e.pill.first).length, 14);
 });
+
+test("her last call drifts gently toward you until the middle of the screen, then goes straight", () => {
+  const round = createRound(), before = [], after = [];
+  while (!round.over) {
+    const y = 302 + 150 * Math.sin(round.t * 3); // a player who keeps moving up and down on the left
+    stepRound(round, 1 / 60, { target: { x: 200, y }, keys: { x: 0, y: 0 } });
+    const mom = round.pills.find(p => p.ci === 13);
+    if (mom) (mom.x > 480 ? before : after).push(mom.vy);
+  }
+  assert.ok(before.length > 0 && after.length > 0, "her last call never crossed the middle");
+  assert.ok(Math.max(...before.map(Math.abs)) <= 90, "steers harder than 90 px/s");
+  assert.ok(new Set(before.slice(-30).map(v => v.toFixed(3))).size > 1, "stopped steering before the middle");
+  // the commit happens on the step after it crosses the middle (one frame, ~5 px), so skip that crossing frame
+  assert.equal(new Set(after.slice(1).map(v => v.toFixed(6))).size, 1, "kept steering after the middle");
+});

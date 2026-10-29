@@ -35,7 +35,8 @@ export const TUNING = {
   MAX_SPEED: 720, KEY_SPEED: 460,       // the moon, px/s
   REACT_MIN: 1.1,                       // seconds a call near you must give you to react
   HOME_WAIT: 0.6,                       // how long Mom's last call may wait for you to have room
-  HOME_LOCK_DIST: 420, HOME_MAX_VY: 150, // when her last call stops steering, and how hard it steers
+  // her last call drifts toward you until the middle of the screen (or 240 px from you, whichever comes first), then goes straight
+  HOME_LOCK_X: 480, HOME_LOCK_DIST: 240, HOME_STEER: 1.5, HOME_MAX_VY: 90,
   CLARITY_BONUS: 0.17,                  // how much each answered call clears the names
   ROUND_TIME: 20
 };

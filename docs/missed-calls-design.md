@@ -118,7 +118,7 @@ Callers, saved in the phone exactly like this (the user's choice):
 - **Aimed at the player.** A call takes the free lane closest to the player when it starts, so standing still loses.
 - **Pills never overlap.** A lane takes a new call only after the previous one has fully slid in, and only if the new one can't catch up with it.
 - **Calls pass underneath the score and date**, so there's nowhere to hide.
-- **Mom's last call (#14)** is the one exception. It enters at the player's height and steers toward the player at first. Then, while still well away (when it's past the middle of the screen or within 420 px of the player), it commits to a gentle straight line the player can dodge (its sideways speed halves when it commits). If the player stands still, it reaches them.
+- **Mom's last call (#14)** is the one exception. It enters at the player's height and drifts gently toward the player (at most 90 px/s sideways) **until it reaches the middle of the screen**, or until it's within 240 px of the player, whichever comes first. Then it commits to a straight line (its sideways speed halves) the player can dodge. If the player stands still, it reaches them. (The user found the earlier, stronger following too much.)
 - All calls are off screen by 17 s. Seconds 17–20 are quiet.
 
 ### Fairness (no forced touches)

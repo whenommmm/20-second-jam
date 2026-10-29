@@ -91,8 +91,8 @@ function movePills(r, dt, ev) {
   for (const p of r.pills) {
     if (p.dead) continue;
     const c = r.calls[p.ci];
-    // Mom's last call steers toward you as it comes in, then commits to a gentler straight line you can dodge
-    if (c.home && p.x > W * 0.55 && p.x - r.me.x > T.HOME_LOCK_DIST) p.vy = clamp(-T.HOME_MAX_VY, T.HOME_MAX_VY, (r.me.y - p.y) * 2.4);
+    // Mom's last call drifts toward you until the middle of the screen, then commits to a gentler straight line you can dodge
+    if (c.home && p.x > T.HOME_LOCK_X && p.x - r.me.x > T.HOME_LOCK_DIST) p.vy = clamp(-T.HOME_MAX_VY, T.HOME_MAX_VY, (r.me.y - p.y) * T.HOME_STEER);
     else if (c.home && !p.locked) { p.locked = true; p.vy *= 0.5; }
     p.x += p.vx * dt; p.y = clamp(TOP, BOTTOM, p.y + p.vy * dt);
     const d = capsuleDist(p, r.me.x, r.me.y);
