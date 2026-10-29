@@ -1,0 +1,751 @@
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  #stage { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #EEEAE1; border-radius: 10px; user-select: none; touch-action: none; }
+  #stage.playing { cursor: none; }
+  #world { position: absolute; left: 0; top: 0; width: 960px; height: 540px; transform-origin: 0 0; font-family: "Anton", sans-serif; color: #141414; background: var(--paper, #EEEAE1); }
+  #play { position: absolute; inset: 0; }
+  #score { position: absolute; left: 34px; top: 22px; font-size: 64px; line-height: 1; }
+  #combo { position: absolute; left: 36px; top: 92px; font-size: 22px; color: #FF3B30; }
+  #caption { position: absolute; left: 642px; top: 84px; width: 285px; z-index: 4; display: none; color: #141414; font-family: "Newsreader", Georgia, serif; font-style: italic; }
+  #caption.on { display: block; }
+  #caption .who { font-style: normal; font-family: "Archivo Black", sans-serif; font-size: 11px; letter-spacing: 2px; opacity: .55; margin-bottom: 12px; }
+  #caption p { font-size: 19px; line-height: 1.25; margin: 0 0 4px; animation: capin .6s ease-out both; }
+  @keyframes capin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* dates: paper slips put down by hand */
+  #dates { position: absolute; right: 40px; top: 26px; width: 150px; height: 80px; }
+  .slip { position: absolute; right: 0; top: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); animation: slap .17s ease-out both; }
+  @keyframes slap {
+    from { opacity: 0; transform: translate(var(--x), calc(var(--y) - 12px)) rotate(calc(var(--r) + 7deg)) scale(1.25); }
+    to   { opacity: 1; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); }
+  }
+  .paper { background: var(--paper, #EEEAE1); border: 3px solid #141414; padding: 5px 12px 7px; font-size: 30px; line-height: 1; white-space: nowrap; }
+
+  .pill { position: absolute; left: 0; top: 0; height: 42px; padding: 0 17px 0 7px; border-radius: 21px; background: #34C759; display: flex; align-items: center; gap: 7px; transition: opacity .2s; }
+  .pill i { width: 28px; height: 28px; border-radius: 50%; background: var(--paper, #EEEAE1); display: block; }
+  .pill span { font-family: "Archivo Black", sans-serif; font-size: 16px; color: #fff; filter: blur(var(--nb, 6px)); white-space: nowrap; }
+  .pill.gone { opacity: 0; }
+
+  #me { position: absolute; left: 0; top: 0; z-index: 5; }
+  #me .wrap { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: grid; justify-items: center; }
+  #me svg { width: 52px; height: 52px; display: block; }
+  #me .badge { position: absolute; right: -12px; top: -8px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; background: #FF3B30; color: #fff; font-family: "Archivo Black", sans-serif; font-size: 14px; display: grid; place-items: center; }
+  #me .badge.zero { visibility: hidden; }
+  #me .tag { font-family: "Archivo Black", sans-serif; font-size: 14px; letter-spacing: 1.5px; margin-top: 3px; }
+
+  .pop { position: absolute; font-size: 30px; color: #FF3B30; transform: translate(-50%, -50%) rotate(-7deg); animation: pop .7s ease-out forwards; pointer-events: none; white-space: nowrap; }
+  @keyframes pop { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -34px; } }
+
+  .ov { position: absolute; inset: 0; display: none; z-index: 6; }
+  .ov.on { display: block; }
+  #title .name { position: absolute; left: 0; right: 0; top: 56px; text-align: center; font-size: 68px; line-height: 1; letter-spacing: 4px; }
+  #title .name small { display: block; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 3px; opacity: .4; margin-top: 8px; }
+  #title .go { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 64px; line-height: 1; }
+  #timeov { display: none; place-items: center; font-size: 150px; }
+  #timeov.on { display: grid; }
+
+  /* results screen, which shrinks into the phone */
+  #card { position: absolute; left: 50%; top: 50%; width: 960px; height: 540px; transform: translate(-50%, -50%); background: var(--paper, #EEEAE1); display: none; overflow: hidden; z-index: 3;
+          transition: width .85s cubic-bezier(.6,0,.2,1), height .85s cubic-bezier(.6,0,.2,1), border-radius .85s, background .85s; }
+  #card.on { display: block; }
+  #card.phone { width: 256px; height: 516px; border-radius: 42px; background: #0b0b0c; }
+  #res { position: absolute; left: 0; top: 0; width: 960px; height: 540px; transition: opacity .25s; }
+  #res .lbl { position: absolute; left: 84px; top: 64px; font-family: "Archivo Black", sans-serif; font-size: 15px; letter-spacing: 4px; }
+  #res .num { position: absolute; left: 76px; top: 82px; font-size: 180px; line-height: 1; }
+  #res .rows { position: absolute; left: 84px; top: 304px; width: 430px; }
+  #res .row { display: flex; justify-content: space-between; font-size: 32px; line-height: 1; padding: 11px 0 12px; border-top: 3px solid #141414; opacity: 0; transform: translateX(-14px); transition: opacity .2s, transform .2s; }
+  #res .row:last-child { border-bottom: 3px solid #141414; }
+  #res .row.on { opacity: 1; transform: none; }
+  #res .stamp { position: absolute; left: 600px; top: 330px; border: 6px solid #141414; color: #141414; font-size: 66px; line-height: 1; padding: 8px 18px 12px; transform: rotate(-9deg); display: none; }
+  #res .stamp.on { display: block; animation: stampin .18s ease-out both; }
+  #res .doubt { position: absolute; left: 640px; top: 452px; font-size: 30px; line-height: 1; transform: rotate(-9deg); opacity: 0; transition: opacity .6s; }
+  #res .doubt.on { opacity: 1; }
+  @keyframes stampin { from { opacity: 0; transform: rotate(-3deg) scale(1.5); } to { opacity: 1; transform: rotate(-9deg) scale(1); } }
+
+  /* the phone: plain and real */
+  #lock { position: absolute; inset: 6px; border-radius: 37px; background: #1d2025; color: #fff; font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; overflow: hidden; opacity: 0; transition: opacity .45s; }
+  #lock.on { opacity: 1; }
+  #lock .island { position: absolute; left: 50%; top: 9px; width: 70px; height: 20px; margin-left: -35px; border-radius: 10px; background: #000; }
+  #lock .sbar { display: flex; justify-content: space-between; align-items: center; height: 38px; padding: 0 22px 0 26px; font-size: 10px; font-weight: 600; }
+  #lock .sl svg { display: block; opacity: 0; transition: opacity .4s; }
+  #lock .sl svg.on { opacity: 1; }
+  #lock .sr { display: flex; align-items: center; gap: 4px; }
+  #lock .sig { display: inline-flex; align-items: flex-end; gap: 1px; height: 8px; }
+  #lock .sig b { width: 2px; background: #fff; border-radius: .5px; }
+  #lock .sig b:nth-child(1) { height: 3px; } #lock .sig b:nth-child(2) { height: 4.5px; } #lock .sig b:nth-child(3) { height: 6px; } #lock .sig b:nth-child(4) { height: 8px; opacity: .35; }
+  #lock .bat { display: inline-block; width: 18px; height: 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 3px; padding: 1px; }
+  #lock .bat b { display: block; height: 100%; width: 34%; background: #fff; border-radius: 1px; }
+  #lock .date { text-align: center; font-size: 12.5px; font-weight: 600; margin-top: 8px; opacity: .85; }
+  #lock .clock { text-align: center; font-family: -apple-system, "SF Pro Rounded", "SF Pro Display", "Helvetica Neue", Arial, sans-serif; font-size: 66px; font-weight: 600; line-height: 1; letter-spacing: -1.5px; margin-top: 1px; }
+  #lock .focus { height: 24px; display: flex; justify-content: center; margin-top: 10px; }
+  #lock .focus span { position: relative; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); padding: 0 11px 0 9px; border-radius: 12px; font-size: 11px; font-weight: 600; opacity: 0; }
+  #lock .focus em { font-style: normal; }
+  #lock .sil { text-align: center; font-size: 9.5px; opacity: 0; margin-top: 7px; transition: opacity .4s; }
+  #lock .sil.on { opacity: .55; }
+  #lock .list { position: absolute; left: 9px; right: 9px; bottom: 62px; display: flex; flex-direction: column; gap: 6px; }
+  #items { display: flex; flex-direction: column; gap: 6px; }
+  #group { opacity: 0; }
+  .n { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; background: rgba(255,255,255,.13); border-radius: 15px; padding: 8px 10px 9px 8px; font-size: 10.5px; line-height: 1.32; }
+  .n .ic { width: 22px; height: 22px; border-radius: 6px; background: #34C759; display: grid; place-items: center; }
+  .n .ic svg { width: 13px; height: 13px; }
+  .n .tt { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+  .n .tt b { font-size: 11px; font-weight: 650; }
+  .n .tt > span { font-size: 9px; opacity: .55; white-space: nowrap; }
+  .n .sub { font-size: 9.5px; opacity: .6; margin-bottom: 1px; }
+  .n .vm { font-size: 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .n.pending { opacity: 0; }
+  .n .more { margin-top: 1px; }
+  .n.stacked { margin-bottom: 10px; box-shadow: 0 6px 0 -3px rgba(255,255,255,.08), 0 11px 0 -6px rgba(255,255,255,.05); }
+  .n.in { animation: slide .35s cubic-bezier(.2,.8,.2,1) both; }
+  #group .peek { height: 7px; margin: 0 10px; border-radius: 0 0 12px 12px; background: rgba(255,255,255,.08); }
+  #group .peek.p2 { margin: 0 20px; background: rgba(255,255,255,.05); }
+  @keyframes slide { from { opacity: 0; transform: translateY(-12px) scale(.97); } to { opacity: 1; transform: none; } }
+  #lock .ctl { position: absolute; bottom: 20px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; }
+  #lock .ctl svg { width: 15px; height: 15px; }
+  #lock .ctl.cl { left: 26px; } #lock .ctl.cr { right: 26px; }
+  #lock .home { position: absolute; left: 50%; bottom: 7px; width: 90px; height: 4px; margin-left: -45px; border-radius: 2px; background: rgba(255,255,255,.85); }
+  .n.tap { cursor: pointer; transition: background .15s; }
+  .n.tap:hover { background: rgba(255,255,255,.19); }
+  #sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; background: #1d2025; display: none; flex-direction: column; padding: 4px 9px 18px; }
+  #sheet.on { display: flex; animation: sheetin .28s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes sheetin { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  #sheet .sh { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 10px; }
+  #sheet .sh b { font-size: 17px; font-weight: 700; }
+  #sheet button { font: 600 10.5px -apple-system, "Helvetica Neue", Arial, sans-serif; color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 11px; padding: 5px 10px; cursor: pointer; }
+  #sheetList { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; }
+  #sheetList::-webkit-scrollbar { display: none; }
+
+  /* things that fly from the game into the phone */
+  #fly { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+  .flyer { position: absolute; display: grid; place-items: center; transform-origin: 50% 50%; white-space: nowrap; will-change: transform; }
+  .flyer svg { width: 100%; height: 100%; display: block; }
+  #again { position: absolute; right: 40px; bottom: 30px; font-size: 26px; display: none; cursor: pointer; border-bottom: 3px solid #141414; line-height: 1.1; z-index: 6; }
+  #again.on { display: block; }
+  #again.tried { cursor: default; border-bottom-color: transparent; text-align: right; max-width: 290px; text-wrap: balance; }
+  #again .soft { display: block; margin-top: 8px; font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.2; text-wrap: balance; animation: capin .9s ease-out both; }
+  #restart { position: absolute; left: 40px; bottom: 34px; z-index: 6; display: none; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 2px; opacity: .55; cursor: pointer; border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+  #restart.on { display: block; animation: capin .8s ease-out both; }
+  #restart:hover { opacity: .9; }
+  .help { font-size: .85rem; color: var(--text-secondary); margin: .5rem 0 0; }
+</style>
+
+<h2>The whole thing, roughly · v3</h2>
+<p class="subtitle">Turn your sound on. Click to start, dodge with the mouse or arrow keys. Touch a call to answer it. Still a rough mockup: numbers untuned.</p>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <path id="moon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  <path id="handset" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+  <path id="bubble" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.6 3.4 6.1L4.5 21l4.3-2.2c1 .3 2.1.4 3.2.4 5.5 0 10-3.6 10-8S17.5 3 12 3z"/>
+</defs></svg>
+
+<div id="stage"><div id="world">
+  <div id="play">
+    <div id="pills"></div>
+    <div id="score">0</div>
+    <div id="combo"></div>
+    <div id="dates"></div>
+    <div id="pops"></div>
+  </div>
+  <div id="me"><div class="wrap" id="mewrap">
+    <svg viewBox="0 0 24 24" id="mesvg"><use href="#moon" fill="#141414"/></svg>
+    <div class="badge zero" id="badge">0</div>
+    <div class="tag">LATER</div>
+  </div></div>
+  <div class="ov on" id="title"><div class="name">LATER</div><div class="go">CLICK TO START</div></div>
+  <div class="ov" id="timeov">TIME!</div>
+  <div id="card">
+    <div id="res">
+      <div class="lbl">RESULTS</div>
+      <div class="num" id="resnum">0</div>
+      <div class="rows">
+        <div class="row"><span>DODGED</span><span id="r1"></span></div>
+        <div class="row"><span>CLOSE CALLS</span><span id="r2"></span></div>
+        <div class="row"><span>BEST STREAK</span><span id="r3"></span></div>
+      </div>
+      <div class="stamp" id="rank">PERFECT!</div>
+      <div class="doubt" id="doubt">…or is it?</div>
+    </div>
+    <div id="lock">
+      <div class="island"></div>
+      <div class="sbar">
+        <span class="sl"><svg id="sbMoon" viewBox="0 0 24 24" width="10" height="10"><use href="#moon" fill="#fff"/></svg></span>
+        <span class="sr"><i class="sig"><b></b><b></b><b></b><b></b></i>5G<i class="bat"><b></b></i></span>
+      </div>
+      <div class="date">Thursday, April 2</div>
+      <div class="clock">7:12</div>
+      <div class="focus"><span id="focus"><svg id="focusIcon" viewBox="0 0 24 24" width="12" height="12"><use href="#moon" fill="#fff"/></svg><em id="focusText">Later</em></span></div>
+      <div class="sil" id="sil">Notifications silenced</div>
+      <div class="list">
+        <div id="items"></div>
+        <div id="group">
+          <div class="n"><div class="ic"><svg viewBox="0 0 24 24"><use href="#handset" fill="#fff"/></svg></div>
+            <div><div class="tt"><b><span id="gcount">0</span> Missed Calls</b><span>Mar 28</span></div><div id="gnames"></div></div></div>
+          <div class="peek"></div><div class="peek p2"></div>
+        </div>
+      </div>
+      <div class="ctl cl"><svg viewBox="0 0 24 24"><path d="M8 2h8v4l-2 3v13h-4V9L8 6z" fill="#fff"/></svg></div>
+      <div class="ctl cr"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" fill="#fff"/><circle cx="12" cy="13" r="3.2" fill="#3a3e45"/></svg></div>
+      <div class="home"></div>
+      <div id="sheet">
+        <div class="sh"><b>Messages</b><button id="sheetClose">Show less</button></div>
+        <div id="sheetList"></div>
+      </div>
+    </div>
+  </div>
+  <div id="fly"></div>
+  <div id="caption"></div>
+  <div id="again">TURN BACK TIME</div>
+  <div id="restart">PLAY AGAIN</div>
+</div></div>
+<p class="help">The paper is your month: it goes cold with every call you let ring out. Sound on: no voices, no music.</p>
+
+<script>
+(function () {
+  const W = 960, H = 540;
+  const CALLS = [
+    { t: 0.4,  who: "Mom",    n: 1, v: 170, date: "MAR 01" },
+    { t: 1.6,  who: "Mom",    n: 2, v: 190, date: "MAR 05" },
+    { t: 2.6,  who: "Mom",    n: 2, v: 210, date: "MAR 09" },
+    { t: 3.5,  who: "Dad",    n: 2, v: 230, date: "MAR 12" },
+    { t: 4.4,  who: "Jessie", n: 3, v: 250, date: "MAR 15" },
+    { t: 5.3,  who: "Dad",    n: 3, v: 265, date: "MAR 17" },
+    { t: 6.2,  who: "Aunt",   n: 3, v: 275, date: "MAR 19" },
+    { t: 7.1,  who: "Jessie", n: 3, v: 285, date: "MAR 21" },
+    { t: 8.0,  who: "John",   n: 3, v: 290, date: "MAR 23" },
+    { t: 8.9,  who: "Dad",    n: 2, v: 280, date: "MAR 24" },
+    { t: 9.8,  who: "Jessie", n: 2, v: 265, date: "MAR 25" },
+    { t: 10.7, who: "John",   n: 1, v: 250, date: "MAR 26" },
+    { t: 11.4, who: "Dad",    n: 1, v: 240, date: "MAR 27" },
+    { t: 12.4, who: "Mom",    n: 1, v: 280, date: "MAR 28", home: true }
+  ];
+  const TOTAL_PILLS = CALLS.reduce((a, c) => a + c.n, 0);
+  const QUIET_DATES = [[14.6, "MAR 29"], [16.0, "MAR 30"], [17.4, "MAR 31"], [18.7, "APR 01"], [19.6, "APR 02"]];
+  // lanes run the full height; calls slide underneath the score and dates, so there's nowhere to hide
+  const LANES = Array.from({ length: 8 }, (_, i) => 54 + i * 62), TOP = 30, BOTTOM = 512;
+  // what each caller texts afterwards, one line per call (the last call, Mom's, has the voicemail instead)
+  const FOLLOW_UP = [   // you picked up
+    "So good to hear your voice. Talk soon.",
+    "Loved our chat. Eat something proper!",
+    "Thanks for calling, sweetheart. Love you.",
+    "Thanks for picking up. She was so happy.",
+    "Thank you for answering. Room 412, if you come.",
+    "Good to talk, kiddo. Come when you can.",
+    "Your mom was so happy you called, sweetie.",
+    "Thanks for picking up. She keeps asking for you.",
+    "Okay. See you soon.",
+    "Drive safe. We'll be here.",
+    "Tell me when you land.",
+    "Good. Hurry.",
+    "She smiled when I said you're coming."
+  ];
+  const PENDING = [     // you let it ring out
+    "Did you eat? Don't skip dinner again.",
+    "Are you well? Call when you're free, no rush.",
+    "Doctor's appointment went fine. Don't worry. Love you.",
+    "Your mom's had a few rough days. Give her a call?",
+    "Mom's back in the hospital. Can you call me?",
+    "Doctors want to run more tests. Please call.",
+    "Sweetie, your mother keeps asking about you.",
+    "Why aren't you picking up?? It's serious.",
+    "Call Dad. Now.",
+    "They're saying weeks, maybe less. Please come home.",
+    "She asked for you again today.",
+    "If you're coming, come now.",
+    "She's sleeping most of the day now. We're all here."
+  ];
+  const PILL_SPACE = 26, HIT_R = 8, CLOSE_R = 30, MAX_SPEED = 720, KEY_SPEED = 460;
+  const WARM = [253, 220, 172], COLD = [146, 158, 172]; // the paper with nothing missed (vibrant apricot) and with everything missed (cold slate)
+
+  // sound, made on the fly: no voices, no music, and everything goes quiet at TIME!
+  let ac = null, master = null, noise = null;
+  function audioOn() {
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === "suspended") ac.resume();
+      if (master) master.disconnect();
+      master = ac.createGain(); master.gain.value = 0.55; master.connect(ac.destination);
+      if (!noise) {
+        noise = ac.createBuffer(1, ac.sampleRate * 0.3, ac.sampleRate);
+        const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+    } catch (e) { ac = null; }
+  }
+  function silence() { if (ac && master) { master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0, ac.currentTime); } }
+  function env(g, t0, peak, attack, hold, release) {
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + attack);
+    g.gain.setValueAtTime(peak, t0 + attack + hold); g.gain.linearRampToValueAtTime(0, t0 + attack + hold + release);
+  }
+  // a phone vibrating on a table: a low rattling hum
+  function sfxBuzz() {
+    if (!ac) return;
+    const t0 = ac.currentTime, o = ac.createOscillator(), lp = ac.createBiquadFilter(), rattle = ac.createGain(), lfo = ac.createOscillator(), depth = ac.createGain(), g = ac.createGain();
+    o.type = "sawtooth"; o.frequency.value = 150; lp.type = "lowpass"; lp.frequency.value = 420;
+    rattle.gain.value = 0.5; lfo.frequency.value = 31; depth.gain.value = 0.5;
+    lfo.connect(depth); depth.connect(rattle.gain);
+    o.connect(lp); lp.connect(rattle); rattle.connect(g); g.connect(master);
+    env(g, t0, 0.16, 0.015, 0.2, 0.05);
+    o.start(t0); lfo.start(t0); o.stop(t0 + 0.3); lfo.stop(t0 + 0.3);
+  }
+  function blip(freq, at, vol) {
+    const t0 = ac.currentTime + at, o = ac.createOscillator(), g = ac.createGain();
+    o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(master);
+    env(g, t0, vol, 0.004, 0.02, 0.06); o.start(t0); o.stop(t0 + 0.1);
+  }
+  // each dodge climbs a semitone with the streak
+  function sfxDodge(streak) { if (ac) blip(523 * Math.pow(2, Math.min(streak, 14) / 12), 0, 0.09); }
+  function sfxClose() { if (ac) { blip(880, 0, 0.1); blip(1320, 0.06, 0.1); } }
+  // touching a call: a dull thud, not a voice
+  function sfxThud() {
+    if (!ac) return;
+    const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), n = ac.createBufferSource(), lp = ac.createBiquadFilter(), ng = ac.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(45, t0 + 0.25);
+    o.connect(g); g.connect(master); env(g, t0, 0.38, 0.005, 0.05, 0.2); o.start(t0); o.stop(t0 + 0.3);
+    n.buffer = noise; lp.type = "lowpass"; lp.frequency.value = 300;
+    n.connect(lp); lp.connect(ng); ng.connect(master); env(ng, t0, 0.22, 0.003, 0.03, 0.09); n.start(t0);
+  }
+  const LAST_CALL = "Hi sweetheart… you picked up. No, nothing's wrong. I just wanted to hear you. Tell me about your day. Take your time… I love you. I'm so proud of you.";
+  const VOICEMAIL = "Hi sweetheart, it's just me. No reason… I'm a bit tired, so I'll keep it short. I just wanted to hear your voice. Call your dad sometime, okay? And be good to Jessie and John. Don't worry about me. I love you so much. I'm so proud of you.";
+
+  const $ = id => document.getElementById(id);
+  const stage = $("stage"), world = $("world"), play = $("play");
+  let scale = 1;
+  function fit() { scale = stage.clientWidth / W; world.style.transform = `scale(${scale})`; }
+  new ResizeObserver(fit).observe(stage); fit();
+
+  let state = "title", t = 0, last = 0, timers = [], ending = "late", paperK = 0, caption = null, lastTap = 0;
+  let me, vel, tilt, target, keys = {}, rings, calls, score, combo, best, closeN, missed, hits, bonus, nextCall, quietIdx, shakeT, dodged;
+
+  function later(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    me = { x: 220, y: 270 }; vel = { x: 0, y: 0 }; tilt = 0; target = { ...me };
+    rings = []; score = 0; combo = 0; best = 0; closeN = 0; missed = 0; hits = 0; bonus = 0; nextCall = 0; quietIdx = 0; shakeT = 0; dodged = 0;
+    calls = CALLS.map(c => ({ ...c, spawned: 0, alive: 0, answered: false }));
+    ["pills", "pops", "dates", "items", "fly", "caption"].forEach(id => $(id).innerHTML = ""); caption = null;
+    $("caption").classList.remove("on"); $("sheet").classList.remove("on");
+    ["focus", "focusText", "group"].forEach(id => { $(id).getAnimations().forEach(a => a.cancel()); $(id).style.opacity = ""; });
+    $("sbMoon").classList.remove("on"); $("me").style.visibility = ""; $("group").style.display = "";
+    $("score").textContent = "0"; $("combo").textContent = "";
+    $("badge").textContent = "0"; $("badge").classList.add("zero");
+    $("card").className = ""; $("res").style.opacity = 1; $("lock").classList.remove("on");
+    document.querySelectorAll("#res .row").forEach(r => r.classList.remove("on")); $("rank").classList.remove("on"); $("doubt").classList.remove("on");
+    $("sil").classList.remove("on");
+    $("again").className = ""; $("again").textContent = "TURN BACK TIME"; $("restart").classList.remove("on"); $("timeov").classList.remove("on");
+    const w = $("mewrap"); w.style.transition = "none"; w.style.transform = ""; w.style.opacity = 1;
+    play.style.transition = "none"; play.style.opacity = 1; play.style.translate = "0 0";
+    paperK = 0; world.style.setProperty("--paper", `rgb(${WARM.join(",")})`);
+    slip("FEB 27");
+  }
+
+  // a bordered date card, put down by hand on top of the last one, a little crooked
+  function slip(text) {
+    const s = document.createElement("div"), p = document.createElement("div");
+    s.className = "slip"; p.className = "paper"; p.textContent = text;
+    s.style.setProperty("--x", (Math.random() * 22 - 12).toFixed(1) + "px");
+    s.style.setProperty("--y", (Math.random() * 14 - 5).toFixed(1) + "px");
+    s.style.setProperty("--r", (Math.random() * 13 - 6.5).toFixed(1) + "deg");
+    s.appendChild(p); $("dates").appendChild(s);
+    while ($("dates").children.length > 9) $("dates").firstChild.remove();
+  }
+
+  function pop(x, y, text) {
+    const p = document.createElement("div");
+    p.className = "pop"; p.textContent = text; p.style.left = x + "px"; p.style.top = y + "px";
+    $("pops").appendChild(p); later(800, () => p.remove());
+  }
+
+  function spawnRing(call, ci) {
+    const el = document.createElement("div");
+    el.className = "pill"; el.innerHTML = `<i></i><span>${call.who}</span>`;
+    $("pills").appendChild(el);
+    const w = el.offsetWidth, h = 42, x = W + w / 2 + 10;
+    // pills of one call follow each other a fixed distance apart, whatever their speed
+    if (!call.gap) call.gap = (w + PILL_SPACE) / call.v;
+    rings.push({ el, ci, x, y: call.home ? Math.max(TOP, Math.min(BOTTOM, me.y)) : call.band[0], w, h, vx: -call.v, vy: 0, minD: 1e9, passed: false, dead: false, seed: Math.random() * 10 });
+    sfxBuzz();
+    call.spawned++; call.alive++;
+  }
+
+  // a lane takes a new call only once the last one has fully slid in, and only if the newcomer can't catch it up
+  function laneFree(y, v) {
+    if (calls.some(c => c.band && c.band.includes(y) && !c.answered && c.spawned < c.n)) return false;
+    let tail = null;
+    for (const r of rings) if (!r.dead && calls[r.ci].band.includes(y) && (!tail || r.x > tail.x)) tail = r;
+    if (!tail) return true;
+    const back = tail.x + tail.w / 2, u = -tail.vx;
+    if (back > W - 40) return false;
+    return v <= u || (W + 10 - back) / (v - u) > back / u;
+  }
+  // calls slide straight in along the free lane closest to you
+  function pickLane(c) {
+    const near = LANES.slice().sort((p, q) => Math.abs(p - me.y) - Math.abs(q - me.y));
+    return near.find(y => laneFree(y, c.v) && fair(y, c));
+  }
+
+  // when, counting from now, a lane's pills cover the column you're standing in: [[from, to], ...] in seconds
+  function laneWindows(y) {
+    const xp = me.x, out = [];
+    for (const r of rings) if (!r.dead && calls[r.ci].band.includes(y)) {
+      const u = -r.vx;
+      out.push([(r.x - r.w / 2 - xp - 40) / u, (r.x + r.w / 2 - xp + 40) / u]);
+    }
+    for (const c of calls) if (c.band && c.band.includes(y) && !c.answered && c.spawned < c.n) {
+      const gap = c.gap || (100 + PILL_SPACE) / c.v;
+      for (let k = c.spawned; k < c.n; k++) {
+        const ts = c.start + k * gap - t;
+        out.push([ts + (W + 10 - xp - 40) / c.v, ts + (W + 110 - xp + 40) / c.v]);
+      }
+    }
+    // Mom's last call leaves the lanes, so it blocks whichever lane it's in right now
+    for (const r of rings) if (!r.dead && calls[r.ci].home && Math.abs(r.y - y) < 40) out.push([(r.x - r.w / 2 - xp - 40) / -r.vx, (r.x + r.w / 2 - xp + 40) / -r.vx]);
+    return out.filter(([a, b]) => b > 0);
+  }
+  const clearDuring = (y, a, b) => y !== undefined && laneWindows(y).every(([p, q]) => q < a || p > b);
+
+  // a call may come at you, but only if you'll see it in time and have somewhere to go
+  function fair(lane, c) {
+    const mine = LANES.reduce((b, l, i) => (Math.abs(l - me.y) < Math.abs(LANES[b] - me.y) ? i : b), 0);
+    const i = LANES.indexOf(lane);
+    if (Math.abs(i - mine) > 1) return true;
+    const reach = (W + 10 - me.x - 40) / c.v; // seconds until its first pill reaches you
+    if (reach < 1.1) return false;
+    // some other lane right around you must stay open from now until the whole call has gone past
+    const b = reach + (c.n * 100 + (c.n - 1) * PILL_SPACE + 80) / c.v;
+    return [mine - 1, mine, mine + 1].some(j => j !== i && clearDuring(LANES[j], 0, b));
+  }
+
+  function capsuleDist(r, px, py) {
+    const L = r.w / 2 - r.h / 2;
+    const dx = Math.max(Math.abs(px - r.x) - L, 0), dy = py - r.y;
+    return Math.hypot(dx, dy) - r.h / 2;
+  }
+
+  function killRing(r) { r.dead = true; r.el.classList.add("gone"); later(250, () => r.el.remove()); }
+
+  // the moment a pill gets past you it's one more missed call: points, streak and badge tick up right then
+  function passRing(r) {
+    const c = calls[r.ci];
+    r.passed = true; r.gain = r.minD < CLOSE_R ? 25 : 10;
+    setScore(score + r.gain);
+    if (r.gain === 25) { closeN++; pop(me.x, me.y - 50, "CLOSE!"); }
+    dodged++; missed++; c.missedN = (c.missedN || 0) + 1; combo++; best = Math.max(best, combo);
+    if (r.gain === 25) sfxClose(); else sfxDodge(combo);
+    $("badge").textContent = missed; $("badge").classList.remove("zero");
+    $("combo").textContent = combo > 1 ? `PERFECT ×${combo}` : "";
+  }
+
+  function unpassRing(r) {
+    const c = calls[r.ci];
+    setScore(score - r.gain); if (r.gain === 25) closeN--;
+    dodged--; missed--; c.missedN--;
+    $("badge").textContent = missed; $("badge").classList.toggle("zero", missed === 0);
+  }
+
+  function setScore(s) { score = s; $("score").textContent = score.toLocaleString(); }
+
+  function update(dt) {
+    t += dt;
+    // smooth movement: steer velocity toward the pointer (or keys) instead of snapping
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+    const ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
+    let want;
+    if (kx || ky) { const l = Math.hypot(kx, ky); want = { x: kx / l * KEY_SPEED, y: ky / l * KEY_SPEED }; target = { ...me }; }
+    else {
+      want = { x: (target.x - me.x) * 7, y: (target.y - me.y) * 7 };
+      const wl = Math.hypot(want.x, want.y); if (wl > MAX_SPEED) { want.x *= MAX_SPEED / wl; want.y *= MAX_SPEED / wl; }
+    }
+    const a = 1 - Math.exp(-dt * 11);
+    vel.x += (want.x - vel.x) * a; vel.y += (want.y - vel.y) * a;
+    me.x = Math.max(26, Math.min(W - 26, me.x + vel.x * dt)); me.y = Math.max(TOP, Math.min(BOTTOM, me.y + vel.y * dt));
+    tilt += (Math.max(-20, Math.min(20, vel.x * 0.03)) - tilt) * (1 - Math.exp(-dt * 8));
+
+    // each call slides in near you; Mom's last call is the only one that leaves the lanes
+    while (nextCall < calls.length && t >= calls[nextCall].t) {
+      const c = calls[nextCall], lane = c.home ? null : pickLane(c);
+      // her last call comes straight for you, so it waits (briefly) until you'd have room to get out of its way
+      if (c.home && t < c.t + 0.6 && !fair(LANES.reduce((b, l) => (Math.abs(l - me.y) < Math.abs(b - me.y) ? l : b)), c)) break;
+      if (!c.home && lane === undefined) break; // every lane busy: try again next frame
+      c.band = c.home ? [] : [lane]; c.start = t; slip(c.date); nextCall++;
+    }
+    calls.forEach((c, ci) => {
+      if (!c.band || c.answered) return;
+      while (c.spawned < c.n && (c.spawned === 0 || t >= c.start + c.spawned * c.gap)) spawnRing(c, ci);
+    });
+    while (quietIdx < QUIET_DATES.length && t >= QUIET_DATES[quietIdx][0]) { slip(QUIET_DATES[quietIdx][1]); quietIdx++; }
+
+    for (const r of rings) {
+      if (r.dead) continue;
+      const c = calls[r.ci];
+      // Mom's last call steers toward you as it comes in, then commits to a straight line you can dodge
+      if (c.home && r.x > W * 0.55 && r.x - me.x > 420) r.vy = Math.max(-150, Math.min(150, (me.y - r.y) * 2.4));
+      else if (c.home && !r.locked) { r.locked = true; r.vy *= 0.5; }
+      r.x += r.vx * dt; r.y = Math.max(TOP, Math.min(BOTTOM, r.y + r.vy * dt));
+      const d = capsuleDist(r, me.x, me.y);
+      r.minD = Math.min(r.minD, d);
+      if (d < HIT_R) {
+        if (r.passed) unpassRing(r); // you went back for it: answered, not missed
+        c.answered = true; hits++; bonus += 0.17; combo = 0;
+        setScore(score - 100); $("combo").textContent = ""; shakeT = 0.3; sfxThud();
+        for (const o of rings) if (!o.dead && o.ci === r.ci) { killRing(o); c.alive--; }
+        continue;
+      }
+      if (!r.passed && r.x + r.w / 2 < me.x - 20) passRing(r);
+      if (r.x < -r.w || r.y < -80 || r.y > H + 80) {
+        if (!r.passed) passRing(r);
+        killRing(r); c.alive--;
+      }
+    }
+    rings = rings.filter(r => !r.dead);
+    for (const r of rings) {
+      const buzz = Math.sin(t * 75 + r.seed) * 1.3, lean = Math.max(-14, Math.min(14, Math.atan(r.vy / r.vx) * 57.3 * 0.6));
+      r.el.style.transform = `translate(${(r.x - r.w / 2 + buzz).toFixed(1)}px, ${(r.y - r.h / 2).toFixed(1)}px) rotate(${lean.toFixed(1)}deg)`;
+    }
+
+    // names stay unreadable through most of the round; 5–6 answered calls clear them, and the last slow call sharpens on its own
+    const clarity = Math.min(1, Math.pow(Math.min(t, 16) / 16, 3.5) + bonus);
+    world.style.setProperty("--nb", ((1 - clarity) * 8).toFixed(2) + "px");
+    // the paper is your month: vibrant at first, a step colder with every call you let ring out; answering never cools it
+    paperK += (missed / TOTAL_PILLS - paperK) * (1 - Math.exp(-dt * 3));
+    world.style.setProperty("--paper", `rgb(${WARM.map((w, i) => Math.round(w + (COLD[i] - w) * paperK)).join(",")})`);
+    if (shakeT > 0) { shakeT -= dt; play.style.translate = `${(Math.random() * 14 - 7).toFixed(1)}px ${(Math.random() * 14 - 7).toFixed(1)}px`; }
+    else play.style.translate = "0 0";
+  }
+
+  function drawMe() {
+    $("me").style.transform = `translate(${me.x.toFixed(1)}px, ${me.y.toFixed(1)}px)`;
+    $("mesvg").style.rotate = tilt.toFixed(1) + "deg";
+  }
+
+  function countUp(el, to, ms) {
+    const t0 = performance.now();
+    const id = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(to * e).toLocaleString();
+      if (k >= 1) clearInterval(id);
+    }, 16);
+    timers.push(id);
+  }
+
+  function endRound() {
+    state = "over"; stage.classList.remove("playing"); silence();
+    for (const r of rings) killRing(r);
+    $("timeov").classList.add("on");
+    later(800, () => {
+      $("timeov").classList.remove("on");
+      $("card").className = "on";
+      play.style.opacity = 0;
+      // the moon glides over to sit beside your score
+      const w = $("mewrap");
+      w.style.transition = "transform .7s cubic-bezier(.3,0,.2,1)";
+      w.style.transform = `translate(calc(-50% + ${720 - me.x}px), calc(-50% + ${170 - me.y}px)) scale(1.7)`;
+      $("resnum").textContent = "0";
+      later(150, () => countUp($("resnum"), score, 900));
+      $("r1").textContent = `${dodged} / ${TOTAL_PILLS}`; $("r2").textContent = closeN; $("r3").textContent = `×${best}`;
+      document.querySelectorAll("#res .row").forEach((row, i) => later(700 + i * 170, () => row.classList.add("on")));
+      $("rank").textContent = hits === 0 ? "PERFECT!" : hits <= 2 ? "GREAT!" : "NICE TRY";
+      later(1550, () => $("rank").classList.add("on"));
+      if (hits === 0) later(2500, () => $("doubt").classList.add("on")); // only a perfect round earns the doubt
+      later(4100, morph);
+    });
+  }
+
+  // world-space box of any element, whatever its transforms
+  function box(el) {
+    const r = el.getBoundingClientRect(), w = world.getBoundingClientRect();
+    return { x: (r.left - w.left) / scale, y: (r.top - w.top) / scale, w: r.width / scale, h: r.height / scale };
+  }
+
+  // a stand-in that starts exactly where `src` is drawn
+  function flyer(src, html, style) {
+    const b = box(src), d = document.createElement("div");
+    d.className = "flyer"; d.innerHTML = html;
+    Object.assign(d.style, { left: b.x + "px", top: b.y + "px", width: b.w + "px", height: b.h + "px" }, style);
+    $("fly").appendChild(d);
+    return { el: d, b };
+  }
+
+  // glide along a gentle arc and shrink into `dest`, landing exactly on it
+  function fly(f, dest, o) {
+    const s = f.b, e = box(dest);
+    const sx = s.x + s.w / 2, sy = s.y + s.h / 2, ex = e.x + e.w / 2, ey = e.y + e.h / 2;
+    const c = o.ctrl ? o.ctrl(sx, sy, ex, ey) : { x: (sx + ex) / 2, y: Math.min(sy, ey) - 80 }, cx = c.x, cy = c.y;
+    const end = (o.fit || "h") === "h" ? e.h / s.h : e.w / s.w;
+    const frames = [];
+    for (let i = 0; i <= 30; i++) {
+      const u = i / 30, v = 1 - u;
+      const x = v * v * sx + 2 * v * u * cx + u * u * ex, y = v * v * sy + 2 * v * u * cy + u * u * ey;
+      const sc = 1 + (end - 1) * (1 - Math.pow(1 - u, 1.6));
+      frames.push({ offset: u, transform: `translate(${(x - sx).toFixed(2)}px, ${(y - sy).toFixed(2)}px) rotate(${((o.rot || 0) * v).toFixed(2)}deg) scale(${sc.toFixed(4)})` });
+    }
+    (o.extra || []).forEach(k => frames.push(k));
+    const a = f.el.animate(frames.sort((p, q) => p.offset - q.offset), { duration: o.dur, delay: o.delay || 0, easing: "cubic-bezier(.45,.05,.2,1)", fill: "forwards" });
+    return a.finished;
+  }
+
+  function morph() {
+    $("res").style.opacity = 0;
+    later(180, () => $("card").classList.add("phone"));
+    later(1000, () => $("lock").classList.add("on"));
+    later(1250, () => {
+      const lastAnswered = calls[13].answered;
+      const missedCalls = calls.filter(c => c.missedN); // calls with at least one pill that got past you
+      // fill in the missed-calls group now so the badge has somewhere to land
+      $("gcount").textContent = missed;
+      $("group").querySelector(".tt b").lastChild.textContent = missed === 1 ? " Missed Call" : " Missed Calls";
+      $("gnames").textContent = [...new Set(missedCalls.slice().reverse().map(c => c.who))].join(", ");
+      $("group").querySelector(".tt > span").textContent = missedCalls.length ? missedCalls[missedCalls.length - 1].date.replace(/^(\w)(\w\w) 0?/, (m, a, b) => a + b.toLowerCase() + " ") : "";
+
+      // swap the real moon, tag and badge for stand-ins, then fly each one home
+      const svg = $("mesvg"), tag = document.querySelector("#me .tag"), badge = $("badge");
+      const moonF = flyer(svg, `<svg viewBox="0 0 24 24"><use href="#moon" fill="currentColor"/></svg>`, { color: "#141414" });
+      const tagF = flyer(tag, "LATER", { fontFamily: '"Archivo Black", sans-serif', fontSize: (14 * 1.7) + "px", letterSpacing: (1.5 * 1.7) + "px", color: "#141414", lineHeight: "1" });
+      const hasBadge = missed > 0;
+      $("group").style.display = hasBadge ? "" : "none";
+      const badgeF = hasBadge ? flyer(badge, String(missed), { background: "#FF3B30", color: "#fff", borderRadius: "999px", fontFamily: '"Archivo Black", sans-serif', fontSize: (14 * 1.7) + "px" }) : null;
+      $("me").style.visibility = "hidden";
+
+      // swoop down and under the clock, then rise into the pill; turn white as they cross onto the screen
+      const under = dip => (sx, sy, ex, ey) => ({ x: (sx + ex) / 2 + 30, y: Math.max(sy, ey) + dip });
+      const toWhite = [{ offset: 0, color: "#141414" }, { offset: .36, color: "#141414" }, { offset: .58, color: "#ffffff" }, { offset: 1, color: "#ffffff" }];
+      fly(moonF, $("focusIcon"), { dur: 1300, ctrl: under(120), rot: tilt, extra: toWhite }).then(() => {
+        // the moon is now the focus icon: grow the pill out from behind it
+        const fp = $("focus");
+        fp.style.opacity = 1; moonF.el.remove();
+        const wFull = fp.offsetWidth;
+        fp.animate([{ clipPath: `inset(0 ${wFull - 30}px 0 0 round 12px)` }, { clipPath: "inset(0 0 0 0 round 12px)" }], { duration: 480, easing: "cubic-bezier(.3,0,.15,1)" });
+        $("focusText").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 160, fill: "backwards" });
+        $("sbMoon").classList.add("on");
+        later(500, () => $("sil").classList.add("on"));
+      });
+      fly(tagF, $("focusText"), { dur: 1450, ctrl: under(150), extra: [...toWhite.map(k => ({ ...k })), { offset: .8, opacity: 1 }, { offset: 1, opacity: 0 }] });
+      if (hasBadge) {
+        $("group").animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 1050, fill: "forwards", easing: "ease-out" });
+        $("gcount").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 1500, fill: "backwards" });
+        fly(badgeF, $("gcount"), { dur: 1500, delay: 120, ctrl: (sx, sy, ex, ey) => ({ x: sx - 10, y: ey + 10 }), extra: [{ offset: 0, backgroundColor: "#FF3B30" }, { offset: .75, backgroundColor: "#FF3B30" }, { offset: 1, backgroundColor: "rgba(255,59,48,0)" }] })
+          .then(() => badgeF.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: "forwards" }));
+      }
+      later(2600, () => endingMessages(lastAnswered));
+    });
+  }
+
+  // a notification card, laid out but hidden until it's revealed
+  function note(icon, title, when, body, cls) {
+    const n = document.createElement("div");
+    n.className = "n pending" + (cls ? " " + cls : "");
+    n.innerHTML = `<div class="ic"><svg viewBox="0 0 24 24"><use href="#${icon}" fill="#fff"/></svg></div><div><div class="tt"><b>${title}</b><span>${when}</span></div>${body}</div>`;
+    $("items").appendChild(n);
+    return n;
+  }
+  const reveal = n => { n.classList.remove("pending"); n.classList.add("in"); };
+  const shortDate = d => d[0] + d.slice(1, 3).toLowerCase() + " " + +d.slice(4);
+
+  function endingMessages(lastAnswered) {
+    // every text you got this month, oldest first, in both endings: calls you picked up get a thank-you,
+    // calls you let ring out get what they were trying to tell you
+    const thread = [];
+    calls.forEach((c, i) => {
+      if (i === 13) return;
+      thread.push({ who: c.who, date: c.date, text: c.answered ? FOLLOW_UP[i] : PENDING[i] });
+    });
+    // three endings: missed her last call, picked up only her last call, or kept in touch and came home
+    const keptInTouch = calls.slice(0, 13).some(c => c.answered);
+    ending = !lastAnswered ? "late" : keptInTouch ? "home" : "last";
+    thread.push(!lastAnswered ? { who: "John", date: "APR 01", text: "Funeral's on Saturday." }
+      : keptInTouch ? { who: "Dad", date: "MAR 29", text: "Thank you for coming home, kiddo. She knew you were there." }
+      : { who: "Dad", date: "MAR 29", text: "She told everyone you called. It was the last thing she talked about." });
+
+    // the lock screen shows one Messages notification, the newest, stacked on the rest; tap to open
+    const newest = thread[thread.length - 1], more = thread.length - 1;
+    const msgs = note("bubble", newest.who, shortDate(newest.date),
+      newest.text + (more ? `<div class="sub more">${more} more message${more === 1 ? "" : "s"}</div>` : ""), "tap" + (more ? " stacked" : ""));
+    msgs.addEventListener("click", () => openThread(thread));
+    const vm = lastAnswered ? null : note("handset", "Mom", "Mar 28", `<div class="sub">Voicemail · 0:18</div><div class="vm">${VOICEMAIL}</div>`);
+    if (vm && $("items").getBoundingClientRect().top < $("sil").getBoundingClientRect().bottom + 6 * scale) vm.querySelector(".vm").style.webkitLineClamp = "2";
+
+    if (vm) { reveal(vm); playCaption("VOICEMAIL · MOM · MAR 28", VOICEMAIL); }
+    else playCaption("CALL · MOM · MAR 28 · 4:12", LAST_CALL);
+    later(2600, () => reveal(msgs));
+  }
+
+  // tapping the Messages notification opens every message, newest first, in a sheet over the lock screen
+  function openThread(thread) {
+    const list = $("sheetList");
+    list.innerHTML = thread.slice().reverse().map(m =>
+      `<div class="n"><div class="ic"><svg viewBox="0 0 24 24"><use href="#bubble" fill="#fff"/></svg></div><div><div class="tt"><b>${m.who}</b><span>${shortDate(m.date)}</span></div>${m.text}</div></div>`).join("");
+    list.scrollTop = 0;
+    $("sheet").classList.add("on");
+  }
+
+  // her words, read out line by line beside the phone: the voicemail you missed, or the call you picked up
+  function playCaption(header, text) {
+    $("caption").innerHTML = `<div class="who">${header}</div>`;
+    $("caption").classList.add("on");
+    caption = { lines: text.match(/[^.?!…]+[.?!…]+/g), shown: 0, ids: [], done: false };
+    caption.lines.forEach((_, i) => { const id = setTimeout(showLine, 500 + i * 1100); caption.ids.push(id); timers.push(id); });
+  }
+  function showLine() {
+    if (!caption || caption.shown >= caption.lines.length) return;
+    const p = document.createElement("p"); p.textContent = caption.lines[caption.shown++].trim(); $("caption").appendChild(p);
+    if (caption.shown === caption.lines.length && !caption.done) {
+      caption.done = true;
+      later(1200, () => $("again").classList.add("on")); // only once she's finished
+      later(16200, () => $("restart").classList.add("on")); // in case TURN BACK TIME is never pressed
+    }
+  }
+  // tap twice and the rest of her words appear at once
+  function showAllLines() {
+    if (!caption || caption.done) return;
+    caption.ids.forEach(clearTimeout);
+    while (caption.shown < caption.lines.length) showLine();
+  }
+
+  // there is no going back: the button answers instead of restarting, in words that fit how your month ended
+  const TURN_BACK = {
+    late: () => [`YOU SAID LATER ${missed === 1 ? "ONCE" : missed === 2 ? "TWICE" : missed + " TIMES"}.`, "She would have taken any one of them."],
+    home: () => ["THERE'S NEVER ENOUGH TIME.", "But you were there."],
+    last: () => ["YOU GAVE HER FOUR MINUTES.", "She'd waited all month for them."]
+  };
+  function turnBack() {
+    const a = $("again"), [loud, soft] = TURN_BACK[ending]();
+    if (a.classList.contains("tried")) return;
+    a.classList.add("tried"); a.textContent = loud;
+    later(1800, () => a.insertAdjacentHTML("beforeend", `<span class="soft">${soft}</span>`));
+    later(4800, () => $("restart").classList.add("on")); // the way out, only after she's had the last word
+  }
+
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+    if (state === "play") { update(dt); if (t >= 20) { t = 20; endRound(); } }
+    if (state !== "over") drawMe();
+    requestAnimationFrame(loop);
+  }
+
+  function start() { audioOn(); reset(); t = 0; state = "play"; $("title").classList.remove("on"); stage.classList.add("playing"); drawMe(); }
+
+  stage.addEventListener("pointermove", e => {
+    const r = stage.getBoundingClientRect();
+    target = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
+  });
+  $("sheetClose").addEventListener("click", e => { e.stopPropagation(); $("sheet").classList.remove("on"); });
+  stage.addEventListener("pointerdown", () => {
+    const now = performance.now();
+    if (state === "over" && now - lastTap < 350) showAllLines();
+    lastTap = now;
+  });
+  stage.addEventListener("click", e => {
+    if (state === "title") start();
+    else if (state === "over" && e.target.id === "again") turnBack();
+    else if (state === "over" && e.target.id === "restart") start();
+  });
+  window.addEventListener("keydown", e => {
+    if (state !== "play") return;
+    keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
+    if (e.key.startsWith("Arrow")) e.preventDefault();
+  });
+  window.addEventListener("keyup", e => { keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
+
+  reset(); drawMe();
+  requestAnimationFrame(loop);
+})();
+</script>
