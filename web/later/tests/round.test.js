@@ -68,3 +68,9 @@ test("long frames play out the same as smooth ones (no tunnelling)", () => {
   assert.equal(play(still, 0.2).round.hits, play(still, 1 / 60).round.hits);
   assert.ok(play(still, 0.2).round.hits > 0);
 });
+
+test("each call buzzes once, on its first pill, not every pill", () => {
+  const spawns = play(r => dodgeTarget(r, 340)).events.filter(e => e.type === "spawn");
+  assert.equal(spawns.length, 29);
+  assert.equal(spawns.filter(e => e.pill.first).length, 14);
+});

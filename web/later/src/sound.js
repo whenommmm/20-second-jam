@@ -42,15 +42,18 @@ export function createSound() {
       } catch (e) { ac = null; }
     },
     silence: safe(() => { master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0, ac.currentTime); }),
-    // a phone vibrating on a table: a low rattling hum
+    // a phone vibrating on a table, once as each call comes in: a soft, low double pulse (bzz… bzz)
     buzz: safe(() => {
-      const t0 = ac.currentTime, o = ac.createOscillator(), lp = ac.createBiquadFilter(), rattle = ac.createGain(), lfo = ac.createOscillator(), depth = ac.createGain(), g = ac.createGain();
-      o.type = "sawtooth"; o.frequency.value = 150; lp.type = "lowpass"; lp.frequency.value = 420;
-      rattle.gain.value = 0.5; lfo.frequency.value = 31; depth.gain.value = 0.5;
-      lfo.connect(depth); depth.connect(rattle.gain);
-      o.connect(lp); lp.connect(rattle); rattle.connect(g); g.connect(master);
-      env(g, t0, 0.16, 0.015, 0.2, 0.05);
-      o.start(t0); lfo.start(t0); o.stop(t0 + 0.3); lfo.stop(t0 + 0.3);
+      const t0 = ac.currentTime, o = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = "triangle"; o.frequency.value = 165; lp.type = "lowpass"; lp.frequency.value = 280;
+      o.connect(lp); lp.connect(g); g.connect(master);
+      g.gain.setValueAtTime(0, t0);
+      for (const at of [0, 0.2]) {
+        g.gain.linearRampToValueAtTime(0.11, t0 + at + 0.02);
+        g.gain.setValueAtTime(0.11, t0 + at + 0.1);
+        g.gain.linearRampToValueAtTime(0, t0 + at + 0.14);
+      }
+      o.start(t0); o.stop(t0 + 0.4);
     }),
     // each dodge climbs a semitone with the streak
     dodge: safe(streak => blip(523 * Math.pow(2, Math.min(streak, 14) / 12), 0, 0.09)),

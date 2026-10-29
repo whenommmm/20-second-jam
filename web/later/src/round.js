@@ -79,7 +79,7 @@ function spawnPills(r, ev) {
       const w = r.pillW[c.who], x = W + w / 2 + 10, id = r.nextId++;
       // pills of one call follow each other a fixed distance apart, whatever their speed
       if (!c.gap) c.gap = (w + T.PILL_SPACE) / c.v;
-      const pill = { id, ci, who: c.who, x, y: c.home ? clamp(TOP, BOTTOM, r.me.y) : c.band[0], w, h: T.PILL_H,
+      const pill = { id, ci, who: c.who, first: c.spawned === 0, x, y: c.home ? clamp(TOP, BOTTOM, r.me.y) : c.band[0], w, h: T.PILL_H,
         vx: -c.v, vy: 0, minD: 1e9, passed: false, gain: 0, locked: false, dead: false, seed: (id * 2.399) % 10 };
       r.pills.push(pill); c.spawned++; c.alive++;
       ev.push({ type: "spawn", pill });

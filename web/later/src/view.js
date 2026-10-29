@@ -63,7 +63,7 @@ export function createPlayView(sound) {
           const el = document.createElement("div");
           el.className = "pill"; el.innerHTML = `<i></i><span>${e.pill.who}</span>`;
           $("pills").appendChild(el); pillEls.set(e.pill.id, el);
-          sound.buzz();
+          if (e.pill.first) sound.buzz(); // one buzz per call, not per pill
         } else if (e.type === "pass") {
           if (e.close) { pop(round.me.x, round.me.y - 50, "CLOSE!"); sound.close(); } else sound.dodge(round.combo);
           setBadge(round.missed);

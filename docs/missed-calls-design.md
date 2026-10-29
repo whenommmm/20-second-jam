@@ -156,7 +156,7 @@ With these, a careful automated dodger finished every test round untouched. Any 
 - "PERFECT ×n" in red under the score counts pills dodged in a row.
 
 ### Sound (no voices, no music for now)
-- Each pill makes a short phone-vibration buzz as it slides in (a line of three goes bzz, bzz, bzz).
+- Each **call** (not each pill) makes one soft phone-vibration double pulse as it comes in (*bzz… bzz*): 14 over the round, roughly one a second. A buzz on every pill (29, often a third of a second apart) sounded like constant droning, and the user asked for it to be fixed.
 - A small blip as each pill passes the player, one semitone higher for each pill in the streak.
 - A brighter double blip on CLOSE!, and a dull thud on a touch.
 - **At "TIME!" everything cuts to silence.** The results and the phone stay silent (the phone's notifications are silenced).
