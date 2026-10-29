@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>LATER</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' fill='%23141414'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Automated checks only: the itch.io zip has no tests/ folder, so this never runs there.
+  if (/^#test/.test(location.hash)) document.write('<script src="tests/browser/anim-shim.js"><\/script><script type="module" src="tests/browser/harness.js"><\/script>');
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="moon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  <path id="handset" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+  <path id="bubble" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.6 3.4 6.1L4.5 21l4.3-2.2c1 .3 2.1.4 3.2.4 5.5 0 10-3.6 10-8S17.5 3 12 3z"/>
+</defs></svg>
+
+<div id="frame"><div id="stage"><div id="world">
+  <div id="play">
+    <div id="pills"></div>
+    <div id="score">0</div>
+    <div id="combo"></div>
+    <div id="dates"></div>
+    <div id="pops"></div>
+  </div>
+  <div id="me"><div class="wrap" id="mewrap">
+    <svg viewBox="0 0 24 24" id="mesvg"><use href="#moon" fill="#141414"/></svg>
+    <div class="badge zero" id="badge">0</div>
+    <div class="tag">LATER</div>
+  </div></div>
+  <div class="ov on" id="title"><div class="name">LATER</div><div class="go">CLICK TO START</div></div>
+  <div class="ov" id="timeov">TIME!</div>
+  <div id="card">
+    <div id="res">
+      <div class="lbl">RESULTS</div>
+      <div class="num" id="resnum">0</div>
+      <div class="rows">
+        <div class="row"><span>DODGED</span><span id="r1"></span></div>
+        <div class="row"><span>CLOSE CALLS</span><span id="r2"></span></div>
+        <div class="row"><span>BEST STREAK</span><span id="r3"></span></div>
+      </div>
+      <div class="stamp" id="rank">PERFECT!</div>
+      <div class="doubt" id="doubt">…or is it?</div>
+    </div>
+    <div id="lock">
+      <div class="island"></div>
+      <div class="sbar">
+        <span class="sl"><svg id="sbMoon" viewBox="0 0 24 24" width="10" height="10"><use href="#moon" fill="#fff"/></svg></span>
+        <span class="sr"><i class="sig"><b></b><b></b><b></b><b></b></i>5G<i class="bat"><b></b></i></span>
+      </div>
+      <div class="date">Thursday, April 2</div>
+      <div class="clock">7:12</div>
+      <div class="focus"><span id="focus"><svg id="focusIcon" viewBox="0 0 24 24" width="12" height="12"><use href="#moon" fill="#fff"/></svg><em id="focusText">Later</em></span></div>
+      <div class="sil" id="sil">Notifications silenced</div>
+      <div class="list">
+        <div id="items"></div>
+        <div id="group">
+          <div class="n"><div class="ic"><svg viewBox="0 0 24 24"><use href="#handset" fill="#fff"/></svg></div>
+            <div><div class="tt"><b><span id="gcount">0</span> Missed Calls</b><span>Mar 28</span></div><div id="gnames"></div></div></div>
+          <div class="peek"></div><div class="peek p2"></div>
+        </div>
+      </div>
+      <div class="ctl cl"><svg viewBox="0 0 24 24"><path d="M8 2h8v4l-2 3v13h-4V9L8 6z" fill="#fff"/></svg></div>
+      <div class="ctl cr"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" fill="#fff"/><circle cx="12" cy="13" r="3.2" fill="#3a3e45"/></svg></div>
+      <div class="home"></div>
+      <div id="sheet">
+        <div class="sh"><b>Messages</b><button id="sheetClose">Show less</button></div>
+        <div id="sheetList"></div>
+      </div>
+    </div>
+  </div>
+  <div id="fly"></div>
+  <div id="caption"></div>
+  <div id="again">TURN BACK TIME</div>
+  <div id="restart">PLAY AGAIN</div>
+  <button id="fs" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg><span>FULLSCREEN</span></button>
+</div></div></div>
+<div id="rotate"><p>ROTATE YOUR DEVICE</p></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

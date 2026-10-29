@@ -77,7 +77,8 @@ Callers, saved in the phone exactly like this (the user's choice):
 ## Title screen (not timed)
 
 - Title **LATER** at the top centre, chunky and not too tall.
-- **CLICK TO START** in the middle (the user called this "perfect": keep it).
+- **CLICK TO START** in the middle (the user called this "perfect": keep it). On touch screens it reads **TAP TO START** (the user's request).
+- A labelled **⤢ FULLSCREEN** button sits centred under it, easy to hit (the user asked for it to be more accessible). After "TIME!" the same button is an icon in the empty top-left corner. It never shows during play, and hides where the browser can't go fullscreen.
 - Nothing on the title screen hints at phones.
 - The public title is **LATER**, everywhere: itch.io page, browser tab, loading screen.
 
@@ -88,7 +89,7 @@ Callers, saved in the phone exactly like this (the user's choice):
   - During play it's just an arcade hero.
   - It's also the phone's Do Not Disturb icon, and "Later" turns out to be the name of the player's silent mode.
 - A **red badge** on the moon counts **missed calls**: it goes up by 1 the moment each pill gets past the player (not when the pill leaves the screen, and not per group). At the end it lands on the phone's "N Missed Calls".
-- Movement glides: the moon steers toward the pointer with a little inertia and leans into its motion. Keyboard moves it at a fixed speed. (Mockup: max speed 720 px/s, keys 460 px/s.)
+- Movement glides: the moon steers toward the pointer with a little inertia and leans into its motion (made a touch smoother at the user's request; it still arrives within about 0.8 s). Keyboard moves it at a fixed speed. (Mockup: max speed 720 px/s, keys 460 px/s.)
 - The moon can go anywhere on screen, including under the score and date. There is no visible or invisible limiter line (the user rejected one).
 
 ### The calls (pills)
@@ -118,16 +119,16 @@ Callers, saved in the phone exactly like this (the user's choice):
 - **Aimed at the player.** A call takes the free lane closest to the player when it starts, so standing still loses.
 - **Pills never overlap.** A lane takes a new call only after the previous one has fully slid in, and only if the new one can't catch up with it.
 - **Calls pass underneath the score and date**, so there's nowhere to hide.
-- **Mom's last call (#14)** is the one exception. It enters at the player's height and steers toward the player at first. Then, while still well away (when it's past the middle of the screen or within 420 px of the player), it commits to a gentle straight line the player can dodge (its sideways speed halves when it commits). If the player stands still, it reaches them.
+- **Mom's last call (#14)** is the one exception. It enters at the player's height and drifts gently toward the player (at most 90 px/s sideways) **until it reaches the middle of the screen**, or until it's within 240 px of the player, whichever comes first. Then it commits to a straight line (its sideways speed halves) the player can dodge. If the player stands still, it reaches them. (The user found the earlier, stronger following too much.)
 - All calls are off screen by 17 s. Seconds 17–20 are quiet.
 
 ### Fairness (no forced touches)
 A player who wants to dodge must always be able to. The mockup enforces three rules:
 1. **Time to react.** A call may only use the player's lane or a neighbouring lane if its first pill will take at least 1.1 s to reach the player. Otherwise it picks a lane further away.
 2. **Never boxed in.** A call may only use the player's lane or a neighbour if at least one other lane right around the player stays clear from that moment until the whole call has gone past.
-3. **Mom's last call waits** up to 0.6 s for a moment when rule 2 holds, then enters.
+3. **Mom's last call waits** up to 0.6 s for a moment when rules 1 and 2 hold. If they still don't (for example the player is parked at the far right, where nothing could give them 1.1 s), it enters along the nearest fair lane instead of at the player's height (found by the code review).
 
-With these, a careful automated dodger finished every test round untouched. Any change to speeds, lanes or the schedule must keep this true.
+With these, a careful automated dodger finishes every test round untouched at 11 positions across the whole width (x = 26 to 934), using the real pill widths. Any change to speeds, lanes or the schedule must keep this true.
 
 ### Touching a call = answering it
 - −100 points, a short screen shake, the streak resets, and a dull thud (no voice).
@@ -155,8 +156,9 @@ With these, a careful automated dodger finished every test round untouched. Any 
 - Large chunky number. A pill that passes the player gives +10, or +25 with a red "CLOSE!" if it passed close.
 - "PERFECT ×n" in red under the score counts pills dodged in a row.
 
-### Sound (no voices, no music for now)
-- Each pill makes a short phone-vibration buzz as it slides in (a line of three goes bzz, bzz, bzz).
+### Sound (no voices)
+- Each **call** (not each pill) makes one soft phone-vibration double pulse as it comes in (*bzz… bzz*): 14 over the round, roughly one a second. A buzz on every pill (29, often a third of a second apart) sounded like constant droning, and the user asked for it to be fixed.
+- **A soft, slow phone ringing plays under play** (the user's request): an original marimba "ring-ring" (G5–D5, six notes 0.28 s apart, then 2 s of silence, repeating) at low volume. It is **not** Apple's ringtone, which is copyrighted. It starts with the round and **fades out once every call has come and gone** (my call), so the quiet seconds at the end are truly quiet: the phone has stopped ringing.
 - A small blip as each pill passes the player, one semitone higher for each pill in the streak.
 - A brighter double blip on CLOSE!, and a dull thud on a touch.
 - **At "TIME!" everything cuts to silence.** The results and the phone stay silent (the phone's notifications are silenced).
@@ -179,8 +181,7 @@ At 20.0 s, "TIME!" appears and the game freezes for about 0.8 s.
 - The whole screen shrinks into a portrait phone in the middle and turns dark.
 - The phone looks **plain and real**, not like a cartoon: camera notch, signal, 5G, a low battery, "Thursday, April 2", a big **7:12**, flashlight and camera buttons at the bottom, and a home bar.
 - Three things fly from the game into the phone on smooth curves, dipping under the clock rather than across it:
-  - **The moon** turns white as it crosses onto the screen and lands exactly as the silent-mode icon. A pill reading **☾ Later** grows out from behind it, with "Notifications silenced" underneath. A small moon also appears in the status bar.
-  - **LATER** (its name tag) follows and fades into the word "Later" on the pill.
+  - **The moon, its name and the pill travel as one piece** along one path (the user asked that the player turn straight into the notification, with nothing disappearing). The moon turns white as it crosses onto the screen and lands as the silent-mode icon; the **☾ Later** pill grows out around it on the way; **LATER** slides from under the moon to beside it and turns into "Later". They hand over to the real pill in the same frame. "Notifications silenced" appears underneath, and a small moon appears in the status bar.
   - **The red badge** drops and lands on the missed-call count.
 
 ### 3. The lock screen
@@ -249,7 +250,7 @@ In every ending, she still dies. The better endings are about whether the player
 
 ## Open questions (for the user)
 
-1. **Music.** The user wants it sad and will decide later. Sad music during play would hint at the twist, so it may belong only after "TIME!". Who makes it is also open (the jam prefers human-made).
+1. **Music.** During play, the soft ringing is the background music for now. Whether anything else (sad music after "TIME!"?) is added, and who makes it, is still open (the jam prefers human-made).
 2. **Recorded voice.** Her voicemail and her last call are text only right now. Should someone record them to play after the timer? (Never during play.)
 
 Not open, just a reminder: the itch.io page's AI-generation disclosure must be filled in at submission.

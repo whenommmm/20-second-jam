@@ -2,29 +2,28 @@
 
 This README is the starting point for any new chat or agent working on the user's jam games. It holds everything decided so far.
 
-**Read it first, then read `docs/missed-calls-design.md` before building Missed Calls.**
+**Read it first, then read `docs/missed-calls-design.md` before working on LATER.**
 
-Last updated: 2026-10-29. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed.
+Last updated: 2026-10-30. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed and is out of date.
 
 ---
 
 ## 1. Where things stand
 
-- **Three games are planned, in this build order:** Missed Calls, then Keep the Beat, then Unsent.
-- **Missed Calls:**
-  - Fully designed. The design is in `docs/missed-calls-design.md`.
-  - The user approved it in chat and added one idea of their own (the blurry name).
-  - A reviewer read it, and the gaps it found are settled in the doc.
-  - **Three open questions are still waiting for the user** (section 6).
-- **Keep the Beat and Unsent:** Only the idea exists (section 4). No design yet.
-- **Unity project:** It exists. This folder, `~/Unity/20-Second-Jam/`, was created on 2026-10-29 from Unity's URP template. Only the template's sample scene is in it.
-- **Nothing has been built yet.**
+- **Three games are planned, in this build order:** LATER (was "Missed Calls"), then Keep the Beat, then Unsent.
+- **LATER:**
+  - Fully designed in `docs/missed-calls-design.md`, rewritten on 2026-10-30 after the user played and refined a browser mockup.
+  - The playable reference is `docs/reference/later-mockup.html`. Build "exactly like the showcase": that's the user's instruction.
+  - **The Unity version is the jam entry.** A web version (`web/later/`) is built first from the mockup and becomes the reference the Unity version is checked against.
+  - The web build follows `docs/superpowers/plans/2026-10-30-later-web.md`. A separate plan for the Unity version comes after it.
+- **Keep the Beat and Unsent:** only the idea exists (section 4). No design yet.
+- **Unity project:** this folder, created on 2026-10-29 from Unity's URP template. Nothing game-specific is in it yet.
+- **Git:** a private GitHub repo, `github.com/whenommmm/20-second-jam`. Work happens on branches; `main` holds reviewed work.
 
 **Next steps:**
-1. Get answers to the three open questions, or use the defaults in section 6.
-2. Check that the editor connection still works (section 7).
-3. Set the project up for a flat 2D game (section 7).
-4. Write an implementation plan from the design doc, then build.
+1. Finish the LATER web version (the plan above).
+2. Write and carry out the Unity plan for LATER (the jam entry).
+3. Design and build Keep the Beat and Unsent.
 
 ---
 
@@ -46,7 +45,7 @@ Last updated: 2026-10-29. This copy, in the Unity project at `~/Unity/20-Second-
 - **Each playthrough stands alone.** No items, health or upgrades carry over. Multiple 20-second levels are allowed. Longer modes are allowed only if the 20-second version is the default.
 - **Multiple entries are allowed**, but low-effort entries can be removed. That's why we're making three polished games, not three rushed ones.
 - **Generative AI use must be declared** in the "AI generation disclosure" field of each project page. The hosts prefer human-made games ("We want to see games made by our fellow humans rather than AI"). Claude is writing code for these games, so **remind the user to fill in the disclosure** when submitting.
-- **Warnings:** Mature content needs a warning in the page description, the Audience & Content settings and the game itself. Flashing or seizure-triggering effects must also be mentioned.
+- **Warnings:** Mature content needs a warning in the page description, the Audience & Content settings and the game itself. Flashing or seizure-triggering effects must also be mentioned. (The user decided LATER gets no content warning.)
 - **Engines:** Any engine is fine if it exports to the web. Unreal 5 doesn't.
 - **Social:** Posts can use the #20SecondGameJam tag.
 
@@ -76,14 +75,13 @@ Four ways a short game can still hit hard:
 
 ## 4. The three games
 
-### Game 1: Missed Calls (fully designed, build first)
-- **What the player thinks it is:** A bright dodge game. Green circles fly in, and you weave through them for points and combos.
-- **The reveal:** The circles were phone calls from Mom, and her saved name ("Mom") was on every circle the whole time.
-  - The name starts blurred and slowly sharpens. **The user added this.**
-  - After the timer, the arcade score screen turns into a phone lock screen stacked with "Mom · Missed call" notifications and a voicemail: *"Hi, it's just me. No reason. Love you."*
-- **Getting hit means answering the call.** You lose points and hear a muffled "Hi beta—".
-- **Endings depend on how many calls you answered.** Answering all 14 gives a warm ending: *"Mom · Same time tomorrow?"*
-- The full spec is in **`docs/missed-calls-design.md`**. Build from that document; this section is only a summary.
+### Game 1: LATER (fully designed, being built)
+- **What the player thinks it is:** an easy, bright dodge game. Green pills slide in along lanes; you weave your little black moon (named LATER) through them for points and streaks.
+- **What it really is:** a month of calls from your family (Mom, Dad, your sister Jessie, an aunt, your brother John) while your mom is dying. Every pill you dodged was you saying "later". The paper behind everything goes colder with each call you let ring out.
+- **The reveal:** after "TIME!" the results screen shrinks into a phone. Your moon becomes its Do Not Disturb pill ("☾ Later · Notifications silenced") and your red badge becomes "N Missed Calls". You can open a month of their texts.
+- **Three endings:** missed her last call (John: "Funeral's on Saturday." and her voicemail), answered it after keeping in touch ("Thank you for coming home"), or answered only her last call ("She told everyone you called").
+- **TURN BACK TIME** never restarts the game. It answers, for example "YOU SAID LATER 24 TIMES. / She would have taken any one of them." A quiet PLAY AGAIN follows.
+- Everything else, including every number and line of text, is in **`docs/missed-calls-design.md`**.
 
 ### Game 2: Keep the Beat (idea only)
 - **What the player thinks it is:** A rhythm game. Tap in time with the pulse and build your streak.
@@ -97,133 +95,91 @@ Four ways a short game can still hit hard:
 
 ---
 
-## 5. Missed Calls: key decisions at a glance
+## 5. LATER: decisions
 
-All of these are in the design doc too. If this list and the doc disagree, **the doc wins**.
-
-- **Length:** Exactly 20.0 s of play, from the first frame to "TIME!". The click-to-start title screen and the reveal don't count.
-- **Calls:** There are 14 calls. Each call is a short line of "ring" circles, 42 circles in total.
-  - Ring counts per call: 2, 2, 3, 3, 4, 4, 5, 5, 4, 3, 3, 2, 1, 1.
-  - Circles aim at where the player was when they spawned.
-- **Timeline:**
-  - 0–2 s: The first call comes in slowly.
-  - 2–12 s: Calls speed up and come more often.
-  - 12–16 s: Calls thin out. The last call is one slow ring.
-  - About 16–20 s: Nothing comes. The date in the corner keeps moving.
-  - All calls are off screen by 17 s.
-- **Name blur:** "Mom" is shown on every circle. It's unreadable at first and sharpens with game time, roughly clarity = (t / 15 s)². A sharp-eyed player can just read it at about 11–12 s, and it's fully sharp on the last call.
-- **Date in the corner:** It sits where a level number would usually be (MAR 3, MAR 9…). It jumps forward when each call spawns, covering about a year, and keeps moving month by month during the quiet seconds.
-- **Scoring:**
-  - +10 for each dodged ring, and +25 with "CLOSE!" for a close dodge.
-  - A call is "missed" when all of its rings are dodged. The "PERFECT ×n" combo counts missed calls in a row.
-  - A hit is −100 with a screen shake, the combo resets, and the call counts as answered.
-- **Muffled voice:** "Hi beta—" plays muffled and full of static at first, then clears on the same curve as the name blur.
-  - The user records one clean clip, and the muffled versions are made from it offline, because Unity's WebGL build has no audio filters.
-  - Until then the placeholder is a non-voice sound. **Never** show "Hi beta—" as text.
-- **Difficulty:** A first-time player should answer about 1–3 calls. Zero hits is rare and earns "PERFECT!".
-- **The reveal:**
-  1. "TIME!" and a freeze of about 0.8 s.
-  2. An arcade score screen for about 2.5 s.
-  3. The score panel turns into a phone lock screen. The header **"14 Missed Calls"** (or however many were missed) is where the title is revealed.
-  4. The missed-call notifications appear newest first, with the voicemail on top only if call #14 was missed.
-  5. "Play again" appears after about 3 s.
-- **Look:** Off-white background, an ink-black player, phone-answer green circles (≈ #34C759) and one accent color. Flat, with no glow or gradients. The lock screen looks like a plain, real phone, not a cartoon.
-- **Never give the twist away early.** Nothing may look like a phone during play. Sound stays upbeat until "TIME!", and the name isn't readable in the first half.
-- **Platforms:** Desktop browsers and landscape touch devices. Phones held upright get a "rotate your device" message, and the itch page says "best on desktop".
-- **Controls:** Mouse or touch follows the pointer, and arrow keys or WASD work too.
-- **Schedule:** About 6 days, finished by **Nov 4**, which leaves time for games 2 and 3. Write the title screen, 20-second timer and WebGL settings so they can be copied into the next games. Don't build a shared framework ahead of time.
+All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's choices marked as theirs and Claude's as "my call"). Don't duplicate them here. If the README and the doc ever disagree, **the doc wins**.
 
 ---
 
-## 6. Open questions for the user (ask these first)
+## 6. Open questions for the user
 
-1. **Is Mom gone?** During the quiet seconds the corner date moves forward by months.
-   - If the lock screen shows that **later** date, the notifications are months old and the ending says she's gone.
-   - If it shows the **date of the last call**, it reads as "you just missed it."
-   - The user's references (Arthur, Ezio) point toward "gone", but it's their decision.
-2. **What's the public title?** "Missed Calls" on the itch page or in the browser tab gives the twist away before anyone plays.
-   - Suggested: **DODGE!**, or something like "Busy", with "Missed Calls" kept for the reveal.
-   - This also sets Unity's product name, which shows in the browser tab and the loading screen.
-3. **Music:** Is there upbeat music during play, and who makes it?
-   - The jam prefers human-made work.
-   - The fallback is sound effects only, with silence when "TIME!" hits.
-
-If the user wants to just build, use the defaults: lock screen shows the later date, public title "DODGE!", and sound effects only. Mark them in the doc as defaults.
+1. **Music for LATER.** The user wants it sad and will decide later. Sad music during play would hint at the twist. Who makes it is open (the jam prefers human-made).
+2. **A recorded voice** for Mom's voicemail and her last call, to play after the timer (never during play). Right now they're text only.
 
 ---
 
-## 7. Tools, setup and what was checked (as of 2026-10-29)
+## 7. Tools, setup and what was checked (as of 2026-10-30)
 
 ### The Unity project (this folder)
 - **Path:** `~/Unity/20-Second-Jam/`.
 - **Editor:** Unity **6000.3.2f1**, with the WebGL module installed. Other installed versions are 6000.1.14f1 and 6000.6.0f1. Keep 6000.3.2f1.
-- **Template:** Unity's **URP template**. It came with:
-  - PC and Mobile URP renderers
-  - a volume profile
-  - the new Input System, with `InputSystem_Actions`
-  - a TutorialInfo folder and a Readme asset
-  - `Scenes/SampleScene.unity`
-- **Packages:** Notable ones are `com.unity.render-pipelines.universal` 17.3.0, `com.unity.inputsystem` 1.17.0, `com.unity.ugui` 2.0.0 (which includes TextMeshPro) and **`com.unity.pipeline` 0.9.1-exp.1**. The Pipeline package is what lets the CLI and MCP control the editor.
-- **Setting it up for Missed Calls, a flat 2D game:**
-  - Use an orthographic camera.
-  - Turn off post-processing effects you don't need.
-  - Remove the TutorialInfo folder and the Readme asset.
-  - Watch the WebGL build size. URP adds weight, and the target is under 10 MB.
-- **One project or three?** The project is named for the whole jam, so the three games could live here as separate scenes, each with its own WebGL build. That's a suggestion, not a decision, so confirm with the user before adding game 2.
+- **Template:** Unity's **URP template** (PC and Mobile URP renderers, a volume profile, the new Input System with `InputSystem_Actions`, a TutorialInfo folder, a Readme asset, `Scenes/SampleScene.unity`).
+- **Packages:** notable ones are `com.unity.render-pipelines.universal` 17.3.0, `com.unity.inputsystem` 1.17.0, `com.unity.ugui` 2.0.0 (includes TextMeshPro) and **`com.unity.pipeline` 0.9.1-exp.1**, which lets the CLI and MCP control the editor.
+- **Setting it up for LATER, a flat 2D game:** orthographic camera, no unneeded post-processing, remove TutorialInfo and the Readme asset, and keep the WebGL build under 10 MB.
+- **One project or three?** The three games could live here as separate scenes, each with its own WebGL build. That's a suggestion, not a decision: confirm with the user before adding game 2.
+
+### The web version of LATER (`web/later/`)
+- Plain HTML/CSS/JavaScript modules, no build step, no dependencies. Needs Node (26 is installed) for tests and Google Chrome for the headless checks.
+- From `web/later/`: `npm test` (logic tests), `npm run smoke` (headless-browser checks), `npm run package` (makes `dist/later-web.zip` for itch.io).
+- **Live at https://later-alpha.vercel.app** (Vercel, public). Redeploy with `npm run deploy` from `web/later/` (the Vercel CLI is installed and logged in on this Mac). The user can't open claude.ai Artifacts, so don't publish there.
+
+### Git and GitHub
+- Repo: `github.com/whenommmm/20-second-jam` (private), logged in through the GitHub CLI as `whenommmm`.
+- Plain `git push` needs a credential helper on this machine. Either push with `git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push`, or have the user run `gh auth setup-git` once (it changes global git settings, so ask first).
+- `.gitignore` leaves out Unity's generated folders, IDE project files, `.superpowers/` (brainstorming and plan-execution scratch) and `web/later/dist/`.
 
 ### Controlling the editor
-- **Checked on 2026-10-29:**
-  - The editor was open on this project.
-  - `unity pipeline list` showed it **reachable** (Pipeline server on port 7800).
-  - The `unity-editor-mcp` tools (create, find, screenshot, eval, game_view, build settings and more) had loaded in the chat.
-  - So the editor **can be controlled**.
+- **Checked on 2026-10-29 and 2026-10-30:** the editor was open on this project, `unity pipeline list` showed it reachable (Pipeline server on port 7800), and the `unity-editor-mcp` tools could read the live scene. So the editor **can be controlled**.
 - **In a new chat, check again before relying on it:** run `unity pipeline list`, and confirm the Unity MCP tools are present. If they aren't, say so honestly, and don't pretend to have editor control.
-- **Unity CLI:** `~/.unity/bin/unity`, version 1.0.0-beta.12.
-  - A newer version, **1.0.0-beta.14**, is available. Ask the user before running `unity self-update`.
-  - The CLI can make headless builds (`unity build`), but not while this project is open in the editor.
-- **Other MCP servers:**
-  - `unityMCP`, the "MCP for Unity" package's HTTP server on `127.0.0.1:8080`, is a separate tool used on the Handshake project. That package is **not** installed in this project, and it isn't needed because `unity-editor-mcp` and the Pipeline package cover it.
-  - `blender` isn't relevant here.
+- **Unity CLI:** `~/.unity/bin/unity`, version 1.0.0-beta.12. A newer version, **1.0.0-beta.14**, is available. Ask the user before running `unity self-update`. The CLI can make headless builds (`unity build`), but not while this project is open in the editor.
+- **Other MCP servers:** `unityMCP` (the "MCP for Unity" package's HTTP server on `127.0.0.1:8080`) belongs to the Handshake project and isn't needed here. `blender` isn't relevant.
 
-### WebGL for itch.io
+### WebGL for itch.io (Unity version)
 - itch.io doesn't send compression headers. Use **gzip with "Decompression Fallback" on**, or no compression.
-- Keep the build small (target under 10 MB) for a fast load.
-- Size-saving settings: IL2CPP set to optimize for size, high managed stripping, minimal packages.
+- Keep the build small (target under 10 MB): IL2CPP optimised for size, high managed stripping, minimal packages.
 - Upload the build as a zip to itch.io.
 
 ### Audio
-- Browsers block audio until the player clicks, so the click-to-start title screen is required.
-- Placeholder sounds can be generated in code with `AudioClip.Create` and `SetData`, which works on WebGL.
+- Browsers block audio until the player clicks or taps, so every game starts with a click-to-start screen.
+- Placeholder sounds can be generated in code (Web Audio on the web; `AudioClip.Create` and `SetData` in Unity, which works on WebGL).
 - Unity's audio filter components don't work on WebGL.
 
 ---
 
 ## 8. About the user and how they like to work
 
-- **They want momentum.** Twice they skipped detailed design questions and asked to start building. Keep questions few and high-value. Make sensible calls, **state them plainly**, and let them correct you.
-- **They hate UI that "looks AI-made":** purple or indigo dark themes, glows, gradients, dot-grid backgrounds, glossy 3D keycap blocks and bouncy hover animations. They also rejected "hand-drawn doodles" as an overused suggestion.
-  - Study real game UIs (interfaceingame.com, gameuidatabase.com) and borrow their principles.
-  - Flat colors, chunky type for big moments, and restraint.
-- **Code:** They sometimes have Codex (OpenAI's coding agent) write code from very explicit specs. For this jam, Claude is writing the code. Ask if that changes.
-- **Other deadline:** They have a separate project with a closer deadline: **Split Keys / Risky Picks**, their Handshake "Create a Multiplayer Game" entry.
-  - It lives in `~/Unity/Handshake`, is due **Oct 31, 2026**, and is deployed at https://split-keys.onrender.com.
-  - It is **not** part of this jam. Don't touch it from here.
-  - Its old specs are in `~/20-Second-Jam/handshake/`.
+- **They want momentum.** Keep questions few and high-value. Make sensible calls, **state them plainly**, and let them correct you.
+- **They decide by playing.** Interactive browser mockups worked far better than descriptions: they tune feel, colour and wording by trying it and reacting in short messages, often several in a row.
+- **Subtle over spelled out.** Hints should be vague ("wait… that looks like a call… nah"). They pushed back whenever a line or visual gave too much away or felt "basic", and they want lines with real emotion.
+- **Fairness matters.** No forced hits; first-time players should be able to dodge everything. They reject limiters, visible or invisible.
+- **They hate UI that "looks AI-made":** purple or indigo dark themes, glows, gradients, dot-grid backgrounds, glossy 3D keycap blocks and bouncy hover animations. They also rejected "hand-drawn doodles" as an overused suggestion. Flat colours, chunky type for big moments, restraint.
+- **Code:** Claude is writing the code for this jam. They sometimes use Codex from very explicit specs elsewhere.
+- **Other deadline:** a separate project, **Split Keys / Risky Picks** (their Handshake "Create a Multiplayer Game" entry) lives in `~/Unity/Handshake`, is due **Oct 31, 2026**, and is deployed at https://split-keys.onrender.com. It is **not** part of this jam. Don't touch it from here. Its old specs are in `~/20-Second-Jam/handshake/`.
 
 ---
 
 ## 9. Folder layout
 
 ```
-~/Unity/20-Second-Jam/              Unity project: work here
+~/Unity/20-Second-Jam/              Unity project + jam repo: work here
 ├── README.md                       this file: start here
+├── .gitignore
 ├── docs/
-│   └── missed-calls-design.md      full Missed Calls spec (the reference)
-├── Assets/                         template content so far (SampleScene, Settings, TutorialInfo)
+│   ├── missed-calls-design.md      LATER's full design (the reference)
+│   ├── reference/later-mockup.html the playable mockup LATER was designed from
+│   └── superpowers/plans/          implementation plans
+├── web/later/                      the web version of LATER
+├── Assets/                         Unity content (template content so far)
 ├── Packages/  ProjectSettings/     Unity project files
-└── Library/  Temp/  Logs/          generated by Unity, don't edit
+└── Library/  Temp/  Logs/          generated by Unity, not in git
 
 ~/20-Second-Jam/                    planning folder from before the project existed
-├── jam/                            older copy of this README and the design doc
+├── jam/                            older copy of this README and the design doc (stale)
 └── handshake/                      old Split Keys specs: not jam work, ignore
 ```
+
+## Schedule
+
+- Submissions close **Nov 17** (plan for UTC).
+- LATER: web version by about **Nov 1**, Unity jam entry by about **Nov 6**.
+- Then Keep the Beat and Unsent in the remaining ~10 days.

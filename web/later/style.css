@@ -1,0 +1,171 @@
+/* LATER: styles ported from docs/reference/later-mockup.html. All game sizes are in world units (960×540). */
+
+/* the same base the mockup was designed in */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.5; background: var(--paper, rgb(253,220,172)); }
+
+/* the page: one 16:9 stage, letterboxed and centred inside the safe area (notches, home bars); main.js sizes it */
+html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+#frame { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#stage { position: relative; flex: none; width: 960px; height: 540px; overflow: hidden; user-select: none; touch-action: none; }
+
+/* fullscreen: a labelled button under the start text on the title screen, an icon in the empty top-left corner
+   after TIME!, never during play, hidden where the browser can't do it */
+#fs { position: absolute; left: 20px; top: 16px; height: 44px; padding: 0 11px; z-index: 8; border: 0; background: none; color: #141414; opacity: .6; cursor: pointer; display: flex; align-items: center; gap: 9px; }
+#fs:hover { opacity: 1; }
+#fs svg { width: 22px; height: 22px; display: block; }
+#fs span { display: none; font-family: "Archivo Black", sans-serif; font-size: 13px; letter-spacing: 2px; }
+#title.on ~ #fs { left: 50%; top: 336px; transform: translateX(-50%); opacity: .75; padding: 0 16px; }
+#title.on ~ #fs span { display: inline; }
+#stage.playing #fs, .nofs #fs { display: none; }
+
+/* phones held upright: ask to rotate (play pauses meanwhile) */
+#rotate { display: none; position: fixed; inset: 0; z-index: 20; background: #141414; color: var(--paper, rgb(253,220,172)); place-items: center; text-align: center; font-family: "Anton", sans-serif; font-size: min(34px, 8vw); letter-spacing: 2px; padding: 24px; }
+@media (orientation: portrait) and (max-width: 900px) { #rotate { display: grid; } }
+#stage.playing { cursor: none; }
+#world { position: absolute; left: 0; top: 0; width: 960px; height: 540px; transform-origin: 0 0; font-family: "Anton", sans-serif; color: #141414; background: var(--paper, #EEEAE1); }
+#play { position: absolute; inset: 0; }
+#score { position: absolute; left: 34px; top: 22px; font-size: 64px; line-height: 1; }
+#combo { position: absolute; left: 36px; top: 92px; font-size: 22px; color: #FF3B30; }
+#caption { position: absolute; left: 642px; top: 84px; width: 285px; z-index: 4; display: none; color: #141414; font-family: "Newsreader", Georgia, serif; font-style: italic; }
+#caption.on { display: block; }
+#caption .who { font-style: normal; font-family: "Archivo Black", sans-serif; font-size: 11px; letter-spacing: 2px; opacity: .55; margin-bottom: 12px; }
+#caption p { font-size: 19px; line-height: 1.25; margin: 0 0 4px; animation: capin .6s ease-out both; }
+@keyframes capin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* dates: paper slips put down by hand */
+#dates { position: absolute; right: 40px; top: 26px; width: 150px; height: 80px; }
+.slip { position: absolute; right: 0; top: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); animation: slap .17s ease-out both; }
+@keyframes slap {
+  from { opacity: 0; transform: translate(var(--x), calc(var(--y) - 12px)) rotate(calc(var(--r) + 7deg)) scale(1.25); }
+  to   { opacity: 1; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); }
+}
+.paper { background: var(--paper, #EEEAE1); border: 3px solid #141414; padding: 5px 12px 7px; font-size: 30px; line-height: 1; white-space: nowrap; }
+
+.pill { position: absolute; left: 0; top: 0; height: 42px; padding: 0 17px 0 7px; border-radius: 21px; background: #34C759; border: 2px solid #141414; box-sizing: border-box; display: flex; align-items: center; gap: 7px; transition: opacity .2s; }
+.pill i { width: 28px; height: 28px; border-radius: 50%; background: var(--paper, #EEEAE1); display: block; }
+.pill span { font-family: "Archivo Black", sans-serif; font-size: 16px; color: #fff; filter: blur(var(--nb, 6px)); white-space: nowrap; }
+.pill.gone { opacity: 0; }
+
+#me { position: absolute; left: 0; top: 0; z-index: 5; will-change: transform; }
+#me .wrap { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: grid; justify-items: center; }
+#me svg { width: 52px; height: 52px; display: block; }
+#me .badge { position: absolute; right: -12px; top: -8px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; background: #FF3B30; color: #fff; font-family: "Archivo Black", sans-serif; font-size: 14px; display: grid; place-items: center; }
+#me .badge.zero { visibility: hidden; }
+#me .tag { font-family: "Archivo Black", sans-serif; font-size: 14px; letter-spacing: 1.5px; margin-top: 3px; }
+
+.pop { position: absolute; font-size: 30px; color: #FF3B30; transform: translate(-50%, -50%) rotate(-7deg); animation: pop .7s ease-out forwards; pointer-events: none; white-space: nowrap; }
+@keyframes pop { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -34px; } }
+
+.ov { position: absolute; inset: 0; display: none; z-index: 6; }
+.ov.on { display: block; }
+#title .name { position: absolute; left: 0; right: 0; top: 56px; text-align: center; font-size: 68px; line-height: 1; letter-spacing: 4px; }
+#title .name small { display: block; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 3px; opacity: .4; margin-top: 8px; }
+#title .go { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 64px; line-height: 1; }
+#timeov { display: none; place-items: center; font-size: 150px; }
+#timeov.on { display: grid; }
+
+/* results screen, which shrinks into the phone */
+#card { position: absolute; left: 50%; top: 50%; width: 960px; height: 540px; transform: translate(-50%, -50%); background: var(--paper, #EEEAE1); display: none; overflow: hidden; z-index: 3;
+        transition: width .85s cubic-bezier(.6,0,.2,1), height .85s cubic-bezier(.6,0,.2,1), border-radius .85s, background .85s; }
+#card.on { display: block; }
+#card.phone { width: 256px; height: 516px; border-radius: 42px; background: #0b0b0c; }
+#res { position: absolute; left: 0; top: 0; width: 960px; height: 540px; transition: opacity .25s; }
+#res .lbl { position: absolute; left: 84px; top: 64px; font-family: "Archivo Black", sans-serif; font-size: 15px; letter-spacing: 4px; }
+#res .num { position: absolute; left: 76px; top: 82px; font-size: 180px; line-height: 1; }
+#res .rows { position: absolute; left: 84px; top: 304px; width: 430px; }
+#res .row { display: flex; justify-content: space-between; font-size: 32px; line-height: 1; padding: 11px 0 12px; border-top: 3px solid #141414; opacity: 0; transform: translateX(-14px); transition: opacity .2s, transform .2s; }
+#res .row:last-child { border-bottom: 3px solid #141414; }
+#res .row.on { opacity: 1; transform: none; }
+#res .stamp { position: absolute; left: 600px; top: 330px; border: 6px solid #141414; color: #141414; font-size: 66px; line-height: 1; padding: 8px 18px 12px; transform: rotate(-9deg); display: none; }
+#res .stamp.on { display: block; animation: stampin .18s ease-out both; }
+#res .doubt { position: absolute; left: 640px; top: 452px; font-size: 30px; line-height: 1; transform: rotate(-9deg); opacity: 0; transition: opacity .6s; }
+#res .doubt.on { opacity: 1; }
+@keyframes stampin { from { opacity: 0; transform: rotate(-3deg) scale(1.5); } to { opacity: 1; transform: rotate(-9deg) scale(1); } }
+
+/* the phone: plain and real */
+#lock { position: absolute; inset: 6px; border-radius: 37px; background: #1d2025; color: #fff; font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; overflow: hidden; opacity: 0; transition: opacity .45s; }
+#lock.on { opacity: 1; }
+#lock .island { position: absolute; left: 50%; top: 9px; width: 70px; height: 20px; margin-left: -35px; border-radius: 10px; background: #000; }
+#lock .sbar { display: flex; justify-content: space-between; align-items: center; height: 38px; padding: 0 22px 0 26px; font-size: 10px; font-weight: 600; }
+#lock .sl svg { display: block; opacity: 0; transition: opacity .4s; }
+#lock .sl svg.on { opacity: 1; }
+#lock .sr { display: flex; align-items: center; gap: 4px; }
+#lock .sig { display: inline-flex; align-items: flex-end; gap: 1px; height: 8px; }
+#lock .sig b { width: 2px; background: #fff; border-radius: .5px; }
+#lock .sig b:nth-child(1) { height: 3px; } #lock .sig b:nth-child(2) { height: 4.5px; } #lock .sig b:nth-child(3) { height: 6px; } #lock .sig b:nth-child(4) { height: 8px; opacity: .35; }
+#lock .bat { display: inline-block; width: 18px; height: 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 3px; padding: 1px; }
+#lock .bat b { display: block; height: 100%; width: 34%; background: #fff; border-radius: 1px; }
+#lock .date { text-align: center; font-size: 12.5px; font-weight: 600; margin-top: 8px; opacity: .85; }
+#lock .clock { text-align: center; font-family: -apple-system, "SF Pro Rounded", "SF Pro Display", "Helvetica Neue", Arial, sans-serif; font-size: 66px; font-weight: 600; line-height: 1; letter-spacing: -1.5px; margin-top: 1px; }
+#lock .focus { height: 24px; display: flex; justify-content: center; margin-top: 10px; }
+#lock .focus span { position: relative; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); padding: 0 11px 0 9px; border-radius: 12px; font-size: 11px; font-weight: 600; opacity: 0; }
+#lock .focus em { font-style: normal; }
+#lock .sil { text-align: center; font-size: 9.5px; opacity: 0; margin-top: 7px; transition: opacity .4s; }
+#lock .sil.on { opacity: .55; }
+#lock .list { position: absolute; left: 9px; right: 9px; bottom: 62px; display: flex; flex-direction: column; gap: 6px; }
+#items { display: flex; flex-direction: column; gap: 6px; }
+#group { opacity: 0; }
+.n { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; background: rgba(255,255,255,.13); border-radius: 15px; padding: 8px 10px 9px 8px; font-size: 10.5px; line-height: 1.32; }
+.n .ic { width: 22px; height: 22px; border-radius: 6px; background: #34C759; display: grid; place-items: center; }
+.n .ic svg { width: 13px; height: 13px; }
+.n .tt { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.n .tt b { font-size: 11px; font-weight: 650; }
+.n .tt > span { font-size: 9px; opacity: .55; white-space: nowrap; }
+.n .sub { font-size: 9.5px; opacity: .6; margin-bottom: 1px; }
+.n .vm { font-size: 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.n.pending { opacity: 0; pointer-events: none; } /* not tappable until it has appeared */
+.n .more { margin-top: 1px; }
+.n.stacked { margin-bottom: 10px; box-shadow: 0 6px 0 -3px rgba(255,255,255,.08), 0 11px 0 -6px rgba(255,255,255,.05); }
+.n.in { animation: slide .35s cubic-bezier(.2,.8,.2,1) both; }
+#group .peek { height: 7px; margin: 0 10px; border-radius: 0 0 12px 12px; background: rgba(255,255,255,.08); }
+#group .peek.p2 { margin: 0 20px; background: rgba(255,255,255,.05); }
+@keyframes slide { from { opacity: 0; transform: translateY(-12px) scale(.97); } to { opacity: 1; transform: none; } }
+#lock .ctl { position: absolute; bottom: 20px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; }
+#lock .ctl svg { width: 15px; height: 15px; }
+#lock .ctl.cl { left: 26px; } #lock .ctl.cr { right: 26px; }
+#lock .home { position: absolute; left: 50%; bottom: 7px; width: 90px; height: 4px; margin-left: -45px; border-radius: 2px; background: rgba(255,255,255,.85); }
+.n.tap { cursor: pointer; transition: background .15s; }
+.n.tap:hover { background: rgba(255,255,255,.19); }
+#sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; background: #1d2025; display: none; flex-direction: column; padding: 4px 9px 0; }
+#sheet.on { display: flex; animation: sheetin .28s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes sheetin { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+#sheet .sh { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 10px; }
+#sheet .sh b { font-size: 17px; font-weight: 700; }
+#sheet button { font: 600 10.5px -apple-system, "Helvetica Neue", Arial, sans-serif; color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 11px; padding: 5px 10px; cursor: pointer; }
+/* like a real phone: the list runs to the bottom edge, with room at its end so the last message clears the rounded corners; touch can scroll it */
+#sheetList { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; padding-bottom: 30px; touch-action: pan-y; overscroll-behavior: contain; }
+#sheetList::-webkit-scrollbar { display: none; }
+
+/* things that fly from the game into the phone */
+#fly { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.flyer { position: absolute; display: grid; place-items: center; transform-origin: 50% 50%; white-space: nowrap; will-change: transform; }
+.flyer svg { width: 100%; height: 100%; display: block; }
+#again { position: absolute; right: 40px; bottom: 30px; font-size: 26px; display: none; cursor: pointer; border-bottom: 3px solid #141414; line-height: 1.1; z-index: 6; }
+#again.on { display: block; }
+#again.tried { cursor: default; border-bottom-color: transparent; text-align: right; max-width: 290px; text-wrap: balance; }
+#again .soft { display: block; margin-top: 8px; font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.2; text-wrap: balance; animation: capin .9s ease-out both; }
+#restart { position: absolute; left: 40px; bottom: 34px; z-index: 6; display: none; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 2px; opacity: .55; cursor: pointer; border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+#restart.on { display: block; animation: capin .8s ease-out both; }
+#restart:hover { opacity: .9; }
+
+/* small screens (landscape phones): the phone's text a touch larger so it stays readable when the world is scaled down */
+@media (max-height: 460px) {
+  .n { font-size: 11.6px; }
+  .n .tt b { font-size: 12px; }
+  .n .tt > span, .n .sub { font-size: 10px; }
+  .n .vm { font-size: 11px; }
+  #lock .sil { font-size: 10.5px; }
+}
+
+/* bigger tap areas on phones, without changing how these look */
+#restart::before { content: ""; position: absolute; inset: -16px -14px; }
+#sheet button { position: relative; }
+#sheet button::before { content: ""; position: absolute; inset: -14px -10px; }
+
+/* the moon's name turning into the pill's "Later" mid-flight, and the pill growing in around them */
+.flyer .was, .flyer .now { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
+.flyer .now { font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: 0; color: #fff; opacity: 0; }
+.flyer.pillbg { background: rgba(255,255,255,.15); border-radius: 12px; opacity: 0; }
