@@ -10,7 +10,7 @@ SERVER=$!
 trap 'kill $SERVER 2>/dev/null' EXIT
 for _ in $(seq 50); do curl -sf "http://127.0.0.1:$PORT/index.html" >/dev/null && break; sleep 0.1; done
 
-# name  virtual-time budget (ms)
+# name  virtual-time budget (ms)  [window size; headless adds 87 px of frame, so 960,627 is a 960×540 page and 844,477 an 844×390 phone]
 CHECKS=(
   "title 2000"
   "dodge 22000"
@@ -23,13 +23,17 @@ CHECKS=(
   "fallback 56000"
   "dblturnback 44000"
   "restart 64500"
+  "hidden 9500"
+  "touch 3000"
+  "fullscreen 22000"
+  "smallphone 32500 844,477"
 )
 
 failed=0
 for check in "${CHECKS[@]}"; do
-  read -r name budget <<<"$check"
+  read -r name budget size <<<"$check"
   if [ $# -gt 0 ] && [ "$1" != "$name" ]; then continue; fi
-  title=$("$CHROME" --headless=new --disable-gpu --hide-scrollbars --window-size=960,540 \
+  title=$("$CHROME" --headless=new --disable-gpu --hide-scrollbars --window-size="${size:-960,627}" \
     --virtual-time-budget="$budget" --dump-dom "http://127.0.0.1:$PORT/index.html#test-$name" 2>/dev/null \
     | grep -o '<title>[^<]*' | head -1 | sed 's/<title>//')
   if [[ "$title" == OK* ]]; then echo "PASS  $name"; else echo "FAIL  $name  →  ${title:-no title}"; failed=1; fi

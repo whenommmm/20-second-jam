@@ -15,14 +15,23 @@ export function createSound() {
     env(g, t0, vol, 0.004, 0.02, 0.06); o.start(t0); o.stop(t0 + 0.1);
   }
 
+  // create or resume the audio context; browsers (iOS especially) only allow this inside a tap or click
+  function wake() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = ac || new AC();
+      if (ac.state === "suspended") ac.resume();
+      return true;
+    } catch (e) { ac = null; return false; }
+  }
+
   return {
-    // call inside a click or tap: browsers (iOS especially) only allow audio to start from a user gesture
+    wake,
+    // wake, and turn the volume back up for a new round
     unlock() {
       try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        ac = ac || new AC();
-        if (ac.state === "suspended") ac.resume();
+        if (!wake()) return;
         if (master) master.disconnect();
         master = ac.createGain(); master.gain.value = 0.55; master.connect(ac.destination);
         if (!noise) {

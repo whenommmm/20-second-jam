@@ -104,8 +104,55 @@ const MODES = {
       expect(!visible($("card")) && !$("caption").textContent && !visible($("again")) && !visible($("restart")), "old ending still showing at " + (ms - 45600) + " ms");
       expect(!document.querySelector(".flyer") && !document.querySelector("#sheet.on") && !visible($("timeov")), "leftover flyer, sheet or TIME! at " + (ms - 45600) + " ms");
     }])
+  ],
+
+  // ---- itch.io and mobile ----
+  hidden: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [5000, () => { setHidden(true); window.__t0 = L().round().t; }],
+    [7000, () => { expect(Math.abs(L().round().t - window.__t0) < 0.001, `round ran while hidden: ${window.__t0} → ${L().round().t}`); setHidden(false); }],
+    [9000, () => expect(L().round().t > window.__t0 + 1, "round didn't resume after the tab came back")]
+  ],
+  touch: [
+    [200, () => {
+      expect(getComputedStyle($("stage")).touchAction === "none", "stage touch-action: " + getComputedStyle($("stage")).touchAction);
+      expect(/user-scalable=no/.test(document.querySelector('meta[name="viewport"]').content), "viewport allows zoom");
+      L().start();
+    }],
+    [1200, () => { window.__m0 = { ...L().round().me }; touchAt("pointerdown", 0.8, 0.8); touchAt("pointermove", 0.8, 0.8, 40); }],
+    [2400, () => {
+      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960, want = window.__m0.x + 40 / s;
+      expect(Math.abs(me.x - want) < 4 && Math.abs(me.y - window.__m0.y) < 4, `moon at ${me.x.toFixed(1)},${me.y.toFixed(1)}; expected ${want.toFixed(1)},${window.__m0.y.toFixed(1)}`);
+    }]
+  ],
+  fullscreen: [
+    [200, () => { expect(visible($("fs")), "fullscreen button hidden on the title screen"); }],
+    ["start", () => setTimeout(() => { L().start(); steer(r => dodgeTarget(r, 340)); }, 300)],
+    [5300, () => expect(!visible($("fs")), "fullscreen button showing during play")],
+    [21500, () => expect(visible($("fs")), "fullscreen button hidden after TIME!")]
+  ],
+  smallphone: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [32000, () => {
+      const s = $("world").getBoundingClientRect().width / 960;
+      const body = document.querySelector("#items .n");
+      const px = body ? parseFloat(getComputedStyle(body).fontSize) * s : 0;
+      expect(px >= 8, `notification text renders at ${px.toFixed(2)} CSS px (scale ${s.toFixed(3)})`);
+      const items = $("items").getBoundingClientRect(), sil = $("sil").getBoundingClientRect();
+      expect(items.top >= sil.bottom - 1, "notifications overlap 'Notifications silenced'");
+    }]
   ]
 };
+
+function setHidden(h) {
+  Object.defineProperty(document, "hidden", { configurable: true, get: () => h });
+  Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (h ? "hidden" : "visible") });
+  document.dispatchEvent(new Event("visibilitychange"));
+}
+function touchAt(type, fx, fy, dx = 0) {
+  const r = $("stage").getBoundingClientRect();
+  $("stage").dispatchEvent(new PointerEvent(type, { pointerType: "touch", isPrimary: true, clientX: r.left + r.width * fx + dx, clientY: r.top + r.height * fy, bubbles: true }));
+}
 
 const topCard = () => document.querySelector("#items .n.tap");
 const topWho = () => topCard()?.querySelector("b")?.textContent || "none";
