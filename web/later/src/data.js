@@ -97,6 +97,8 @@ export const TURN_BACK = {
   home: ["THERE'S NEVER ENOUGH TIME.", "But you were there."],
   last: ["YOU GAVE HER FOUR MINUTES.", "She'd waited all month for them."]
 };
+// ...and then, whichever way the month ended, what the game is about.
+export const LESSON = "SOMEONE IS WAITING FOR YOUR CALL.";
 
 // The ringing under play: an original, soft marimba "ring-ring" (not Apple's ringtone), slow and quiet.
 // MOTIF is MIDI notes played STEP seconds apart, then REST seconds of silence, repeating.

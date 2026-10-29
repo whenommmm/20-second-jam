@@ -210,7 +210,7 @@ In every ending, she still dies. The better endings are about whether the player
 
 ### 6. TURN BACK TIME
 - About 1.2 s after her last line appears, a big **TURN BACK TIME** shows at the bottom right.
-- Clicking it **does not restart**. It answers, in words that fit the ending: a loud line, then a beat later (about 1.8 s) a soft line in her captions' font.
+- Clicking it **does not restart**. It answers, in words that fit the ending: a loud line, then a beat later (about 1.8 s) a soft line in her captions' font, then another beat later the game's lesson in smaller poster type.
 
 | Ending | Loud line | Soft line |
 |---|---|---|
@@ -218,10 +218,12 @@ In every ending, she still dies. The better endings are about whether the player
 | Came home | **THERE'S NEVER ENOUGH TIME.** | But you were there. |
 | Only her last call | **YOU GAVE HER FOUR MINUTES.** (her last call lasts 4:12) | She'd waited all month for them. |
 
+- The third line is the same in every ending, the main teaching of the game (the user's pick of three): **SOMEONE IS WAITING FOR YOUR CALL.**
+
 - Clicking it again does nothing.
 
 ### 7. PLAY AGAIN
-- A small, quiet **PLAY AGAIN** appears at the bottom left about 3 s after the soft line.
+- A small, quiet **PLAY AGAIN** appears at the bottom left about 3 s after the lesson line.
 - Fallback: if TURN BACK TIME is never clicked, PLAY AGAIN appears 15 s after TURN BACK TIME showed.
 - PLAY AGAIN starts a fresh round straight away (no title screen). Nothing carries over.
 

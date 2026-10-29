@@ -53,7 +53,14 @@ const MODES = {
       expect(t.startsWith(`YOU SAID LATER ${n} TIMES.`) && t.endsWith("She would have taken any one of them."), "response: " + t);
       expect(!visible($("restart")), "PLAY AGAIN too early");
     }],
-    [45600, () => expect(visible($("restart")), "PLAY AGAIN not shown 3 s after the soft line")]
+    [44400, () => {
+      const lesson = $("again").querySelector(".lesson");
+      expect(lesson && lesson.textContent === "SOMEONE IS WAITING FOR YOUR CALL.", "no lesson line after the soft line");
+      expect(!visible($("restart")), "PLAY AGAIN before the lesson has sunk in");
+      const a = $("again").getBoundingClientRect(), c = $("caption").getBoundingClientRect();
+      expect(a.top >= c.bottom - 1 || a.right <= c.left || a.left >= c.right, "the response overlaps her words");
+    }],
+    [47400, () => expect(visible($("restart")), "PLAY AGAIN not shown about 3 s after the lesson")]
   ],
   home: [
     ["start", () => { L().start(); steer(r => chaseTarget(r)); }],
@@ -62,13 +69,17 @@ const MODES = {
       expect(capHeader() === "CALL · MOM · MAR 28 · 4:12", "caption header: " + capHeader());
     }],
     [39500, () => $("again").click()],
-    [41500, () => expect($("again").textContent === "THERE'S NEVER ENOUGH TIME.But you were there.", "response: " + $("again").textContent)]
+    [43500, () => expect($("again").textContent === "THERE'S NEVER ENOUGH TIME.But you were there.SOMEONE IS WAITING FOR YOUR CALL.", "response: " + $("again").textContent)]
   ],
   lastonly: [
     ["start", () => { L().start(); steer(r => (r.calls[13].spawned ? chaseTarget(r, p => p.ci === 13) : dodgeTarget(r, 340))); }],
     [30000, () => expect(topWho() === "Dad" && topText().startsWith("She told everyone you called."), "top message: " + topWho() + " " + topText())],
     [39500, () => $("again").click()],
-    [41500, () => expect($("again").textContent === "YOU GAVE HER FOUR MINUTES.She'd waited all month for them.", "response: " + $("again").textContent)]
+    [43500, () => {
+      expect($("again").textContent === "YOU GAVE HER FOUR MINUTES.She'd waited all month for them.SOMEONE IS WAITING FOR YOUR CALL.", "response: " + $("again").textContent);
+      const a = $("again").getBoundingClientRect(), c = $("caption").getBoundingClientRect();
+      expect(a.top >= c.bottom - 1 || a.right <= c.left || a.left >= c.right, "the response overlaps her words");
+    }]
   ],
   thread: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
@@ -115,11 +126,11 @@ const MODES = {
   restart: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
     [40500, () => $("again").click()],
-    [45600, () => $("restart").click()],
-    ...[47600, 55600, 63600].map(ms => [ms, () => {
-      expect(L().state() === "play", "not playing " + (ms - 45600) + " ms into the new round");
-      expect(!visible($("card")) && !$("caption").textContent && !visible($("again")) && !visible($("restart")), "old ending still showing at " + (ms - 45600) + " ms");
-      expect(!document.querySelector(".flyer") && !document.querySelector("#sheet.on") && !visible($("timeov")), "leftover flyer, sheet or TIME! at " + (ms - 45600) + " ms");
+    [47400, () => $("restart").click()],
+    ...[49400, 57400, 65400].map(ms => [ms, () => {
+      expect(L().state() === "play", "not playing " + (ms - 47400) + " ms into the new round");
+      expect(!visible($("card")) && !$("caption").textContent && !visible($("again")) && !visible($("restart")), "old ending still showing at " + (ms - 47400) + " ms");
+      expect(!document.querySelector(".flyer") && !document.querySelector("#sheet.on") && !visible($("timeov")), "leftover flyer, sheet or TIME! at " + (ms - 47400) + " ms");
     }])
   ],
 
@@ -173,7 +184,7 @@ const MODES = {
   taptargets: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
     [40500, () => $("again").click()],
-    [45800, () => {
+    [47400, () => {
       const hit = (el, name) => {
         const r = el.getBoundingClientRect(), cx = r.left + r.width / 2;
         for (const y of [r.top - 9, r.bottom + 9]) expect(el.contains(document.elementFromPoint(cx, y)), `${name}: a tap 9 px ${y < r.top ? "above" : "below"} it misses`);
@@ -181,7 +192,7 @@ const MODES = {
       hit($("restart"), "PLAY AGAIN");
       document.querySelector("#items .n.tap").click();
     }],
-    [46300, () => hit2($("sheetClose"), "Show less")]
+    [47900, () => hit2($("sheetClose"), "Show less")]
   ],
   fsplace: [
     [600, () => {

@@ -147,6 +147,7 @@ html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -web
 #again.on { display: block; }
 #again.tried { cursor: default; border-bottom-color: transparent; text-align: right; max-width: 290px; text-wrap: balance; }
 #again .soft { display: block; margin-top: 8px; font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.2; text-wrap: balance; animation: capin .9s ease-out both; }
+#again .lesson { display: block; margin-top: 14px; font-size: 19px; letter-spacing: .5px; text-wrap: balance; animation: capin .9s ease-out both; }
 #restart { position: absolute; left: 40px; bottom: 34px; z-index: 6; display: none; font-family: "Archivo Black", sans-serif; font-size: 12px; letter-spacing: 2px; opacity: .55; cursor: pointer; border-bottom: 2px solid currentColor; padding-bottom: 2px; }
 #restart.on { display: block; animation: capin .8s ease-out both; }
 #restart:hover { opacity: .9; }

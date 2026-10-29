@@ -1,7 +1,7 @@
 // Everything from "TIME!" to PLAY AGAIN: the results screen, the shrink into the phone, the three flights,
 // the lock screen and its Messages sheet, her words beside the phone, TURN BACK TIME.
 // Ported from the mockup (endRound, morph, fly, endingMessages, playCaption, turnBack).
-import { W, CALLS, VOICEMAIL, LAST_CALL, CAPTION_HEADERS } from "./data.js";
+import { W, CALLS, VOICEMAIL, LAST_CALL, CAPTION_HEADERS, LESSON } from "./data.js";
 import { rankFor, endingFor, buildThread, turnBackLines, shortDate } from "./rules.js";
 
 const $ = id => document.getElementById(id);
@@ -221,7 +221,8 @@ export function playEnding(round, { onRestart }) {
     const [loud, soft] = turnBackLines(ending, round.missed);
     a.classList.add("tried"); a.textContent = loud;
     later(1800, () => a.insertAdjacentHTML("beforeend", `<span class="soft">${soft}</span>`));
-    later(4800, () => $("restart").classList.add("on")); // the way out, only after she's had the last word
+    later(3600, () => a.insertAdjacentHTML("beforeend", `<span class="lesson">${LESSON}</span>`));
+    later(6600, () => $("restart").classList.add("on")); // the way out, only once the lesson has sunk in
   };
   $("restart").onclick = () => onRestart();
 

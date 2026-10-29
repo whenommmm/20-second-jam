@@ -21,3 +21,7 @@ test("all the text is there, verbatim", () => {
   assert.equal(D.FINAL.late.text, "Funeral's on Saturday.");
   assert.equal(D.TURN_BACK.last[0], "YOU GAVE HER FOUR MINUTES.");
 });
+
+test("every ending's TURN BACK TIME closes on the same lesson", () => {
+  assert.equal(D.LESSON, "SOMEONE IS WAITING FOR YOUR CALL.");
+});
