@@ -121,6 +121,7 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 ### The web version of LATER (`web/later/`)
 - Plain HTML/CSS/JavaScript modules, no build step, no dependencies. Needs Node (26 is installed) for tests and Google Chrome for the headless checks.
 - From `web/later/`: `npm test` (logic tests), `npm run smoke` (headless-browser checks), `npm run package` (makes `dist/later-web.zip` for itch.io).
+- **Live at https://later-alpha.vercel.app** (Vercel, public). Redeploy with `npm run deploy` from `web/later/` (the Vercel CLI is installed and logged in on this Mac). The user can't open claude.ai Artifacts, so don't publish there.
 
 ### Git and GitHub
 - Repo: `github.com/whenommmm/20-second-jam` (private), logged in through the GitHub CLI as `whenommmm`.
