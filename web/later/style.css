@@ -125,13 +125,14 @@ html, body { height: 100dvh; overscroll-behavior: none; -webkit-user-select: non
 #lock .home { position: absolute; left: 50%; bottom: 7px; width: 90px; height: 4px; margin-left: -45px; border-radius: 2px; background: rgba(255,255,255,.85); }
 .n.tap { cursor: pointer; transition: background .15s; }
 .n.tap:hover { background: rgba(255,255,255,.19); }
-#sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; background: #1d2025; display: none; flex-direction: column; padding: 4px 9px 18px; }
+#sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; background: #1d2025; display: none; flex-direction: column; padding: 4px 9px 0; }
 #sheet.on { display: flex; animation: sheetin .28s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes sheetin { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 #sheet .sh { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 10px; }
 #sheet .sh b { font-size: 17px; font-weight: 700; }
 #sheet button { font: 600 10.5px -apple-system, "Helvetica Neue", Arial, sans-serif; color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 11px; padding: 5px 10px; cursor: pointer; }
-#sheetList { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; }
+/* like a real phone: the list runs to the bottom edge, with room at its end so the last message clears the rounded corners; touch can scroll it */
+#sheetList { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; scrollbar-width: none; padding-bottom: 30px; touch-action: pan-y; overscroll-behavior: contain; }
 #sheetList::-webkit-scrollbar { display: none; }
 
 /* things that fly from the game into the phone */

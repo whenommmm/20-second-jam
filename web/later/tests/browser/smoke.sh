@@ -19,6 +19,7 @@ CHECKS=(
   "home 42500"
   "lastonly 42500"
   "thread 33000"
+  "threadend 32000"
   "doubletap 32500"
   "fallback 56000"
   "dblturnback 44000"

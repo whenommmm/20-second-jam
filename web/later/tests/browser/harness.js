@@ -79,6 +79,20 @@ const MODES = {
     }],
     [32000, () => expect(!visible($("sheet")), "Show less didn't close the sheet")]
   ],
+  threadend: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [31000, () => { document.querySelector("#items .n.tap").click(); }],
+    [31400, () => { const l = $("sheetList"); l.scrollTop = l.scrollHeight; }],
+    [31600, () => {
+      const l = $("sheetList"), cards = l.querySelectorAll(".n"), lastCard = cards[cards.length - 1];
+      const lr = l.getBoundingClientRect(), cr = lastCard.getBoundingClientRect(), sr = $("lock").getBoundingClientRect();
+      expect(lastCard.querySelector("b").textContent === "Mom", "last message isn't Mom's first text");
+      expect(cr.bottom <= lr.bottom + 0.5, `last message cut off: card bottom ${cr.bottom.toFixed(1)} > list bottom ${lr.bottom.toFixed(1)} (scrollTop ${l.scrollTop}, scrollHeight ${l.scrollHeight}, clientHeight ${l.clientHeight})`);
+      const scale = $("world").getBoundingClientRect().width / 960;
+      expect(sr.bottom - cr.bottom >= 20 * scale, `last message ends ${((sr.bottom - cr.bottom) / scale).toFixed(1)} px from the screen's rounded bottom (needs 20)`);
+      expect(getComputedStyle(l).touchAction === "pan-y", "Messages can't be scrolled by touch: touch-action " + getComputedStyle(l).touchAction);
+    }]
+  ],
   doubletap: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
     [30000, () => { tap(); setTimeout(tap, 150); }],
