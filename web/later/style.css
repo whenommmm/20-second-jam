@@ -49,7 +49,7 @@ html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -web
 .pill span { font-family: "Archivo Black", sans-serif; font-size: 16px; color: #fff; filter: blur(var(--nb, 6px)); white-space: nowrap; }
 .pill.gone { opacity: 0; }
 
-#me { position: absolute; left: 0; top: 0; z-index: 5; }
+#me { position: absolute; left: 0; top: 0; z-index: 5; will-change: transform; }
 #me .wrap { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: grid; justify-items: center; }
 #me svg { width: 52px; height: 52px; display: block; }
 #me .badge { position: absolute; right: -12px; top: -8px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; background: #FF3B30; color: #fff; font-family: "Archivo Black", sans-serif; font-size: 14px; display: grid; place-items: center; }
@@ -164,3 +164,8 @@ html, body { height: 100dvh; touch-action: none; overscroll-behavior: none; -web
 #restart::before { content: ""; position: absolute; inset: -16px -14px; }
 #sheet button { position: relative; }
 #sheet button::before { content: ""; position: absolute; inset: -14px -10px; }
+
+/* the moon's name turning into the pill's "Later" mid-flight, and the pill growing in around them */
+.flyer .was, .flyer .now { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
+.flyer .now { font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: 0; color: #fff; opacity: 0; }
+.flyer.pillbg { background: rgba(255,255,255,.15); border-radius: 12px; opacity: 0; }

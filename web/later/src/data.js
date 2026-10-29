@@ -33,6 +33,7 @@ export const TUNING = {
   PILL_H: 42, PILL_SPACE: 26,           // pill height; gap between pills in one call
   HIT_R: 8, CLOSE_R: 30,                // how close counts as a touch / a close call
   MAX_SPEED: 720, KEY_SPEED: 460,       // the moon, px/s
+  FOLLOW_GAIN: 5.5, FOLLOW_EASE: 8,     // how eagerly the moon chases the pointer, and how smoothly it speeds up and slows down
   REACT_MIN: 1.1,                       // seconds a call near you must give you to react
   HOME_WAIT: 0.6,                       // how long Mom's last call may wait for you to have room
   // her last call drifts toward you until the middle of the screen (or 240 px from you, whichever comes first), then goes straight

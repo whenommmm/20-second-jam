@@ -33,6 +33,7 @@ CHECKS=(
   "fsplace 22500"
   "taptext 1200"
   "clicktext 1200"
+  "morphpill 30500"
   "hidden 9500"
   "touch 3000"
   "fullscreen 22000"

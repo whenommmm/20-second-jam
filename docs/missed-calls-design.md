@@ -89,7 +89,7 @@ Callers, saved in the phone exactly like this (the user's choice):
   - During play it's just an arcade hero.
   - It's also the phone's Do Not Disturb icon, and "Later" turns out to be the name of the player's silent mode.
 - A **red badge** on the moon counts **missed calls**: it goes up by 1 the moment each pill gets past the player (not when the pill leaves the screen, and not per group). At the end it lands on the phone's "N Missed Calls".
-- Movement glides: the moon steers toward the pointer with a little inertia and leans into its motion. Keyboard moves it at a fixed speed. (Mockup: max speed 720 px/s, keys 460 px/s.)
+- Movement glides: the moon steers toward the pointer with a little inertia and leans into its motion (made a touch smoother at the user's request; it still arrives within about 0.8 s). Keyboard moves it at a fixed speed. (Mockup: max speed 720 px/s, keys 460 px/s.)
 - The moon can go anywhere on screen, including under the score and date. There is no visible or invisible limiter line (the user rejected one).
 
 ### The calls (pills)
@@ -181,8 +181,7 @@ At 20.0 s, "TIME!" appears and the game freezes for about 0.8 s.
 - The whole screen shrinks into a portrait phone in the middle and turns dark.
 - The phone looks **plain and real**, not like a cartoon: camera notch, signal, 5G, a low battery, "Thursday, April 2", a big **7:12**, flashlight and camera buttons at the bottom, and a home bar.
 - Three things fly from the game into the phone on smooth curves, dipping under the clock rather than across it:
-  - **The moon** turns white as it crosses onto the screen and lands exactly as the silent-mode icon. A pill reading **☾ Later** grows out from behind it, with "Notifications silenced" underneath. A small moon also appears in the status bar.
-  - **LATER** (its name tag) follows and fades into the word "Later" on the pill.
+  - **The moon, its name and the pill travel as one piece** along one path (the user asked that the player turn straight into the notification, with nothing disappearing). The moon turns white as it crosses onto the screen and lands as the silent-mode icon; the **☾ Later** pill grows out around it on the way; **LATER** slides from under the moon to beside it and turns into "Later". They hand over to the real pill in the same frame. "Notifications silenced" appears underneath, and a small moon appears in the status bar.
   - **The red badge** drops and lands on the missed-call count.
 
 ### 3. The lock screen

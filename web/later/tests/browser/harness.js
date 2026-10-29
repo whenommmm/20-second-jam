@@ -205,6 +205,28 @@ const MODES = {
     [600, () => expect(document.querySelector("#title .go").textContent === "CLICK TO START", "mouse screens show: " + document.querySelector("#title .go").textContent)]
   ],
 
+  // the moon and its name turn into the "☾ Later" pill without ever disappearing
+  morphpill: [
+    ["start", () => {
+      L().start(); steer(r => dodgeTarget(r, 340));
+      let t0 = null, gaps = [];
+      const op = el => (el ? Number(getComputedStyle(el).opacity) : 0);
+      const id = setInterval(() => {
+        const flyers = [...document.querySelectorAll(".flyer")];
+        const moonF = flyers.find(f => f.querySelector('use[href="#moon"]')), tagF = flyers.find(f => /LATER/.test(f.textContent));
+        if (t0 === null) { if (moonF) t0 = performance.now(); else return; }
+        const ms = Math.round(performance.now() - t0);
+        const pill = op($("focus")) > 0.5;
+        const spans = tagF ? [...tagF.querySelectorAll("span")] : [];
+        const tagShows = tagF && op(tagF) > 0.3 && (!spans.length || spans.some(sp => op(sp) > 0.3));
+        if (!(moonF && op(moonF) > 0.3) && !pill) gaps.push(ms + "ms: no moon and no pill");
+        if (!tagShows && !(pill && op($("focusText")) > 0.5)) gaps.push(ms + "ms: no LATER and no 'Later'");
+        if (ms > 2200) { clearInterval(id); window.__gaps = gaps; }
+      }, 50);
+    }],
+    [30000, () => expect(window.__gaps && window.__gaps.length === 0, "gaps in the transform: " + (window.__gaps || ["never ran"]).slice(0, 4).join(", "))]
+  ],
+
   // ---- itch.io and mobile ----
   hidden: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],

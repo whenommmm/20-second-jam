@@ -92,9 +92,17 @@ export function playEnding(round, { onRestart }) {
       $("gnames").textContent = [...new Set(missedCalls.slice().reverse().map(c => c.who))].join(", ");
       $("group").querySelector(".tt > span").textContent = missedCalls.length ? shortDate(missedCalls[missedCalls.length - 1].date) : "";
 
-      // swap the real moon, tag and badge for stand-ins, then fly each one home
+      // swap the real moon, tag and badge for stand-ins, then fly each one home. The moon and its name travel with
+      // a pill that grows out around them, and LATER turns into "Later" on the way: together they become "☾ Later".
+      const tag = document.querySelector("#me .tag");
+      const textScale = box($("focusText")).h / box(tag).h;
       const moonF = flyer($("mesvg"), `<svg viewBox="0 0 24 24"><use href="#moon" fill="currentColor"/></svg>`, { color: "#141414" });
-      const tagF = flyer(document.querySelector("#me .tag"), "LATER", { fontFamily: '"Archivo Black", sans-serif', fontSize: (14 * 1.7) + "px", letterSpacing: (1.5 * 1.7) + "px", color: "#141414", lineHeight: "1" });
+      const tagF = flyer(tag, `<span class="was">LATER</span><span class="now" style="font-size:${(11 / textScale).toFixed(2)}px">Later</span>`,
+        { fontFamily: '"Archivo Black", sans-serif', fontSize: (14 * 1.7) + "px", letterSpacing: (1.5 * 1.7) + "px", color: "#141414", lineHeight: "1" });
+      const pillBox = box($("focus")), pillBg = document.createElement("div");
+      pillBg.className = "flyer pillbg";
+      Object.assign(pillBg.style, { left: pillBox.x + "px", top: pillBox.y + "px", width: pillBox.w + "px", height: pillBox.h + "px" });
+      $("fly").prepend(pillBg); // behind the moon and its name
       const hasBadge = round.missed > 0;
       $("group").style.display = hasBadge ? "" : "none";
       const badgeF = hasBadge ? flyer($("badge"), String(round.missed), { background: "#FF3B30", color: "#fff", borderRadius: "999px", fontFamily: '"Archivo Black", sans-serif', fontSize: (14 * 1.7) + "px" }) : null;
@@ -103,17 +111,38 @@ export function playEnding(round, { onRestart }) {
       // swoop down and under the clock, then rise into the pill; turn white as they cross onto the screen
       const under = dip => (sx, sy, ex, ey) => ({ x: (sx + ex) / 2 + 30, y: Math.max(sy, ey) + dip });
       const toWhite = [{ offset: 0, color: "#141414" }, { offset: .36, color: "#141414" }, { offset: .58, color: "#ffffff" }, { offset: 1, color: "#ffffff" }];
-      quietly(fly(moonF, $("focusIcon"), { dur: 1300, ctrl: under(120), rot: round.tilt, extra: toWhite }).then(() => {
-        // the moon is now the focus icon: grow the pill out from behind it
-        const fp = $("focus");
-        fp.style.opacity = 1; moonF.el.remove();
-        const wFull = fp.offsetWidth;
-        animate(fp, [{ clipPath: `inset(0 ${wFull - 30}px 0 0 round 12px)` }, { clipPath: "inset(0 0 0 0 round 12px)" }], { duration: 480, easing: "cubic-bezier(.3,0,.15,1)" });
-        animate($("focusText"), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 160, fill: "backwards" });
+      // one path for the moon; its name and the pill ride along with it, so the three move and change as one piece:
+      // the pill grows out around the moon, and LATER slides from under it to beside it as it becomes "Later"
+      const DUR = 1300, EASE = "cubic-bezier(.45,.05,.2,1)";
+      const m = moonF.b, t0 = tagF.b, ic = box($("focusIcon")), tx = box($("focusText"));
+      const c0 = { x: m.x + m.w / 2, y: m.y + m.h / 2 }, c1 = { x: ic.x + ic.w / 2, y: ic.y + ic.h / 2 }, cc = under(120)(c0.x, c0.y, c1.x, c1.y);
+      const tagC = { x: t0.x + t0.w / 2, y: t0.y + t0.h / 2 }, pillC = { x: pillBox.x + pillBox.w / 2, y: pillBox.y + pillBox.h / 2 };
+      const tagFrom = { x: tagC.x - c0.x, y: tagC.y - c0.y }, tagTo = { x: tx.x + tx.w / 2 - c1.x, y: tx.y + tx.h / 2 - c1.y };
+      const pillOff = { x: pillC.x - c1.x, y: pillC.y - c1.y };
+      const fm = [], ft = [], fp = [];
+      for (let i = 0; i <= 40; i++) {
+        const u = i / 40, v = 1 - u, k = 1 - Math.pow(v, 1.6), blend = u * u * (3 - 2 * u);
+        const px = v * v * c0.x + 2 * v * u * cc.x + u * u * c1.x, py = v * v * c0.y + 2 * v * u * cc.y + u * u * c1.y;
+        const sm = 1 + (ic.h / m.h - 1) * k, st = 1 + (tx.h / t0.h - 1) * k, sp = 0.2 + 0.8 * k;
+        fm.push({ offset: u, transform: `translate(${(px - c0.x).toFixed(2)}px, ${(py - c0.y).toFixed(2)}px) rotate(${(round.tilt * v).toFixed(2)}deg) scale(${sm.toFixed(4)})` });
+        const tcx = px + tagFrom.x + (tagTo.x - tagFrom.x) * blend, tcy = py + tagFrom.y + (tagTo.y - tagFrom.y) * blend;
+        ft.push({ offset: u, transform: `translate(${(tcx - tagC.x).toFixed(2)}px, ${(tcy - tagC.y).toFixed(2)}px) scale(${st.toFixed(4)})` });
+        fp.push({ offset: u, transform: `translate(${(px + pillOff.x * sp - pillC.x).toFixed(2)}px, ${(py + pillOff.y * sp - pillC.y).toFixed(2)}px) scale(${sp.toFixed(4)})` });
+      }
+      const timing = { duration: DUR, easing: EASE, fill: "forwards" }, byOffset = (p, q) => p.offset - q.offset;
+      const moonFlight = animate(moonF.el, [...fm, ...toWhite].sort(byOffset), timing);
+      animate(tagF.el, [...ft, ...toWhite.map(k => ({ ...k }))].sort(byOffset), timing);
+      animate(pillBg, [...fp, { offset: 0, opacity: 0 }, { offset: .4, opacity: 0 }, { offset: .9, opacity: 1 }, { offset: 1, opacity: 1 }].sort(byOffset), timing);
+      const crossfade = (el, from, to) => animate(el, [{ offset: 0, opacity: from }, { offset: .55, opacity: from }, { offset: .85, opacity: to }, { offset: 1, opacity: to }], timing);
+      crossfade(tagF.el.querySelector(".was"), 1, 0); crossfade(tagF.el.querySelector(".now"), 0, 1);
+      quietly(moonFlight.finished.then(() => {
+        if (disposed) return;
+        // everything has landed exactly on the real pill: hand over in the same frame, so nothing blinks
+        $("focus").style.opacity = 1;
+        moonF.el.remove(); tagF.el.remove(); pillBg.remove();
         $("sbMoon").classList.add("on");
         later(500, () => $("sil").classList.add("on"));
       }));
-      quietly(fly(tagF, $("focusText"), { dur: 1450, ctrl: under(150), extra: [...toWhite.map(k => ({ ...k })), { offset: .8, opacity: 1 }, { offset: 1, opacity: 0 }] }));
       if (hasBadge) {
         animate($("group"), [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 380, delay: 1050, fill: "forwards", easing: "ease-out" });
         animate($("gcount"), [{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 1500, fill: "backwards" });

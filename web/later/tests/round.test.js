@@ -90,3 +90,12 @@ test("her last call drifts gently toward you until the middle of the screen, the
   // the commit happens on the step after it crosses the middle (one frame, ~5 px), so skip that crossing frame
   assert.equal(new Set(after.slice(1).map(v => v.toFixed(6))).size, 1, "kept steering after the middle");
 });
+
+test("the moon eases toward a sudden new target instead of snapping, and still gets there quickly", () => {
+  const round = createRound(), start = { ...round.me }, target = { x: start.x + 300, y: start.y };
+  stepRound(round, 1 / 60, { target, keys: { x: 0, y: 0 } });
+  assert.ok(round.me.x - start.x < 1.7, `jumped ${(round.me.x - start.x).toFixed(2)} px in the first frame`);
+  let t = 1 / 60;
+  while (Math.abs(target.x - round.me.x) > 8 && t < 2) { stepRound(round, 1 / 60, { target, keys: { x: 0, y: 0 } }); t += 1 / 60; }
+  assert.ok(t <= 0.8, `took ${t.toFixed(2)} s to arrive`);
+});

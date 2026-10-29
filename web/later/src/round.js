@@ -43,11 +43,11 @@ function move(r, dt, { target, keys }) {
   let want = { x: 0, y: 0 };
   if (kx || ky) { const l = Math.hypot(kx, ky); want = { x: kx / l * T.KEY_SPEED, y: ky / l * T.KEY_SPEED }; }
   else if (target) {
-    want = { x: (target.x - r.me.x) * 7, y: (target.y - r.me.y) * 7 };
+    want = { x: (target.x - r.me.x) * T.FOLLOW_GAIN, y: (target.y - r.me.y) * T.FOLLOW_GAIN };
     const wl = Math.hypot(want.x, want.y);
     if (wl > T.MAX_SPEED) { want.x *= T.MAX_SPEED / wl; want.y *= T.MAX_SPEED / wl; }
   }
-  const a = 1 - Math.exp(-dt * 11);
+  const a = 1 - Math.exp(-dt * T.FOLLOW_EASE);
   r.vel.x += (want.x - r.vel.x) * a; r.vel.y += (want.y - r.vel.y) * a;
   r.me.x = clamp(26, W - 26, r.me.x + r.vel.x * dt);
   r.me.y = clamp(TOP, BOTTOM, r.me.y + r.vel.y * dt);

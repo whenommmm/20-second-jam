@@ -85,7 +85,7 @@ export function createPlayView(sound) {
         const buzz = Math.sin(round.t * 75 + p.seed) * 1.3, lean = Math.max(-14, Math.min(14, Math.atan(p.vy / p.vx) * 57.3 * 0.6));
         el.style.transform = `translate(${(p.x - p.w / 2 + buzz).toFixed(1)}px, ${(p.y - p.h / 2).toFixed(1)}px) rotate(${lean.toFixed(1)}deg)`;
       }
-      $("me").style.transform = `translate(${round.me.x.toFixed(1)}px, ${round.me.y.toFixed(1)}px)`;
+      $("me").style.transform = `translate3d(${round.me.x.toFixed(2)}px, ${round.me.y.toFixed(2)}px, 0)`;
       $("mesvg").style.rotate = round.tilt.toFixed(1) + "deg";
       if (round.score !== shownScore) { shownScore = round.score; $("score").textContent = round.score.toLocaleString(); }
       // names stay unreadable through most of the round; 5–6 answered calls clear them
