@@ -59,8 +59,11 @@ function startCalls(r, ev) {
   while (r.nextCall < r.calls.length && r.t >= r.calls[r.nextCall].t) {
     const c = r.calls[r.nextCall];
     if (c.home) {
-      // her last call comes straight for you, so it waits (briefly) until you'd have room to get out of its way
-      if (r.t < c.t + T.HOME_WAIT && !fair(r, nearestLane(r.me.y), c)) break;
+      // her last call comes straight for you, so it waits (briefly) until you'd have room to get out of its way;
+      // if you still wouldn't (say you're parked at the far right), it comes in along the nearest fair lane instead
+      const fairHere = fair(r, nearestLane(r.me.y), c);
+      if (!fairHere && r.t < c.t + T.HOME_WAIT) break;
+      c.y0 = fairHere ? null : (pickLane(r, c) ?? LANES.slice().sort((a, b) => Math.abs(b - r.me.y) - Math.abs(a - r.me.y))[0]);
       c.band = [];
     } else {
       const lane = pickLane(r, c);
@@ -79,7 +82,7 @@ function spawnPills(r, ev) {
       const w = r.pillW[c.who], x = W + w / 2 + 10, id = r.nextId++;
       // pills of one call follow each other a fixed distance apart, whatever their speed
       if (!c.gap) c.gap = (w + T.PILL_SPACE) / c.v;
-      const pill = { id, ci, who: c.who, first: c.spawned === 0, x, y: c.home ? clamp(TOP, BOTTOM, r.me.y) : c.band[0], w, h: T.PILL_H,
+      const pill = { id, ci, who: c.who, first: c.spawned === 0, x, y: c.home ? (c.y0 ?? clamp(TOP, BOTTOM, r.me.y)) : c.band[0], w, h: T.PILL_H,
         vx: -c.v, vy: 0, minD: 1e9, passed: false, gain: 0, locked: false, dead: false, seed: (id * 2.399) % 10 };
       r.pills.push(pill); c.spawned++; c.alive++;
       ev.push({ type: "spawn", pill });

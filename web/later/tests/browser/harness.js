@@ -2,9 +2,12 @@
 // The mode is the hash after "#test-". Each mode starts a round (or not), steers it with a test player,
 // probes the page at set times, and reports "OK <mode>" or "FAIL <reasons>" through document.title.
 import { dodgeTarget, chaseTarget } from "../bots.js";
+import { DEFAULT_PILL_W, TOP } from "../../src/data.js";
 
 const mode = location.hash.replace(/^#test-?/, "") || "dodge";
 if (mode === "noaudio") { delete window.AudioContext; delete window.webkitAudioContext; }
+// pretend to be a touch screen (coarse pointer) before the game reads it
+if (mode === "taptext") { const real = window.matchMedia.bind(window); window.matchMedia = q => (/pointer:\s*coarse/.test(q) ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} } : real(q)); }
 
 const $ = id => document.getElementById(id);
 const fails = [];
@@ -127,6 +130,81 @@ const MODES = {
     [17500, () => expect(!L().sound().ringing(), "still ringing after the last call has gone")]
   ],
 
+  // ---- review fixes ----
+  widths: [
+    [1500, () => {
+      const w = L().pillW();
+      for (const who of Object.keys(DEFAULT_PILL_W)) expect(Math.abs(w[who] - DEFAULT_PILL_W[who]) <= 2, `${who} pill is ${w[who]} px wide, tests assume ${DEFAULT_PILL_W[who]}`);
+    }]
+  ],
+  touchmargin: [
+    [200, () => {
+      expect(getComputedStyle(document.documentElement).touchAction === "none" && getComputedStyle(document.body).touchAction === "none", "page can still be pinch-zoomed from the margins");
+      L().start();
+    }],
+    [1200, () => { window.__m0 = { ...L().round().me }; touchScreen("pointerdown", 1, 40, 300); touchScreen("pointermove", 1, 40, 340); }],
+    [2400, () => {
+      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      expect($("stage").getBoundingClientRect().left > 60, "no margin beside the stage in this window");
+      expect(Math.abs(me.y - (window.__m0.y + 40 / s)) < 4, `a drag started in the margin didn't move the moon (y ${me.y.toFixed(1)}, expected ${(window.__m0.y + 40 / s).toFixed(1)})`);
+    }]
+  ],
+  touchclamp: [
+    [200, () => L().start()],
+    [1200, () => { touchAt("pointerdown", 0.5, 0.8, 0, 1); touchAt("pointermove", 0.5, 0.8, 0, 1, -600); }],
+    [2200, () => { touchAt("pointermove", 0.5, 0.8, 0, 1, -560); }],
+    [3200, () => {
+      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      expect(me.y > TOP + 40 / s - 4, `after overshooting the top and coming back 40 px the moon is at y ${me.y.toFixed(1)} (dead zone)`);
+      window.__m1 = { ...me };
+      touchAt("pointerdown", 0.2, 0.2, 0, 2); touchAt("pointerup", 0.2, 0.2, 0, 2); // a second finger taps and lifts
+      touchAt("pointermove", 0.5, 0.8, 0, 1, -520);
+    }],
+    [4200, () => {
+      const me = L().round().me, s = $("stage").getBoundingClientRect().width / 960;
+      expect(Math.abs(me.y - (window.__m1.y + 40 / s)) < 4, `a second finger broke the drag (y ${me.y.toFixed(1)}, expected ${(window.__m1.y + 40 / s).toFixed(1)})`);
+    }]
+  ],
+  pendingcard: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [29700, () => { const card = document.querySelector("#items .n.tap"); expect(card && card.classList.contains("pending"), "Messages card already revealed"); const r = card.getBoundingClientRect(); document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.click(); }],
+    [30000, () => expect(!document.querySelector("#sheet.on"), "a tap on the still-hidden Messages card opened the sheet")]
+  ],
+  taptargets: [
+    ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
+    [40500, () => $("again").click()],
+    [45800, () => {
+      const hit = (el, name) => {
+        const r = el.getBoundingClientRect(), cx = r.left + r.width / 2;
+        for (const y of [r.top - 9, r.bottom + 9]) expect(el.contains(document.elementFromPoint(cx, y)), `${name}: a tap 9 px ${y < r.top ? "above" : "below"} it misses`);
+      };
+      hit($("restart"), "PLAY AGAIN");
+      document.querySelector("#items .n.tap").click();
+    }],
+    [46300, () => hit2($("sheetClose"), "Show less")]
+  ],
+  fsplace: [
+    [600, () => {
+      const fs = $("fs").getBoundingClientRect(), go = document.querySelector("#title .go").getBoundingClientRect(), d = document.querySelector("#dates .slip")?.getBoundingClientRect();
+      expect(visible($("fs")) && fs.top > go.bottom && Math.abs((fs.left + fs.right) / 2 - (go.left + go.right) / 2) < 6, "fullscreen isn't centred under the start text on the title screen");
+      expect($("fs").textContent.includes("FULLSCREEN"), "fullscreen button isn't labelled on the title screen");
+      const s = $("stage").getBoundingClientRect().width / 960;
+      expect(fs.height >= 40 * s, "fullscreen button too small to tap: " + (fs.height / s).toFixed(0) + " world px tall");
+      expect(!d || fs.right < d.left || fs.bottom < d.top || fs.top > d.bottom, "fullscreen button overlaps the date card");
+    }],
+    ["start", () => setTimeout(() => { L().start(); steer(r => dodgeTarget(r, 340)); }, 700)],
+    [21600, () => {
+      const fs = $("fs").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), s = st.width / 960;
+      expect(visible($("fs")) && fs.left - st.left < 60 * s && fs.top - st.top < 60 * s, "fullscreen button isn't in the top-left corner after TIME!");
+    }]
+  ],
+  taptext: [
+    [600, () => expect(document.querySelector("#title .go").textContent === "TAP TO START", "touch screens show: " + document.querySelector("#title .go").textContent)]
+  ],
+  clicktext: [
+    [600, () => expect(document.querySelector("#title .go").textContent === "CLICK TO START", "mouse screens show: " + document.querySelector("#title .go").textContent)]
+  ],
+
   // ---- itch.io and mobile ----
   hidden: [
     ["start", () => { L().start(); steer(r => dodgeTarget(r, 340)); }],
@@ -170,9 +248,18 @@ function setHidden(h) {
   Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (h ? "hidden" : "visible") });
   document.dispatchEvent(new Event("visibilitychange"));
 }
-function touchAt(type, fx, fy, dx = 0) {
+function touchAt(type, fx, fy, dx = 0, id = 1, dy = 0) {
   const r = $("stage").getBoundingClientRect();
-  $("stage").dispatchEvent(new PointerEvent(type, { pointerType: "touch", isPrimary: true, clientX: r.left + r.width * fx + dx, clientY: r.top + r.height * fy, bubbles: true }));
+  const x = r.left + r.width * fx + dx, y = r.top + r.height * fy + dy;
+  (document.elementFromPoint(x, Math.max(0, Math.min(innerHeight - 1, y))) || $("stage")).dispatchEvent(new PointerEvent(type, { pointerType: "touch", pointerId: id, isPrimary: id === 1, clientX: x, clientY: y, bubbles: true }));
+}
+// a touch at window coordinates, wherever it lands (margins included)
+function touchScreen(type, id, x, y) {
+  (document.elementFromPoint(x, y) || document.body).dispatchEvent(new PointerEvent(type, { pointerType: "touch", pointerId: id, isPrimary: id === 1, clientX: x, clientY: y, bubbles: true }));
+}
+function hit2(el, name) {
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2;
+  for (const y of [r.top - 9, r.bottom + 9]) expect(el.contains(document.elementFromPoint(cx, y)), `${name}: a tap 9 px ${y < r.top ? "above" : "below"} it misses`);
 }
 
 const topCard = () => document.querySelector("#items .n.tap");

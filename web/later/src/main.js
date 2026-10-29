@@ -1,5 +1,5 @@
 // Boot, scaling, input, title screen, the main loop, pausing, fullscreen.
-import { W, H, DEFAULT_PILL_W, CALLS } from "./data.js";
+import { W, H, TOP, BOTTOM, DEFAULT_PILL_W, CALLS } from "./data.js";
 import { createRound, stepRound } from "./round.js";
 import { createPlayView, measurePillWidths } from "./view.js";
 import { createSound } from "./sound.js";
@@ -28,6 +28,7 @@ addEventListener("resize", fit);
 fit();
 
 document.fonts.ready.then(() => { pillW = measurePillWidths(); });
+if (matchMedia("(pointer: coarse)").matches) document.querySelector("#title .go").textContent = "TAP TO START";
 
 function start() {
   if (ending) { ending.dispose(); ending = null; }
@@ -54,25 +55,28 @@ function toWorld(e) {
   return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
 }
 
-// Mouse: the moon follows the pointer. Touch: the moon moves with the finger from wherever it lands,
-// so a thumb never covers it.
-stage.addEventListener("pointerdown", e => {
+// Mouse: the moon follows the pointer over the stage. Touch: the moon moves with one finger from wherever it lands,
+// anywhere on the screen (thumbs rest in the margins beside the stage on phones), so a thumb never covers it.
+frame.addEventListener("pointerdown", e => {
   sound.wake();
   const now = performance.now();
   // double-tap (or double-click) during the ending shows the rest of her words at once
   if (state === "over" && ending && now - lastTap < 350) ending.tapTwice();
   lastTap = now;
-  if (e.pointerType === "touch") { drag = { finger: toWorld(e), moon: { ...round.me } }; target = { ...round.me }; }
+  if (e.pointerType === "touch" && !drag) { drag = { id: e.pointerId, finger: toWorld(e), moon: { ...round.me } }; target = { ...round.me }; }
 });
-stage.addEventListener("pointermove", e => {
-  if (e.pointerType !== "touch") { target = toWorld(e); return; }
-  if (!drag) return;
+stage.addEventListener("pointermove", e => { if (e.pointerType !== "touch") target = toWorld(e); });
+frame.addEventListener("pointermove", e => {
+  if (e.pointerType !== "touch" || !drag || e.pointerId !== drag.id) return;
   const f = toWorld(e);
-  target = { x: drag.moon.x + f.x - drag.finger.x, y: drag.moon.y + f.y - drag.finger.y };
+  const want = { x: drag.moon.x + f.x - drag.finger.x, y: drag.moon.y + f.y - drag.finger.y };
+  target = { x: Math.max(26, Math.min(W - 26, want.x)), y: Math.max(TOP, Math.min(BOTTOM, want.y)) };
+  // past an edge, move the anchor instead, so turning back responds straight away
+  drag.finger.x += want.x - target.x; drag.finger.y += want.y - target.y;
 });
-const endDrag = e => { if (e.pointerType === "touch") drag = null; };
-stage.addEventListener("pointerup", endDrag);
-stage.addEventListener("pointercancel", endDrag);
+const endDrag = e => { if (drag && e.pointerId === drag.id) drag = null; };
+frame.addEventListener("pointerup", endDrag);
+frame.addEventListener("pointercancel", endDrag);
 stage.addEventListener("click", () => { if (state === "title") start(); });
 
 const KEYMAP = { ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0], ArrowUp: [0, -1], w: [0, -1], ArrowDown: [0, 1], s: [0, 1] };
@@ -130,6 +134,7 @@ if (location.hash.startsWith("#test")) {
     setTarget: (x, y) => { forcedTarget = { x, y }; },
     ending: () => ending,
     sound: () => sound,
+    pillW: () => pillW,
     start
   };
 }

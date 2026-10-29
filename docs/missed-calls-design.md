@@ -77,7 +77,8 @@ Callers, saved in the phone exactly like this (the user's choice):
 ## Title screen (not timed)
 
 - Title **LATER** at the top centre, chunky and not too tall.
-- **CLICK TO START** in the middle (the user called this "perfect": keep it).
+- **CLICK TO START** in the middle (the user called this "perfect": keep it). On touch screens it reads **TAP TO START** (the user's request).
+- A labelled **⤢ FULLSCREEN** button sits centred under it, easy to hit (the user asked for it to be more accessible). After "TIME!" the same button is an icon in the empty top-left corner. It never shows during play, and hides where the browser can't go fullscreen.
 - Nothing on the title screen hints at phones.
 - The public title is **LATER**, everywhere: itch.io page, browser tab, loading screen.
 
@@ -125,9 +126,9 @@ Callers, saved in the phone exactly like this (the user's choice):
 A player who wants to dodge must always be able to. The mockup enforces three rules:
 1. **Time to react.** A call may only use the player's lane or a neighbouring lane if its first pill will take at least 1.1 s to reach the player. Otherwise it picks a lane further away.
 2. **Never boxed in.** A call may only use the player's lane or a neighbour if at least one other lane right around the player stays clear from that moment until the whole call has gone past.
-3. **Mom's last call waits** up to 0.6 s for a moment when rule 2 holds, then enters.
+3. **Mom's last call waits** up to 0.6 s for a moment when rules 1 and 2 hold. If they still don't (for example the player is parked at the far right, where nothing could give them 1.1 s), it enters along the nearest fair lane instead of at the player's height (found by the code review).
 
-With these, a careful automated dodger finished every test round untouched. Any change to speeds, lanes or the schedule must keep this true.
+With these, a careful automated dodger finishes every test round untouched at 11 positions across the whole width (x = 26 to 934), using the real pill widths. Any change to speeds, lanes or the schedule must keep this true.
 
 ### Touching a call = answering it
 - −100 points, a short screen shake, the streak resets, and a dull thud (no voice).

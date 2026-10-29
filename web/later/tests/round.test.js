@@ -18,12 +18,13 @@ function play(bot, dt = 1 / 60) {
       const oh = Math.min(a.y + a.h / 2, b.y + b.h / 2) - Math.max(a.y - a.h / 2, b.y - b.h / 2);
       if (ow > 4 && oh > 4) overlaps++;
     }
-    if (leftAt17 === null && round.t >= 17) leftAt17 = round.pills.length;
+    if (leftAt17 === null && round.t >= 17) leftAt17 = round.pills.filter(p => p.x + p.w / 2 > 0).length; // still visible
   }
   return { round, events, hits: round.hits, overlaps, leftAt17 };
 }
 
-for (const x of [120, 200, 340, 480, 620, 760])
+// across the whole width, right up to the far edge (the review found the right edge unfair for her last call)
+for (const x of [26, 120, 200, 340, 480, 620, 700, 760, 820, 880, 934])
   test(`a careful dodger at x=${x} is never forced to answer`, () => assert.equal(play(r => dodgeTarget(r, x)).hits, 0));
 
 test("pills never overlap", () => {

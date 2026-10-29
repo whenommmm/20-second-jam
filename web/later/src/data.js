@@ -41,8 +41,8 @@ export const TUNING = {
   ROUND_TIME: 20
 };
 
-// Pill widths for the Node tests; the browser measures the real ones.
-export const DEFAULT_PILL_W = { Mom: 92, Dad: 90, Aunt: 98, John: 99, Jessie: 113 };
+// Pill widths: the Node tests use these, the browser measures its own (a check keeps the two within 2 px).
+export const DEFAULT_PILL_W = { Mom: 105, Dad: 97, Aunt: 104, John: 105, Jessie: 119 }; // as Chrome draws them with the bundled fonts
 
 // The paper: vibrant with nothing missed, cold slate with everything missed.
 export const PAPER_WARM = [253, 220, 172], PAPER_COLD = [146, 158, 172];
