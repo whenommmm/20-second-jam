@@ -1,4 +1,4 @@
-/* LATER: styles ported from docs/reference/later-mockup.html. All game sizes are in world units (960×540). */
+/* LATER: styles ported from docs/reference/later-mockup.html. All game sizes are in world units (540 tall, 960–1280 wide). */
 
 /* the same base the mockup was designed in */
 * { box-sizing: border-box; margin: 0; padding: 0; }
