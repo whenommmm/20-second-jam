@@ -92,7 +92,7 @@ Callers, saved in the phone exactly like this (the user's choice):
 - The moon can go anywhere on screen, including under the score and date. There is no visible or invisible limiter line (the user rejected one).
 
 ### The calls (pills)
-- Each pill is a **green rounded capsule** (answer-button green, about `#34C759`) with a round knob on the left and the caller's name on it. It looks a bit like something off a phone (a switch or a call banner) on purpose.
+- Each pill is a **green rounded capsule** (answer-button green, about `#34C759`) with a **thin black border** (2 px ink, so it holds up on the cold grey paper; the user's request), a round knob on the left and the caller's name on it. It looks a bit like something off a phone (a switch or a call banner) on purpose.
 - Pills shake slightly, like a phone buzzing on a table.
 - There are **14 calls** and **29 pills**. Each call is a short line of pills from one caller:
 
