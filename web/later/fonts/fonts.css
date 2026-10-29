@@ -1,0 +1,4 @@
+/* Bundled so the game looks the same everywhere on itch.io, with no runtime requests. Latin subsets. */
+@font-face { font-family: "Anton"; font-style: normal; font-weight: 400; font-display: block; src: url("anton-latin.woff2") format("woff2"); }
+@font-face { font-family: "Archivo Black"; font-style: normal; font-weight: 400; font-display: block; src: url("archivo-black-latin.woff2") format("woff2"); }
+@font-face { font-family: "Newsreader"; font-style: italic; font-weight: 400; font-display: block; src: url("newsreader-italic-latin.woff2") format("woff2"); }

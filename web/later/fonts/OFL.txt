@@ -1,0 +1,9 @@
+Fonts bundled with LATER, all licensed under the SIL Open Font License, Version 1.1:
+
+- Anton, Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont)
+- Archivo Black, Copyright 2017 The Archivo Black Project Authors (https://github.com/Omnibus-Type/ArchivoBlack)
+- Newsreader, Copyright 2020 The Newsreader Project Authors (https://github.com/productiontype/Newsreader)
+
+The full license text is at https://openfontlicense.org/open-font-license-official-text/
+The fonts are provided "as is", without warranty of any kind. They may be used, studied, modified
+and redistributed freely as long as they are not sold by themselves and this notice travels with them.
