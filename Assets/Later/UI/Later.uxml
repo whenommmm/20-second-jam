@@ -59,6 +59,13 @@
                             <ui:VisualElement class="ctl cl"><ui:VisualElement class="icon flashlight" /></ui:VisualElement>
                             <ui:VisualElement class="ctl cr"><ui:VisualElement class="icon camera" /></ui:VisualElement>
                             <ui:VisualElement class="home" />
+                            <ui:VisualElement name="sheet">
+                                <ui:VisualElement class="sh">
+                                    <ui:Label text="Messages" class="heading" />
+                                    <ui:VisualElement name="sheetClose"><ui:Label text="Show less" picking-mode="Ignore" /></ui:VisualElement>
+                                </ui:VisualElement>
+                                <ui:ScrollView name="sheetList" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden" touch-scroll-type="Clamped" />
+                            </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement name="caption" />
@@ -76,8 +83,8 @@
                 </ui:VisualElement>
                 <ui:Label name="timeov" text="TIME!" class="ov" />
                 <ui:VisualElement name="centre-top" class="centre" picking-mode="Ignore">
-                    <ui:VisualElement name="again" />
-                    <ui:Label name="restart" text="PLAY AGAIN" />
+                    <ui:VisualElement name="again"><ui:Label name="loud" text="TURN BACK TIME" class="loud" /></ui:VisualElement>
+                    <ui:VisualElement name="restartTap"><ui:Label name="restart" text="&lt;cspace=2px&gt;PLAY AGAIN&lt;/cspace&gt;" picking-mode="Ignore" /></ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="fly" picking-mode="Ignore" />
                 <ui:VisualElement name="fs">

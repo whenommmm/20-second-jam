@@ -38,6 +38,7 @@ namespace Later
         double scale = 1;
         Vector2 screen;
         int keysX, keysY;
+        double lastTap = -1;
 
         void Awake() => Instance = this;
 
@@ -112,6 +113,10 @@ namespace Later
 
         public void PointerDown(int id, bool touch, Vector2 panelPos)
         {
+            // double-tap (or double-click) during the ending shows the rest of her words at once
+            double now = Time.unscaledTimeAsDouble;
+            if (State == "over" && Ending != null && now - lastTap < 0.35) Ending.TapTwice();
+            lastTap = now;
             if (touch) drag.TouchDown(id, ToWorld(panelPos), Round);
         }
 
@@ -144,6 +149,8 @@ namespace Later
             world.style.scale = new Scale(new Vector2((float)scale, (float)scale));
             foreach (var c in centred) c.style.left = (float)((WorldW - W) / 2);
             // min(34px, 8vw), in CSS pixels
+            // landscape phones: the phone's text a touch larger (the web version's @media (max-height: 460px))
+            frame.EnableInClassList("small", screen.y / Browser.PixelRatio <= 460);
             double dpr = Browser.PixelRatio, size = Math.Min(34, 0.08 * screen.x / dpr) * dpr;
             rotateText.style.fontSize = (float)size;
             rotateText.text = $"<cspace={2 * dpr:0.##}px>ROTATE YOUR DEVICE</cspace>";

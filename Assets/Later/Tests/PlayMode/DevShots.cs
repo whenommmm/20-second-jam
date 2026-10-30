@@ -56,6 +56,13 @@ namespace Later.Tests
             yield return Shot($"{w}-flight", w, 627);
             for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 2.6;) yield return null;
             yield return Shot($"{w}-phone", w, 627);
+            for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 3.5;) yield return null;
+            yield return Shot($"{w}-words", w, 627);
+            while (!Game.Root.Q("again").ClassListContains("on")) yield return null;
+            for (var i = 0; i < 30; i++) yield return null;
+            Click(Game.Root.Q("again"));
+            for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 7.5;) yield return null;
+            yield return Shot($"{w}-lesson", w, 627);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static Later.LaterData;
@@ -21,7 +23,10 @@ namespace Later
         readonly Sound sound;
         readonly Action onRestart;
         readonly Timeline tl = new Timeline();
-        bool disposed;
+        readonly EventCallback<ClickEvent> onAgain, onRestartTap, onSheetClose;
+        List<string> lines;
+        int shown;
+        bool disposed, captionDone;
 
         public string Key { get; }
 
@@ -30,6 +35,13 @@ namespace Later
             this.round = round; this.world = world; this.sound = sound; this.onRestart = onRestart;
             fly = Q("fly");
             Key = Rules.EndingFor(round.Answered);
+
+            onAgain = e => TurnBack();
+            onRestartTap = e => onRestart();
+            onSheetClose = e => { e.StopPropagation(); Q("sheet").RemoveFromClassList("on"); };
+            Q("again").RegisterCallback(onAgain);
+            Q("restartTap").RegisterCallback(onRestartTap);
+            Q("sheetClose").RegisterCallback(onSheetClose);
 
             Q("timeov").AddToClassList("on");
             tl.After(0.8, Results);
@@ -40,8 +52,12 @@ namespace Later
             if (!disposed) tl.Update(dt);
         }
 
-        // tap twice and the rest of her words appear at once (Task 8)
-        public void TapTwice() { }
+        // tap twice and the rest of her words appear at once
+        public void TapTwice()
+        {
+            if (lines == null || captionDone) return;
+            while (shown < lines.Count) ShowLine();
+        }
 
         VisualElement Q(string name) => world.Q(name);
         Label L(string name) => world.Q<Label>(name);
@@ -258,9 +274,213 @@ namespace Later
             }, () => tl.Tween(0, 0.15, Ease.Linear, p => f.style.opacity = 1 - (float)p, f.RemoveFromHierarchy));
         }
 
-        // ---- the lock screen, her words, TURN BACK TIME (Task 8) ----
+        // ---- the lock screen ----
 
-        void EndingMessages() { }
+        static Label Text(string text, string cls, string lineHeight = null)
+        {
+            var l = new Label(lineHeight == null ? text : $"<line-height={lineHeight}>{text}") { pickingMode = PickingMode.Ignore };
+            l.AddToClassList(cls);
+            return l;
+        }
+
+        // a notification card: icon, title and time, then its text
+        static VisualElement Note(VisualElement into, string icon, string title, string when, params VisualElement[] body)
+        {
+            var n = new VisualElement();
+            n.AddToClassList("n");
+            var ic = new VisualElement { pickingMode = PickingMode.Ignore };
+            ic.AddToClassList("ic");
+            var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
+            glyph.AddToClassList("icon"); glyph.AddToClassList(icon);
+            ic.Add(glyph);
+            var col = new VisualElement { pickingMode = PickingMode.Ignore };
+            col.AddToClassList("body");
+            var tt = new VisualElement { pickingMode = PickingMode.Ignore };
+            tt.AddToClassList("tt");
+            var b = new VisualElement { pickingMode = PickingMode.Ignore };
+            b.AddToClassList("b");
+            b.Add(Text(title, "title"));
+            tt.Add(b); tt.Add(Text(when, "when"));
+            col.Add(tt);
+            foreach (var el in body) col.Add(el);
+            n.Add(ic); n.Add(col);
+            if (into.childCount > 0) n.style.marginTop = 6; // the list's gap
+            into.Add(n);
+            return n;
+        }
+
+        // laid out but hidden until it's revealed
+        static VisualElement Pending(VisualElement n)
+        {
+            n.AddToClassList("pending");
+            return n;
+        }
+
+        void Reveal(VisualElement n)
+        {
+            n.RemoveFromClassList("pending");
+            n.AddToClassList("in");
+            tl.Tween(0, 0.35, Ease.CubicBezier(.2, .8, .2, 1), p =>
+            {
+                n.style.opacity = (float)p;
+                n.style.translate = new Translate(0, -12 * (1 - (float)p));
+                n.style.scale = new Scale(Vector2.one * (0.97f + 0.03f * (float)p));
+            });
+        }
+
+        void EndingMessages()
+        {
+            // the lock screen shows one Messages notification, the newest, stacked on the rest; tap to open
+            var items = Q("items");
+            var thread = Rules.BuildThread(round.Answered, Key);
+            var newest = thread[thread.Count - 1];
+            int more = thread.Count - 1;
+            var body = new List<VisualElement> { Text(newest.Text, "text", "1.32em") };
+            if (more > 0)
+            {
+                var sub = Text($"{more} more message{(more == 1 ? "" : "s")}", "sub");
+                sub.AddToClassList("more");
+                body.Add(sub);
+            }
+            var msgs = Pending(Note(items, "bubble", newest.Who, Rules.ShortDate(newest.Date), body.ToArray()));
+            msgs.AddToClassList("tap");
+            if (more > 0)
+            {
+                msgs.AddToClassList("stacked");
+                foreach (var cls in new[] { "peek2", "peek1" }) { var p = new VisualElement { pickingMode = PickingMode.Ignore }; p.AddToClassList(cls); msgs.Insert(0, p); }
+            }
+            // not tappable until it has appeared
+            msgs.RegisterCallback<ClickEvent>(e => { if (!msgs.ClassListContains("pending")) OpenThread(thread); });
+
+            VisualElement vm = null;
+            if (Key == "late")
+            {
+                var text = Text(VOICEMAIL, "vm", "1.3em");
+                vm = Pending(Note(items, "handset", "Mom", "Mar 28", Text("Voicemail · 0:18", "sub"), text));
+                // three lines of her voicemail, or two if the cards would reach "Notifications silenced"
+                EventCallback<GeometryChangedEvent> check = null;
+                check = e =>
+                {
+                    items.UnregisterCallback(check);
+                    if (Box(items).yMin < Box(Q("sil")).yMax + 6) text.AddToClassList("clamp2");
+                };
+                items.RegisterCallback(check);
+            }
+
+            if (vm != null) { Reveal(vm); PlayCaption(CAPTION_HEADERS["voicemail"], VOICEMAIL); }
+            else PlayCaption(CAPTION_HEADERS["call"], LAST_CALL);
+            tl.After(2.6, () => Reveal(msgs));
+        }
+
+        // tapping the Messages notification opens every message, newest first, in a sheet over the lock screen
+        void OpenThread(List<Message> thread)
+        {
+            var sheet = Q("sheet");
+            if (sheet.ClassListContains("on")) return;
+            var list = world.Q<ScrollView>("sheetList");
+            list.Clear();
+            foreach (var m in thread.AsEnumerable().Reverse())
+                Note(list.contentContainer, "bubble", m.Who, Rules.ShortDate(m.Date), Text(m.Text, "text", "1.32em"));
+            list.scrollOffset = Vector2.zero;
+            sheet.AddToClassList("on");
+            tl.Tween(0, 0.28, Ease.CubicBezier(.2, .8, .2, 1), p =>
+            {
+                sheet.style.opacity = (float)p;
+                sheet.style.translate = new Translate(0, 16 * (1 - (float)p));
+            });
+        }
+
+        // ---- her words, read out line by line beside the phone ----
+
+        static readonly Regex Sentences = new Regex("[^.?!…]+[.?!…]+");
+
+        void PlayCaption(string header, string text)
+        {
+            var caption = Q("caption");
+            caption.Clear();
+            caption.Add(Text($"<cspace=2px>{header}</cspace>", "who"));
+            caption.AddToClassList("on");
+            lines = Sentences.Matches(text).Cast<Match>().Select(m => m.Value.Trim()).ToList();
+            shown = 0;
+            for (var i = 0; i < lines.Count; i++) tl.After(0.5 + i * 1.1, ShowLine);
+        }
+
+        void ShowLine()
+        {
+            if (disposed || lines == null || shown >= lines.Count) return;
+            var line = Text(lines[shown++], "line", "1.25em");
+            Q("caption").Add(line);
+            CapIn(line, 0.6);
+            if (shown == lines.Count && !captionDone)
+            {
+                captionDone = true;
+                tl.After(1.2, () => Q("again").AddToClassList("on")); // only once she's finished
+                tl.After(16.2, ShowRestart); // in case TURN BACK TIME is never pressed
+            }
+        }
+
+        // fade up from a little below
+        void CapIn(VisualElement el, double seconds, float to = 1)
+        {
+            el.style.opacity = 0;
+            tl.Tween(0, seconds, Ease.EaseOut, p =>
+            {
+                el.style.opacity = to * (float)p;
+                el.style.translate = new Translate(0, 4 * (1 - (float)p));
+            });
+        }
+
+        void ShowRestart()
+        {
+            var tap = Q("restartTap");
+            if (tap.ClassListContains("on")) return;
+            tap.AddToClassList("on");
+            CapIn(Q("restart"), 0.8);
+        }
+
+        // ---- TURN BACK TIME: there is no going back; it answers, in words that fit how the month ended ----
+
+        void TurnBack()
+        {
+            var again = Q("again");
+            if (again.ClassListContains("tried") || !again.ClassListContains("on")) return;
+            var (loud, soft) = Rules.TurnBackLines(Key, round.Missed);
+            again.AddToClassList("tried");
+            var l = L("loud");
+            l.text = $"<line-height=1.1em>{loud}";
+            Balance(l);
+            tl.After(1.8, () => Answer(Text(soft, "soft", "1.2em")));
+            tl.After(3.6, () => Answer(Text($"<cspace=0.5px>{LESSON}</cspace>", "lesson")));
+            tl.After(6.6, ShowRestart); // the way out, only once the lesson has sunk in
+        }
+
+        void Answer(Label line)
+        {
+            Q("again").Add(line);
+            Balance(line);
+            CapIn(line, 0.9);
+        }
+
+        // text-wrap: balance — once laid out, narrow the text to the least width that keeps its number of lines
+        static void Balance(Label label)
+        {
+            EventCallback<GeometryChangedEvent> fit = null;
+            fit = e =>
+            {
+                label.UnregisterCallback(fit);
+                const float max = 290;
+                float Height(float w) => label.MeasureTextSize(label.text, w, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y;
+                float h = Height(max);
+                float lo = 0, hi = max;
+                while (hi - lo > 0.5f)
+                {
+                    float mid = (lo + hi) / 2;
+                    if (Height(mid) > h + 0.5f) lo = mid; else hi = mid;
+                }
+                label.style.maxWidth = Mathf.Ceil(hi);
+            };
+            label.RegisterCallback(fit);
+        }
 
         public void Dispose()
         {
@@ -283,6 +503,22 @@ namespace Later
                 s.display = StyleKeyword.Null;
             }
             Q("me").style.visibility = StyleKeyword.Null;
+
+            Q("again").UnregisterCallback(onAgain);
+            Q("restartTap").UnregisterCallback(onRestartTap);
+            Q("sheetClose").UnregisterCallback(onSheetClose);
+            var caption = Q("caption");
+            caption.Clear(); caption.RemoveFromClassList("on");
+            Q("items").Clear();
+            world.Q<ScrollView>("sheetList").Clear();
+            Q("sheet").RemoveFromClassList("on");
+            var again = Q("again");
+            again.RemoveFromClassList("on"); again.RemoveFromClassList("tried");
+            while (again.childCount > 1) again.RemoveAt(1);
+            var loud = L("loud");
+            loud.text = "TURN BACK TIME"; loud.style.maxWidth = StyleKeyword.Null;
+            Q("restartTap").RemoveFromClassList("on");
+            Q("restart").style.opacity = StyleKeyword.Null; Q("restart").style.translate = StyleKeyword.Null;
         }
     }
 }
