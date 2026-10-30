@@ -6,6 +6,7 @@
     "test": "node --test tests/",
     "smoke": "bash tests/browser/smoke.sh",
     "package": "bash tools/package.sh",
-    "deploy": "bash tools/deploy.sh"
+    "deploy": "bash tools/deploy.sh",
+    "export-unity": "node tools/export-unity.mjs"
   }
 }
