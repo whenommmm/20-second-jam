@@ -1,10 +1,13 @@
 // Writes the Unity version's copy of data.js (Assets/Later/Scripts/Core/LaterData.g.cs), so both versions
-// read the same numbers and text. Run `npm run export-unity` after changing data.js.
+// read the same numbers and text, and the rounds its tests replay to prove both versions play the same.
+// Run `npm run export-unity` after changing data.js or round.js.
 // --check compares instead of writing, and exits 1 if anything on disk is stale.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as D from "../src/data.js";
+import { createRound, stepRound } from "../src/round.js";
+import { dodgeTarget, chaseTarget } from "../tests/bots.js";
 
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
 const check = process.argv.includes("--check");
@@ -83,7 +86,43 @@ ${body.join("\n")}
 `;
 }
 
-const outputs = [["Assets/Later/Scripts/Core/LaterData.g.cs", laterData]];
+// Rounds played by the JavaScript simulation, step by step, for the Unity version to replay and match exactly.
+// Inputs are rounded to 3 decimals before the round sees them, so the replay feeds identical numbers.
+const q = v => Math.round(v * 1000) / 1000;
+const TRACES = [
+  { name: "dodge-340", w: 960, dt: 1 / 60, input: r => dodgeTarget(r, 340) },
+  { name: "chase-all", w: 960, dt: 1 / 60, input: r => chaseTarget(r) },
+  { name: "last-only", w: 960, dt: 1 / 60, input: r => (r.calls[13].spawned ? chaseTarget(r, p => p.ci === 13) : dodgeTarget(r, 340)) },
+  { name: "still-long-frames", w: 960, dt: 0.2, input: () => ({ x: 340, y: 302 }) },
+  // parked exactly between two lanes from the start (a moon steered there only passes through 85 once), so lane ties matter
+  { name: "between-lanes", w: 960, dt: 1 / 60, me: { x: 340, y: 85 }, input: () => ({ x: 340, y: 85 }) },
+  { name: "dodge-wide", w: 1169, dt: 1 / 60, input: r => dodgeTarget(r, 1100) },
+  { name: "home-drift", w: 1280, dt: 1 / 60, input: r => ({ x: 200, y: 302 + 150 * Math.sin(3 * r.t) }) },
+  { name: "keys", w: 1280, dt: 1 / 60, input: () => null, keys: r => ({ x: Math.sign(Math.sin(1.3 * r.t)), y: Math.sign(Math.cos(0.9 * r.t)) }) }
+];
+
+function trace({ name, w, dt, me = { x: 220, y: 270 }, input, keys = () => ({ x: 0, y: 0 }) }) {
+  const r = createRound(undefined, w);
+  Object.assign(r.me, me);
+  const out = { name, w, dt, meX: me.x, meY: me.y, tx: [], ty: [], has: [], kx: [], ky: [], events: [], checkpoints: [] };
+  for (let step = 0; !r.over; step++) {
+    const t = input(r), k = keys(r), target = t && { x: q(t.x), y: q(t.y) };
+    out.tx.push(target ? target.x : 0); out.ty.push(target ? target.y : 0); out.has.push(!!target);
+    out.kx.push(k.x); out.ky.push(k.y);
+    for (const e of stepRound(r, dt, { target, keys: k }))
+      out.events.push({ step, type: e.type, pill: e.pill ? e.pill.id : 0, close: !!e.close, date: e.date || "" });
+    if (step % 30 === 29 || r.over)
+      out.checkpoints.push({ step, t: r.t, x: r.me.x, y: r.me.y, score: r.score, missed: r.missed, hits: r.hits, paperK: r.paperK, pills: r.pills.length });
+  }
+  return out;
+}
+
+const roundTraces = () => JSON.stringify({ traces: TRACES.map(trace) }) + "\n";
+
+const outputs = [
+  ["Assets/Later/Scripts/Core/LaterData.g.cs", laterData],
+  ["Assets/Later/Tests/EditMode/Fixtures/round-traces.json", roundTraces]
+];
 
 let stale = 0;
 for (const [path, make] of outputs) {
