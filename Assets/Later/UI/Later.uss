@@ -1,0 +1,67 @@
+/* LATER: ported from web/later/style.css. All game sizes are world units (540 tall, 960–1280 wide).
+   USS has no line-height: single-line text gets a box as tall as the web version's line, with its text centred in it,
+   which places the glyphs exactly where CSS does. Positions that need calc(), and every animation, are set from C#.
+   USS letter-spacing doesn't come out in pixels (its unit depends on the font), so letter-spaced text carries the web version's
+   spacing as rich text instead, <cspace=Npx>, which is exact. */
+
+* { margin: 0; padding: 0; }
+Label { white-space: nowrap; }
+
+/* the page: one stage, 540 world px tall and 960–1280 wide, centred; LaterGame sizes it */
+#frame { position: absolute; left: 0; top: 0; overflow: hidden; background-color: rgb(253, 220, 172); }
+#stage { position: absolute; overflow: hidden; }
+#world { position: absolute; left: 0; top: 0; width: 960px; height: 540px; transform-origin: left top;
+         -unity-font-definition: url("/Assets/Later/Fonts/Anton SDF.asset"); color: #141414; background-color: rgb(253, 220, 172); }
+#play { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+#pills, #pops { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+#score { position: absolute; left: 34px; top: 22px; height: 64px; font-size: 64px; -unity-text-align: middle-left; }
+#combo { position: absolute; left: 36px; top: 92px; height: 33px; font-size: 22px; color: #FF3B30; -unity-text-align: middle-left; }
+
+/* the ending's things sit in the middle 960 of the world, as the web version's calc(50% ± …) puts them */
+.centre { position: absolute; top: 0; width: 960px; height: 540px; }
+
+/* fullscreen: a labelled button under the start text on the title screen, an icon in the empty top-left corner
+   after TIME!, never during play, hidden where the browser can't do it */
+#fs { position: absolute; left: 20px; top: 16px; height: 44px; padding: 0 11px; flex-direction: row; align-items: center; opacity: 0.6; }
+#fs:hover { opacity: 1; }
+#fs .icon { width: 22px; height: 22px; background-image: url("/Assets/Later/UI/Icons/fullscreen.svg"); -unity-background-image-tint-color: #141414; }
+#fs Label { display: none; margin-left: 9px; height: 20px; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 13px; -unity-text-align: middle-left; }
+#fs.ontitle { left: 50%; top: 336px; translate: -50% 0; opacity: 0.75; padding: 0 16px; }
+#fs.ontitle Label { display: flex; }
+#fs.hide { display: none; }
+
+/* phones held upright: ask to rotate (play pauses meanwhile); LaterGame sizes the text like min(34px, 8vw) */
+#rotate { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; padding: 24px; background-color: #141414; }
+#rotate.on { display: flex; }
+#rotate Label { white-space: normal; -unity-font-definition: url("/Assets/Later/Fonts/Anton SDF.asset"); color: rgb(253, 220, 172); -unity-text-align: middle-center; }
+
+/* dates: paper slips put down by hand */
+#dates { position: absolute; right: 40px; top: 26px; width: 150px; height: 80px; }
+.slip { position: absolute; right: 0; top: 0; }
+.paper { height: 48px; border-width: 3px; border-color: #141414; padding: 5px 12px 7px 12px; font-size: 30px; -unity-text-align: middle-center; background-color: rgb(253, 220, 172); }
+
+/* pills: drawn exactly DEFAULT_PILL_W wide (the widths the fairness tests use), the name centred where the web version puts it */
+.pill { position: absolute; left: 0; top: 0; height: 42px; border-radius: 21px; border-width: 2px; border-color: #141414; background-color: #34C759; }
+.pill .knob { position: absolute; left: 7px; top: 5px; width: 28px; height: 28px; border-radius: 14px; background-color: rgb(253, 220, 172); }
+.pill Label { position: absolute; left: 42px; right: 17px; top: 0; bottom: 0; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 16px; color: #fff; -unity-text-align: middle-center; }
+
+/* the moon: its centre (the point calls must miss) is the middle of moon + tag, as on the web */
+#me { position: absolute; left: 0; top: 0; }
+#mewrap { position: absolute; left: 0; top: 0; translate: -50% -50%; align-items: center; }
+#mesvg { width: 52px; height: 52px; background-image: url("/Assets/Later/UI/Icons/moon.svg"); -unity-background-image-tint-color: #141414; }
+#badge { position: absolute; right: -12px; top: -8px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; background-color: #FF3B30; color: #fff;
+         -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 14px; -unity-text-align: middle-center; }
+#badge.zero { visibility: hidden; }
+#mewrap .tag { margin-top: 3px; height: 21px; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 14px; -unity-text-align: middle-center; }
+
+.pop { position: absolute; height: 45px; font-size: 30px; color: #FF3B30; translate: -50% -50%; rotate: -7deg; -unity-text-align: middle-center; }
+
+.ov { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; }
+.ov.on { display: flex; }
+#title .name { position: absolute; left: 0; right: 0; top: 56px; height: 68px; font-size: 68px; -unity-text-align: middle-center; }
+#title .go { position: absolute; left: 0; right: 0; top: 50%; height: 64px; translate: 0 -50%; font-size: 64px; -unity-text-align: middle-center; }
+#timeov { font-size: 150px; -unity-text-align: middle-center; }
+
+/* the ending's elements: hidden until the ending ports in */
+#card, #caption, #again, #restart { display: none; }
+#fly { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }

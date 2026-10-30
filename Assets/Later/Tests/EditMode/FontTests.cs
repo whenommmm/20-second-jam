@@ -10,6 +10,8 @@ namespace Later.Tests
     // Every string the game shows, in each font that draws it, must have every glyph (…, ×, ·, ’ and friends included).
     public class FontTests
     {
+        [OneTimeTearDown] public void ClearAddedGlyphs() => Later.Editor.FontHygiene.Clear();
+
         static readonly string[] Callers = CALLS.Select(c => c.Who).Distinct().ToArray();
 
         static string[] Dates() => new[] { START_DATE }.Concat(CALLS.Select(c => c.Date)).Concat(QUIET_DATES.Select(q => q.Date)).ToArray();

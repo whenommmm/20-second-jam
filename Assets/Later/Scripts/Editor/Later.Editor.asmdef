@@ -3,7 +3,9 @@
     "rootNamespace": "Later.Editor",
     "references": [
         "Later.Core",
-        "Later.Runtime"
+        "Later.Runtime",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

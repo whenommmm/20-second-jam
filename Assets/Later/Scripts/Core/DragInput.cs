@@ -20,7 +20,14 @@ namespace Later
             dragging = false;
         }
 
-        public void MouseMove(Vec world) => Target = world;
+        // a mouse can't steer while a finger is dragging (some browsers send both for one touch)
+        public void MouseMove(Vec world)
+        {
+            if (!dragging) Target = world;
+        }
+
+        // after using keys, the moon stays where the keys left it
+        public void ClearTarget() => Target = null;
 
         public void TouchDown(int pointerId, Vec world, Round r)
         {

@@ -80,23 +80,7 @@ MonoBehaviour:
     m_Height: 1023
   m_FontFeatureTable:
     m_MultipleSubstitutionRecords: []
-    m_LigatureSubstitutionRecords:
-    - m_ComponentGlyphIDs: 3e00000028010000
-      m_LigatureGlyphID: 66
-    - m_ComponentGlyphIDs: 120100003701000013010000
-      m_LigatureGlyphID: 287
-    - m_ComponentGlyphIDs: 120100003701000015010000
-      m_LigatureGlyphID: 288
-    - m_ComponentGlyphIDs: 120100003701000019010000
-      m_LigatureGlyphID: 290
-    - m_ComponentGlyphIDs: 140100003701000015010000
-      m_LigatureGlyphID: 289
-    - m_ComponentGlyphIDs: 140100003701000019010000
-      m_LigatureGlyphID: 291
-    - m_ComponentGlyphIDs: 160100003701000019010000
-      m_LigatureGlyphID: 292
-    - m_ComponentGlyphIDs: 180100003701000019010000
-      m_LigatureGlyphID: 293
+    m_LigatureSubstitutionRecords: []
     m_GlyphPairAdjustmentRecords: []
     m_MarkToBaseAdjustmentRecords: []
     m_MarkToMarkAdjustmentRecords: []

@@ -22,7 +22,10 @@ usage() { echo "usage: tools/unity.sh test editmode|playmode [filter] | run <Typ
 compile_error() { grep -m1 -E 'error CS[0-9]+' "$1"; }
 
 # Everything runs as WebGL, the jam's only target, so nothing reimports when switching between tests and the build.
-batch() { "$UNITY" -batchmode -nographics -projectPath "$ROOT" -buildTarget WebGL "$@"; }
+# GRAPHICS=1 keeps a GPU, for the explicit DevShots test that renders screenshots.
+gfx=(-nographics)
+[ -n "${GRAPHICS:-}" ] && gfx=()
+batch() { "$UNITY" -batchmode "${gfx[@]+"${gfx[@]}"}" -projectPath "$ROOT" -buildTarget WebGL "$@"; }
 
 run_method() {
   local method=$1 log=$2
@@ -54,15 +57,17 @@ case "${1:-}" in
     python3 -I - "$xml" <<'EOF'
 import sys, xml.etree.ElementTree as ET
 run = ET.parse(sys.argv[1]).getroot()
-total, passed = int(run.get("total", 0)), int(run.get("passed", 0))
-failed = [c for c in run.iter("test-case") if c.get("result") not in ("Passed", "Skipped")]
+cases = list(run.iter("test-case"))
+skipped = sum(c.get("result") == "Skipped" for c in cases)
+total, passed = len(cases) - skipped, sum(c.get("result") == "Passed" for c in cases)
+failed = [c for c in cases if c.get("result") not in ("Passed", "Skipped")]
 for c in failed:
     msg = c.find("failure/message")
     print(f"FAIL {c.get('fullname')}\n  {(msg.text or '').strip() if msg is not None else c.get('result')}")
 if failed or total == 0:
     print(f"{passed}/{total} passed")
     sys.exit(1)
-print(f"PASS {passed}/{total}")
+print(f"PASS {passed}/{total}" + (f" ({skipped} explicit, skipped)" if skipped else ""))
 EOF
     ;;
   run)

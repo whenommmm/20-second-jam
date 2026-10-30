@@ -52,5 +52,24 @@ namespace Later.Tests
             input.Reset();
             Assert.IsNull(input.Target);
         }
+    
+        [Test]
+        public void TheKeys_ClearThePointerTarget_SoTheMoonStaysWhereTheKeysLeftIt()
+        {
+            var input = new DragInput();
+            input.MouseMove(new Vec(400, 123));
+            input.ClearTarget();
+            Assert.IsNull(input.Target);
+        }
+
+        [Test]
+        public void TheMouse_IsIgnoredWhileAFingerIsDragging()
+        {
+            var r = RoundSim.Create();
+            var input = new DragInput();
+            input.TouchDown(1, new Vec(100, 270), r);
+            input.MouseMove(new Vec(700, 50));
+            Assert.AreEqual(r.Me, input.Target);
+        }
     }
 }
