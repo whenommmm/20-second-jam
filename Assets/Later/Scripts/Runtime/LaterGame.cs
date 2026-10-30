@@ -17,6 +17,7 @@ namespace Later
 
         public string State { get; private set; } = "title";
         public Round Round { get; private set; } = RoundSim.Create();
+        public Ending Ending { get; private set; }
         public double WorldW { get; private set; } = W;
         public VisualElement Root { get; private set; }
         // like the web version's __later.setTarget: steers the moon over the pointer and keys
@@ -80,6 +81,8 @@ namespace Later
 
         public void StartRound()
         {
+            Ending?.Dispose();
+            Ending = null;
             sound.Unlock();
             sound.RingStart(); // the phone rings softly under play
             Fit(true);
@@ -95,6 +98,7 @@ namespace Later
             State = "over";
             sound.Silence();
             ShowChrome();
+            Ending = new Ending(Round, world, sound, StartRound);
         }
 
         // the title, the fullscreen button and the cursor follow the state
@@ -180,6 +184,7 @@ namespace Later
                 if (events.Any(e => e.Type == RoundEventType.Time)) EndRound();
             }
             view.Tick(dt);
+            Ending?.Update(dt);
             if (State != "over") view.Draw(Round);
         }
     }

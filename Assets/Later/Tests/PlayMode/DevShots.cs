@@ -49,6 +49,13 @@ namespace Later.Tests
             Game.StartRound();
             while (Game.Round.T < 10) { Game.ForcedTarget = Bots.DodgeTarget(Game.Round, 340); yield return null; }
             yield return Shot($"{w}-play10", w, 627);
+            while (Game.State == "play") { Game.ForcedTarget = Bots.DodgeTarget(Game.Round, 340); yield return null; }
+            for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 2;) yield return null;
+            yield return Shot($"{w}-results", w, 627);
+            for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 3.9;) yield return null;
+            yield return Shot($"{w}-flight", w, 627);
+            for (double t = Time.timeAsDouble; Time.timeAsDouble - t < 2.6;) yield return null;
+            yield return Shot($"{w}-phone", w, 627);
         }
     }
 }

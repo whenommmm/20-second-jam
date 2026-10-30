@@ -12,7 +12,55 @@
                     <ui:VisualElement name="pops" picking-mode="Ignore" />
                 </ui:VisualElement>
                 <ui:VisualElement name="centre" class="centre" picking-mode="Ignore">
-                    <ui:VisualElement name="card" />
+                    <ui:VisualElement name="card">
+                        <ui:VisualElement name="res">
+                            <ui:Label text="&lt;cspace=4px&gt;RESULTS&lt;/cspace&gt;" class="lbl" />
+                            <ui:Label name="resnum" text="0" class="num" />
+                            <ui:VisualElement class="rows">
+                                <ui:VisualElement class="row"><ui:Label text="DODGED" /><ui:Label name="r1" /></ui:VisualElement>
+                                <ui:VisualElement class="row"><ui:Label text="CLOSE CALLS" /><ui:Label name="r2" /></ui:VisualElement>
+                                <ui:VisualElement class="row last"><ui:Label text="BEST STREAK" /><ui:Label name="r3" /></ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label name="rank" text="PERFECT!" class="stamp" />
+                            <ui:Label name="doubt" text="…or is it?" class="doubt" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="lock">
+                            <ui:VisualElement class="island" />
+                            <ui:VisualElement class="sbar">
+                                <ui:VisualElement class="sl"><ui:VisualElement name="sbMoon" /></ui:VisualElement>
+                                <ui:VisualElement class="sr">
+                                    <ui:VisualElement class="sig"><ui:VisualElement class="b1" /><ui:VisualElement class="b2" /><ui:VisualElement class="b3" /><ui:VisualElement class="b4" /></ui:VisualElement>
+                                    <ui:Label text="5G" class="g5" />
+                                    <ui:VisualElement class="bat"><ui:VisualElement class="fill" /></ui:VisualElement>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label text="Thursday, April 2" class="date" />
+                            <ui:Label text="&lt;cspace=-1.5px&gt;7:12&lt;/cspace&gt;" class="clock" />
+                            <ui:VisualElement class="focus">
+                                <ui:VisualElement name="focus"><ui:VisualElement name="focusIcon" /><ui:Label name="focusText" text="Later" /></ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label name="sil" text="Notifications silenced" class="sil" />
+                            <ui:VisualElement class="list">
+                                <ui:VisualElement name="items" />
+                                <ui:VisualElement name="group">
+                                    <ui:VisualElement class="n">
+                                        <ui:VisualElement class="ic"><ui:VisualElement class="icon handset" /></ui:VisualElement>
+                                        <ui:VisualElement class="body">
+                                            <ui:VisualElement class="tt">
+                                                <ui:VisualElement class="b"><ui:Label name="gcount" text="0" /><ui:Label name="gword" text="Missed Calls" /></ui:VisualElement>
+                                                <ui:Label name="gdate" text="Mar 28" class="when" />
+                                            </ui:VisualElement>
+                                            <ui:Label name="gnames" class="text" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="peek" /><ui:VisualElement class="peek p2" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="ctl cl"><ui:VisualElement class="icon flashlight" /></ui:VisualElement>
+                            <ui:VisualElement class="ctl cr"><ui:VisualElement class="icon camera" /></ui:VisualElement>
+                            <ui:VisualElement class="home" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
                     <ui:VisualElement name="caption" />
                 </ui:VisualElement>
                 <ui:VisualElement name="me" picking-mode="Ignore">
