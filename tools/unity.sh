@@ -76,6 +76,7 @@ EOF
     ;;
   build)
     run_method Later.Editor.LaterBuild.WebGL "Logs/build.log"
+    grep -m1 "LATER-webgl.zip:" Logs/build.log
     ;;
   *) usage ;;
 esac

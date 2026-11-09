@@ -78,6 +78,7 @@ namespace Later
             view.Reset();
             Fit(true);
             ShowChrome();
+            if (SmokeMode.Wanted) gameObject.AddComponent<SmokeMode>();
         }
 
         public void StartRound()
