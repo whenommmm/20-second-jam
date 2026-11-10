@@ -118,5 +118,23 @@ namespace Later.Tests
             Assert.That(Game.Round.T, Is.GreaterThan(t + 0.9));
             Assert.IsFalse(Shown(Q("rotate")));
         }
+    
+        // the player switches apps mid-drag, so the finger's lift never arrives: the next finger must still steer
+        [UnityTest]
+        public IEnumerator AFingerLostToAnotherApp_DoesntFreezeTouch()
+        {
+            yield return Load();
+            Game.StartRound();
+            yield return null;
+            var p = Q("world").worldBound.center;
+            Game.PointerDown(1, true, p);
+            Game.SendMessage("OnApplicationFocus", false, SendMessageOptions.DontRequireReceiver);
+            Game.SendMessage("OnApplicationFocus", true, SendMessageOptions.DontRequireReceiver);
+            double x0 = Game.Round.Me.X;
+            Game.PointerDown(2, true, p);
+            Game.PointerMove(2, true, p + new Vector2(80, 0));
+            yield return Wait(1);
+            Assert.That(Game.Round.Me.X - x0, Is.GreaterThan(40), "touch stayed locked to the lost finger");
+        }
     }
 }

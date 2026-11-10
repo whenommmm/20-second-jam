@@ -118,16 +118,28 @@ namespace Later
             double now = Time.unscaledTimeAsDouble;
             if (State == "over" && Ending != null && now - lastTap < 0.35) Ending.TapTwice();
             lastTap = now;
-            if (touch) drag.TouchDown(id, ToWorld(panelPos), Round);
+            if (touch) drag.TouchDown(id, ToWorld(panelPos), Round, now);
         }
 
         public void PointerMove(int id, bool touch, Vector2 panelPos)
         {
-            if (touch) drag.TouchMove(id, ToWorld(panelPos), Round);
-            else if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos));
+            double now = Time.unscaledTimeAsDouble;
+            if (touch) drag.TouchMove(id, ToWorld(panelPos), Round, now);
+            else if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos), now);
         }
 
-        public void PointerUp(int id) => drag.TouchUp(id);
+        public void PointerUp(int id) => drag.TouchUp(id, Time.unscaledTimeAsDouble);
+
+        // a finger down when the game loses focus (another app, the notification shade) never sends its lift
+        void OnApplicationFocus(bool focused)
+        {
+            if (!focused) drag.CancelTouch();
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) drag.CancelTouch();
+        }
 
         Vec ToWorld(Vector2 panelPos)
         {

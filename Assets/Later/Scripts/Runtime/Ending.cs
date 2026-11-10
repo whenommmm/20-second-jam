@@ -401,6 +401,9 @@ namespace Later
             foreach (var m in thread.AsEnumerable().Reverse())
                 Note(list.contentContainer, "bubble", m.Who, Rules.ShortDate(m.Date), Text(m.Text, "text", 1.32f));
             list.scrollOffset = Vector2.zero;
+            // it opens from a tap, outside the timeline: start it invisible, so no frame shows it before its fade
+            sheet.style.opacity = 0;
+            sheet.style.translate = new Translate(0, 16);
             sheet.AddToClassList("on");
             tl.Tween(0, 0.28, Ease.CubicBezier(.2, .8, .2, 1), p =>
             {
@@ -525,7 +528,9 @@ namespace Later
             caption.Clear(); caption.RemoveFromClassList("on");
             Q("items").Clear();
             world.Q<ScrollView>("sheetList").Clear();
-            Q("sheet").RemoveFromClassList("on");
+            var sheet = Q("sheet");
+            sheet.RemoveFromClassList("on");
+            sheet.style.opacity = StyleKeyword.Null; sheet.style.translate = StyleKeyword.Null;
             var again = Q("again");
             again.RemoveFromClassList("on"); again.RemoveFromClassList("tried");
             while (again.childCount > 1) again.RemoveAt(1);

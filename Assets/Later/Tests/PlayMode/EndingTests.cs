@@ -143,6 +143,55 @@ namespace Later.Tests
             Assert.IsTrue(Shown(Q("sheet")), "the sheet didn't open again");
         }
 
+        // the sheet appears with the next frame drawn; it must not show fully for a frame before its fade starts
+        [UnityTest]
+        public IEnumerator MessagesSheet_StartsInvisible_ThenFadesIn()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            for (var open = 0; open < 2; open++)
+            {
+                Click(MessagesCard);
+                var o = Q("sheet").style.opacity;
+                Assert.IsTrue(o.keyword == StyleKeyword.Undefined && o.value == 0, $"the sheet shows before its fade (opening {open + 1})");
+                yield return Wait(0.5);
+                Assert.IsTrue(Shown(Q("sheet")));
+                Click(Q("sheetClose"));
+                yield return Wait(0.2);
+            }
+        }
+
+        // three playthroughs in a row: the second ending is the second round's, with nothing left over from the first
+        [UnityTest]
+        public IEnumerator SecondEnding_AfterPlayAgain_ShowsTheNewRound()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToTurnBack();
+            Click(Again);
+            yield return WaitFor(() => Shown(Q("restart")), 8, "PLAY AGAIN");
+            Click(Q("restart"));
+            yield return null;
+            // this time pick up her first call (one pill), then dodge the rest: 28 missed, and still too late
+            yield return Play(r => r.Calls[0].Answered ? Bots.DodgeTarget(r, 340) : Bots.ChaseTarget(r, p => p.Ci == 0));
+            Assert.AreEqual(28, Game.Round.Missed);
+            Assert.AreEqual("late", Game.Ending.Key);
+            yield return ToHerWords();
+            Assert.AreEqual("28", Text("gcount"));
+            Assert.IsTrue(Shown(Q("group")));
+            Assert.AreEqual(2, Q("items").childCount, "cards left over from the first ending");
+            yield return ToTurnBack();
+            var loud = Q("loud");
+            Assert.AreEqual("TURN BACK TIME", Text("loud"));
+            Assert.AreEqual(0, loud.resolvedStyle.marginTop, 0.01, "the first answer's spacing is still on TURN BACK TIME");
+            Assert.AreEqual(StyleKeyword.Null, loud.style.maxWidth.keyword, "the first answer's width is still on TURN BACK TIME");
+            Assert.AreEqual(9, CaptionLines);
+            Click(Again);
+            yield return Wait(4);
+            Assert.AreEqual("YOU SAID LATER 28 TIMES.She would have taken any one of them." + LESSON, AgainText);
+        }
+
         [UnityTest]
         public IEnumerator PendingCard_OpensNothing()
         {
