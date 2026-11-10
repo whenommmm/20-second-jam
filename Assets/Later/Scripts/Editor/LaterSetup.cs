@@ -17,7 +17,7 @@ namespace Later.Editor
         static readonly (string Ttf, string Name)[] Fonts =
         {
             ("Anton-Regular", "Anton"), ("ArchivoBlack-Regular", "ArchivoBlack"), ("Newsreader-Italic", "Newsreader-Italic"),
-            ("Inter-SemiBold", "Inter-SemiBold"), ("Inter-Bold", "Inter-Bold")
+            ("Inter-Regular", "Inter-Regular"), ("Inter-SemiBold", "Inter-SemiBold"), ("Inter-Bold", "Inter-Bold")
         };
 
         // A dynamic TextCore font asset for each bundled font. Existing assets are kept, so the stylesheet's references hold.

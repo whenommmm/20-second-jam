@@ -4,7 +4,7 @@ This README is the starting point for any new chat or agent working on the user'
 
 **Read it first, then read `docs/missed-calls-design.md` before working on LATER.**
 
-Last updated: 2026-10-30. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed and is out of date.
+Last updated: 2026-11-10. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed and is out of date.
 
 ---
 
@@ -14,16 +14,16 @@ Last updated: 2026-10-30. This copy, in the Unity project at `~/Unity/20-Second-
 - **LATER:**
   - Fully designed in `docs/missed-calls-design.md`, rewritten on 2026-10-30 after the user played and refined a browser mockup.
   - The playable reference is `docs/reference/later-mockup.html`. Build "exactly like the showcase": that's the user's instruction.
-  - **The Unity version is the jam entry.** A web version (`web/later/`) is built first from the mockup and becomes the reference the Unity version is checked against.
-  - The web build follows `docs/superpowers/plans/2026-10-30-later-web.md`. A separate plan for the Unity version comes after it.
+  - **The Unity version is the jam entry.** A web version (`web/later/`) was built first from the mockup and is the reference the Unity version is checked against.
+  - **The web version is finished** (`docs/superpowers/plans/2026-10-30-later-web.md`).
+  - **The Unity version is built** on the branch `later-unity` (`docs/superpowers/plans/2026-10-30-later-unity.md`): it plays and reads like the web version, its WebGL zip is 9.3 MB, and it passes every check (section 7). Not yet merged to `main` or uploaded to itch.io: both wait for the user.
 - **Keep the Beat and Unsent:** only the idea exists (section 4). No design yet.
-- **Unity project:** this folder, created on 2026-10-29 from Unity's URP template. Nothing game-specific is in it yet.
+- **Unity project:** this folder. LATER lives in `Assets/Later/`.
 - **Git:** a private GitHub repo, `github.com/whenommmm/20-second-jam`. Work happens on branches; `main` holds reviewed work.
 
 **Next steps:**
-1. Finish the LATER web version (the plan above).
-2. Write and carry out the Unity plan for LATER (the jam entry).
-3. Design and build Keep the Beat and Unsent.
+1. The user plays the Unity build, then merges `later-unity` and uploads it to itch.io (section 7, "Uploading to itch.io").
+2. Design and build Keep the Beat and Unsent.
 
 ---
 
@@ -113,10 +113,28 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 ### The Unity project (this folder)
 - **Path:** `~/Unity/20-Second-Jam/`.
 - **Editor:** Unity **6000.3.2f1**, with the WebGL module installed. Other installed versions are 6000.1.14f1 and 6000.6.0f1. Keep 6000.3.2f1.
-- **Template:** Unity's **URP template** (PC and Mobile URP renderers, a volume profile, the new Input System with `InputSystem_Actions`, a TutorialInfo folder, a Readme asset, `Scenes/SampleScene.unity`).
-- **Packages:** notable ones are `com.unity.render-pipelines.universal` 17.3.0, `com.unity.inputsystem` 1.17.0, `com.unity.ugui` 2.0.0 (includes TextMeshPro) and **`com.unity.pipeline` 0.9.1-exp.1**, which lets the CLI and MCP control the editor.
-- **Setting it up for LATER, a flat 2D game:** orthographic camera, no unneeded post-processing, remove TutorialInfo and the Readme asset, and keep the WebGL build under 10 MB.
+- **Render pipeline:** the built-in one. The project started from Unity's URP template, but LATER is all UI Toolkit, and URP alone put the WebGL zip over 10 MB, so URP and the template's leftovers are gone. Colour space is **Gamma**, so see-through things blend as they do in a browser.
+- **Packages:** notable ones are `com.unity.inputsystem` 1.17.0, `com.unity.ugui` 2.0.0, `com.unity.test-framework` 1.6.0 and **`com.unity.pipeline` 0.9.1-exp.1**, which lets the CLI and MCP control the editor.
 - **One project or three?** The three games could live here as separate scenes, each with its own WebGL build. That's a suggestion, not a decision: confirm with the user before adding game 2.
+
+### The Unity version of LATER (`Assets/Later/`)
+- **A faithful port of `web/later/`**, file by file: `Rules.cs` ← `rules.js`, `Round.cs` ← `round.js`, `PlayView.cs` ← `view.js`, `Ending.cs` ← `ending.js`, `LaterGame.cs` ← `main.js`, `Later.uxml`/`Later.uss` ← `index.html`/`style.css`. Everything on screen is UI Toolkit.
+- **Every number and line of text comes from `web/later/src/data.js`**, through the generated `Assets/Later/Scripts/Core/LaterData.g.cs`. Never edit that file: change `data.js`, then run `npm run export-unity` in `web/later/`. `npm test` fails if the two drift apart.
+- **Fonts:** the web version's Anton, Archivo Black and Newsreader Italic, plus Inter (Regular, SemiBold, Bold) standing in for the iPhone's own font on the lock screen.
+- **Sounds** are baked to WAVs from the web version's synthesis (`Editor/Synth.cs`, `tools/unity.sh run Later.Editor.SoundBaker.Bake`).
+- **Close the Unity Editor before testing or building:** everything runs in batch mode, which can't open a project the Editor has open. `tools/unity.sh` says so if it is.
+- **Checks** (run from the project folder):
+  - `tools/unity.sh test editmode`: the rules, the round, and replays of rounds recorded from the JavaScript simulation (same events, same positions), fonts, icons, sounds.
+  - `tools/unity.sh test playmode`: the game itself, from the title screen through all three endings, restarts and the wide-phone layout.
+  - `cd web/later && npm test`: the web version's checks, and that the Unity data still matches `data.js`.
+- **Build:** `tools/unity.sh build` makes `Builds/LATER-webgl/` and `Builds/LATER-webgl.zip` (it fails if the zip is over 10 MB). Then `node tools/webgl-smoke.mjs` plays the build in headless Chrome, served the way itch.io serves it.
+- **Side by side with the web version:** `node tools/compare-shots.mjs` writes screenshots of both at the same moments to `Builds/shots/` (`*-pair.png`: web above, Unity below). They match apart from the lock screen's font (Inter) and how the voicemail preview wraps because of it.
+
+### Uploading to itch.io
+- Upload `Builds/LATER-webgl.zip` as an **HTML** project and tick **"This file will be played in the browser"**.
+- **Embed options:** viewport **960 × 540**; tick **Mobile friendly**, orientation **Landscape**; leave itch's fullscreen button off (the game has its own).
+- **Fill in the "AI generation disclosure"** on the project page (Claude wrote the code).
+- After uploading, play it once on itch.io on a desktop and on a phone held sideways.
 
 ### The web version of LATER (`web/later/`)
 - Plain HTML/CSS/JavaScript modules, no build step, no dependencies. Needs Node (26 is installed) for tests and Google Chrome for the headless checks.
@@ -135,13 +153,11 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 - **Other MCP servers:** `unityMCP` (the "MCP for Unity" package's HTTP server on `127.0.0.1:8080`) belongs to the Handshake project and isn't needed here. `blender` isn't relevant.
 
 ### WebGL for itch.io (Unity version)
-- itch.io doesn't send compression headers. Use **gzip with "Decompression Fallback" on**, or no compression.
-- Keep the build small (target under 10 MB): IL2CPP optimised for size, high managed stripping, minimal packages.
-- Upload the build as a zip to itch.io.
+- itch.io doesn't send compression headers, so the build uses **gzip with "Decompression Fallback" on** (`Editor/LaterBuild.cs` sets this and the rest: IL2CPP optimised for size, high managed stripping, no splash).
 
 ### Audio
 - Browsers block audio until the player clicks or taps, so every game starts with a click-to-start screen.
-- Placeholder sounds can be generated in code (Web Audio on the web; `AudioClip.Create` and `SetData` in Unity, which works on WebGL).
+- Sounds are generated in code (Web Audio on the web; baked to WAVs at edit time in Unity).
 - Unity's audio filter components don't work on WebGL.
 
 ---
@@ -169,9 +185,11 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 │   ├── reference/later-mockup.html the playable mockup LATER was designed from
 │   └── superpowers/plans/          implementation plans
 ├── web/later/                      the web version of LATER
-├── Assets/                         Unity content (template content so far)
+├── Assets/Later/                   the Unity version of LATER (scripts, UI, fonts, sounds, tests)
+├── Assets/WebGLTemplates/Later/    the page around the WebGL build
+├── tools/                          unity.sh (tests, build), webgl-smoke.mjs, compare-shots.mjs
 ├── Packages/  ProjectSettings/     Unity project files
-└── Library/  Temp/  Logs/          generated by Unity, not in git
+└── Library/  Temp/  Logs/  Builds/ generated, not in git
 
 ~/20-Second-Jam/                    planning folder from before the project existed
 ├── jam/                            older copy of this README and the design doc (stale)
@@ -181,5 +199,5 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 ## Schedule
 
 - Submissions close **Nov 17** (plan for UTC).
-- LATER: web version by about **Nov 1**, Unity jam entry by about **Nov 6**.
+- LATER: web version done Nov 1; Unity jam entry built Nov 10, waiting for the user to play it and upload it.
 - Then Keep the Beat and Unsent in the remaining ~10 days.

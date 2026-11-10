@@ -54,6 +54,8 @@ The emotion comes from the player's own actions. The reveal changes what **they 
 - Controls: mouse, touch, and keyboard (arrow keys or WASD) all move the player.
 - Platforms (my call, unchanged): desktop browsers and touch devices held landscape. Phones held portrait get a "rotate your device" message, and the itch.io page says "best on desktop".
 - Keep the web build tiny and the Unity build under 10 MB.
+- **Fonts in the Unity version (my call):** the same Anton, Archivo Black and Newsreader Italic, bundled. A Unity build can't use the device's own font, so the lock screen uses **Inter** (Regular, SemiBold and Bold, at the web version's weights), the closest open font to the iPhone's. Its wider letters make the voicemail preview wrap a word earlier than on the web.
+- **How the Unity version is kept the same as the web version:** its data is generated from the web version's `data.js`; its round replays rounds recorded from the JavaScript simulation and must produce the same events at the same moments; its screens are compared with the web version's at the same moments (`tools/compare-shots.mjs`); and its WebGL build is played in a real browser served the way itch.io serves it (`tools/webgl-smoke.mjs`). How to run each is in the README.
 
 ---
 

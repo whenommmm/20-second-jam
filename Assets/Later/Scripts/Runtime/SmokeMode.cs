@@ -11,7 +11,8 @@ namespace Later
 {
     // The build's automated checks, like the web version's tests/browser/harness.js. Started when the page's hash is
     // #test-<mode>[&speed=N]: boot, dodge or late. Every frame is a fixed speed/60 s of game time (default 4×), any
-    // logged error fails the run, and the result goes in the tab title: "OK <mode>" or "FAIL <reasons>".
+    // logged error fails the run, and the result goes in the tab title: "OK <mode>" or "FAIL <reasons>", followed by
+    // the game clock (" t=12.34").
     public sealed class SmokeMode : MonoBehaviour
     {
         LaterGame game;
@@ -21,6 +22,7 @@ namespace Later
         Func<Round, Vec> bot;
         double t;
         bool done;
+        string status;
 
         public static bool Wanted => Browser.Hash.StartsWith("#test-");
 
@@ -34,7 +36,8 @@ namespace Later
                 if (p.StartsWith("speed=")) float.TryParse(p.Substring(6), NumberStyles.Float, CultureInfo.InvariantCulture, out speed);
             Time.captureDeltaTime = speed / 60f;
             Application.logMessageReceived += OnLog;
-            Browser.SetTitle("RUNNING " + mode);
+            status = "RUNNING " + mode;
+            Browser.SetTitle(status);
 
             switch (mode)
             {
@@ -45,7 +48,7 @@ namespace Later
                         Expect(Plain(Q("title").Q<Label>(className: "name").text) == "LATER", "no LATER on the title screen");
                         // every bundled font can draw: the build carries the font files the dynamic atlases fill from
                         var fonts = Resources.FindObjectsOfTypeAll<UnityEngine.TextCore.Text.FontAsset>();
-                        foreach (var name in new[] { "Anton SDF", "ArchivoBlack SDF", "Newsreader-Italic SDF", "Inter-SemiBold SDF", "Inter-Bold SDF" })
+                        foreach (var name in new[] { "Anton SDF", "ArchivoBlack SDF", "Newsreader-Italic SDF", "Inter-Regular SDF", "Inter-SemiBold SDF", "Inter-Bold SDF" })
                         {
                             var font = fonts.FirstOrDefault(f => f.name == name);
                             Expect(font != null && font.HasCharacters("LATERlater0123…×·", out uint[] _, false, true), $"font {name} {(font == null ? "missing" : "can't draw")}");
@@ -115,9 +118,12 @@ namespace Later
 
         void Update()
         {
+            t += Time.deltaTime;
+            // the status, then the game clock, which keeps going after the report so tools/compare-shots.mjs
+            // can catch the same moments as in the web version
+            Browser.SetTitle(string.Format(CultureInfo.InvariantCulture, "{0} t={1:F2}", status, t));
             if (done) return;
             if (bot != null && game.State == "play") game.ForcedTarget = bot(game.Round);
-            t += Time.deltaTime;
             foreach (var due in schedule.Where(s => s.At <= t).ToList())
             {
                 schedule.Remove(due);
@@ -136,7 +142,8 @@ namespace Later
         {
             if (done) return;
             done = true;
-            Browser.SetTitle(fails.Count == 0 ? "OK " + mode : "FAIL " + string.Join("; ", fails.Take(5)));
+            status = fails.Count == 0 ? "OK " + mode : "FAIL " + string.Join("; ", fails.Take(5));
+            Browser.SetTitle(status);
         }
 
         VisualElement Q(string name) => game.Root.Q(name);

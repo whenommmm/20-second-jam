@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using UnityEditor;
@@ -17,18 +18,7 @@ namespace Later.Editor
         [MenuItem("LATER/Build WebGL")]
         public static void WebGL()
         {
-            PlayerSettings.productName = "LATER";
-            PlayerSettings.WebGL.template = "PROJECT:Later";
-            // itch.io serves the compressed files without a Content-Encoding header, so the loader decompresses them itself
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
-            PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
-            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
-            PlayerSettings.SplashScreen.show = false;
-            PlayerSettings.SplashScreen.showUnityLogo = false;
-            // a hidden tab pauses the game, as on the web
-            PlayerSettings.runInBackground = false;
-
+            ApplyPlayerSettings();
             if (Directory.Exists(Dir)) Directory.Delete(Dir, true);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
@@ -43,9 +33,27 @@ namespace Later.Editor
             if (File.Exists(Zip)) File.Delete(Zip);
             ZipFile.CreateFromDirectory(Dir, Zip, System.IO.Compression.CompressionLevel.Optimal, false);
             long size = new FileInfo(Zip).Length;
-            var en = System.Globalization.CultureInfo.InvariantCulture;
+            var en = CultureInfo.InvariantCulture;
             Debug.Log(string.Format(en, "LATER-webgl.zip: {0:N0} bytes (limit {1:N0})", size, MaxZip));
             if (size > MaxZip) throw new Exception(string.Format(en, "{0} is {1:N0} bytes, over the jam's {2:N0}", Zip, size, MaxZip));
+        }
+
+        public static void ApplyPlayerSettings()
+        {
+            PlayerSettings.productName = "LATER";
+            PlayerSettings.WebGL.template = "PROJECT:Later";
+            // itch.io serves the compressed files without a Content-Encoding header, so the loader decompresses them itself
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
+            PlayerSettings.SplashScreen.show = false;
+            PlayerSettings.SplashScreen.showUnityLogo = false;
+            // a hidden tab pauses the game, as on the web
+            PlayerSettings.runInBackground = false;
+            // blend colours as browsers do: in linear space everything see-through comes out lighter than the web version
+            PlayerSettings.colorSpace = ColorSpace.Gamma;
+            AssetDatabase.SaveAssets();
         }
     }
 }

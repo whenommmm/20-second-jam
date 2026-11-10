@@ -67,6 +67,29 @@ namespace Later.Tests
             Assert.IsTrue(a.yMin >= c.yMax - 1 || a.xMax <= c.xMin || a.xMin >= c.xMax, "the response overlaps her words");
         }
 
+        // CSS line-height, which USS lacks: her lines 19 px × 1.25 + 4 px apart, the reply 26 px × 1.1 tall, the phone's text regular weight
+        [UnityTest]
+        public IEnumerator Text_IsSpacedAndWeightedLikeTheWeb()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return WaitFor(() => CaptionLines == 3, 15, "three of her lines");
+            yield return Wait(0.7);
+            var lines = Q("caption").Query<Label>(className: "line").ToList();
+            float s = Q("world").worldBound.height / (float)H;
+            Assert.AreEqual(19 * 1.25 + 4, (lines[1].worldBound.yMin - lines[0].worldBound.yMin) / s, 0.5, "her lines aren't spaced as on the web");
+            Assert.AreEqual(19 * 1.25 + 4, (lines[2].worldBound.yMin - lines[1].worldBound.yMin) / s, 0.5);
+            Assert.AreEqual("Inter-Regular SDF", Q("sil").resolvedStyle.unityFontDefinition.fontAsset.name);
+            Assert.AreEqual("Inter-Regular SDF", MessagesCard.Q<Label>(className: "text").resolvedStyle.unityFontDefinition.fontAsset.name);
+            Assert.AreEqual("Inter-SemiBold SDF", MessagesCard.Q<Label>(className: "title").resolvedStyle.unityFontDefinition.fontAsset.name);
+            yield return ToTurnBack();
+            Click(Again);
+            yield return Wait(0.5);
+            var loud = Q("loud");
+            float lineBox = loud.layout.height + loud.resolvedStyle.marginTop + loud.resolvedStyle.marginBottom; // the space it takes, as CSS lays it out
+            Assert.AreEqual(26 * 1.1, lineBox, 1, "the reply's line doesn't take the height it does on the web");
+        }
+
         [UnityTest]
         public IEnumerator Home()
         {

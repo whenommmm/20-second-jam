@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -276,11 +277,34 @@ namespace Later
 
         // ---- the lock screen ----
 
-        static Label Text(string text, string cls, string lineHeight = null)
+        // a line of text; text that may wrap gets the web version's line-height (font size × lineHeight)
+        static Label Text(string text, string cls, float lineHeight = 0, Action<float, float> then = null)
         {
-            var l = new Label(lineHeight == null ? text : $"<line-height={lineHeight}>{text}") { pickingMode = PickingMode.Ignore };
+            var l = new Label(text) { pickingMode = PickingMode.Ignore };
             l.AddToClassList(cls);
+            if (lineHeight > 0) LineHeight(l, lineHeight, then);
             return l;
+        }
+
+        // CSS line-height, which USS lacks. Once the label has its font: its lines go `factor` × the font size apart, and
+        // its box grows or shrinks by the leading, so it is as tall as CSS makes it, each line where CSS draws it.
+        // `then` gets the line height and the font's own line height.
+        static void LineHeight(Label label, float factor, Action<float, float> then = null)
+        {
+            string raw = label.text;
+            EventCallback<GeometryChangedEvent> fit = null;
+            fit = e =>
+            {
+                label.UnregisterCallback(fit);
+                float lh = label.resolvedStyle.fontSize * factor;
+                float natural = label.MeasureTextSize("Hg", 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
+                float half = (lh - natural) / 2;
+                label.text = string.Format(CultureInfo.InvariantCulture, "<line-height={0:0.###}px>{1}", lh, raw);
+                label.style.marginTop = label.resolvedStyle.marginTop + half;
+                label.style.marginBottom = label.resolvedStyle.marginBottom + half;
+                then?.Invoke(lh, natural);
+            };
+            label.RegisterCallback(fit);
         }
 
         // a notification card: icon, title and time, then its text
@@ -335,7 +359,7 @@ namespace Later
             var thread = Rules.BuildThread(round.Answered, Key);
             var newest = thread[thread.Count - 1];
             int more = thread.Count - 1;
-            var body = new List<VisualElement> { Text(newest.Text, "text", "1.32em") };
+            var body = new List<VisualElement> { Text(newest.Text, "text", 1.32f) };
             if (more > 0)
             {
                 var sub = Text($"{more} more message{(more == 1 ? "" : "s")}", "sub");
@@ -355,16 +379,11 @@ namespace Later
             VisualElement vm = null;
             if (Key == "late")
             {
-                var text = Text(VOICEMAIL, "vm", "1.3em");
-                vm = Pending(Note(items, "handset", "Mom", "Mar 28", Text("Voicemail · 0:18", "sub"), text));
                 // three lines of her voicemail, or two if the cards would reach "Notifications silenced"
-                EventCallback<GeometryChangedEvent> check = null;
-                check = e =>
-                {
-                    items.UnregisterCallback(check);
-                    if (Box(items).yMin < Box(Q("sil")).yMax + 6) text.AddToClassList("clamp2");
-                };
-                items.RegisterCallback(check);
+                Label text = null;
+                text = Text(VOICEMAIL, "vm", 1.3f, (lh, natural) =>
+                    text.style.maxHeight = (Box(items).yMin < Box(Q("sil")).yMax + 6 ? 1 : 2) * lh + natural);
+                vm = Pending(Note(items, "handset", "Mom", "Mar 28", Text("Voicemail · 0:18", "sub"), text));
             }
 
             if (vm != null) { Reveal(vm); PlayCaption(CAPTION_HEADERS["voicemail"], VOICEMAIL); }
@@ -380,7 +399,7 @@ namespace Later
             var list = world.Q<ScrollView>("sheetList");
             list.Clear();
             foreach (var m in thread.AsEnumerable().Reverse())
-                Note(list.contentContainer, "bubble", m.Who, Rules.ShortDate(m.Date), Text(m.Text, "text", "1.32em"));
+                Note(list.contentContainer, "bubble", m.Who, Rules.ShortDate(m.Date), Text(m.Text, "text", 1.32f));
             list.scrollOffset = Vector2.zero;
             sheet.AddToClassList("on");
             tl.Tween(0, 0.28, Ease.CubicBezier(.2, .8, .2, 1), p =>
@@ -408,7 +427,7 @@ namespace Later
         void ShowLine()
         {
             if (disposed || lines == null || shown >= lines.Count) return;
-            var line = Text(lines[shown++], "line", "1.25em");
+            var line = Text(lines[shown++], "line", 1.25f);
             Q("caption").Add(line);
             CapIn(line, 0.6);
             if (shown == lines.Count && !captionDone)
@@ -447,39 +466,34 @@ namespace Later
             var (loud, soft) = Rules.TurnBackLines(Key, round.Missed);
             again.AddToClassList("tried");
             var l = L("loud");
-            l.text = $"<line-height=1.1em>{loud}";
-            Balance(l);
-            tl.After(1.8, () => Answer(Text(soft, "soft", "1.2em")));
-            tl.After(3.6, () => Answer(Text($"<cspace=0.5px>{LESSON}</cspace>", "lesson")));
+            l.text = loud;
+            LineHeight(l, 1.1f, (_, __) => Balance(l));
+            tl.After(1.8, () => Answer(soft, "soft", 1.2f));
+            tl.After(3.6, () => Answer($"<cspace=0.5px>{LESSON}</cspace>", "lesson", 1.1f));
             tl.After(6.6, ShowRestart); // the way out, only once the lesson has sunk in
         }
 
-        void Answer(Label line)
+        void Answer(string text, string cls, float lineHeight)
         {
+            Label line = null;
+            line = Text(text, cls, lineHeight, (_, __) => Balance(line));
             Q("again").Add(line);
-            Balance(line);
             CapIn(line, 0.9);
         }
 
-        // text-wrap: balance — once laid out, narrow the text to the least width that keeps its number of lines
+        // text-wrap: balance — narrow the text to the least width that keeps its number of lines (as browsers do)
         static void Balance(Label label)
         {
-            EventCallback<GeometryChangedEvent> fit = null;
-            fit = e =>
+            const float max = 290;
+            float Height(float w) => label.MeasureTextSize(label.text, w, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y;
+            float h = Height(max);
+            float lo = 0, hi = max;
+            while (hi - lo > 0.5f)
             {
-                label.UnregisterCallback(fit);
-                const float max = 290;
-                float Height(float w) => label.MeasureTextSize(label.text, w, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y;
-                float h = Height(max);
-                float lo = 0, hi = max;
-                while (hi - lo > 0.5f)
-                {
-                    float mid = (lo + hi) / 2;
-                    if (Height(mid) > h + 0.5f) lo = mid; else hi = mid;
-                }
-                label.style.maxWidth = Mathf.Ceil(hi);
-            };
-            label.RegisterCallback(fit);
+                float mid = (lo + hi) / 2;
+                if (Height(mid) > h + 0.5f) lo = mid; else hi = mid;
+            }
+            label.style.maxWidth = Mathf.Ceil(hi);
         }
 
         public void Dispose()
@@ -517,6 +531,7 @@ namespace Later
             while (again.childCount > 1) again.RemoveAt(1);
             var loud = L("loud");
             loud.text = "TURN BACK TIME"; loud.style.maxWidth = StyleKeyword.Null;
+            loud.style.marginTop = StyleKeyword.Null; loud.style.marginBottom = StyleKeyword.Null;
             Q("restartTap").RemoveFromClassList("on");
             Q("restart").style.opacity = StyleKeyword.Null; Q("restart").style.translate = StyleKeyword.Null;
         }

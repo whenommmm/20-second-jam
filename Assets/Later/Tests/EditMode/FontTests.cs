@@ -42,12 +42,17 @@ namespace Later.Tests
         public void NewsreaderItalic_DrawsHerWords() =>
             AssertDraws("Newsreader-Italic", new[] { VOICEMAIL, LAST_CALL }.Concat(TURN_BACK.Values.Select(v => v[1])));
 
+        // the phone's own text is regular weight, as on the web; titles, the clock and the pill are semibold
         [Test]
-        public void InterSemiBold_DrawsThePhone() =>
-            AssertDraws("Inter-SemiBold", FOLLOW_UP.Concat(PENDING).Concat(FINAL.Values.SelectMany(m => new[] { m.Who, m.Text })).Concat(Callers)
-                .Concat(new[] { VOICEMAIL, "Thursday, April 2", "7:12", "Later", "Notifications silenced", "Missed Calls", "Voicemail · 0:18",
-                    "Show less", "more messages", "5G", "0123456789" })
+        public void InterRegular_DrawsThePhonesText() =>
+            AssertDraws("Inter-Regular", FOLLOW_UP.Concat(PENDING).Concat(FINAL.Values.Select(m => m.Text)).Concat(Callers)
+                .Concat(new[] { VOICEMAIL, "Notifications silenced", "Voicemail · 0:18", "13 more messages", "0123456789, " })
                 .Concat(Dates().Select(Rules.ShortDate)));
+
+        [Test]
+        public void InterSemiBold_DrawsThePhonesTitles() =>
+            AssertDraws("Inter-SemiBold", Callers.Concat(FINAL.Values.Select(m => m.Who))
+                .Concat(new[] { "Thursday, April 2", "7:12", "Later", "Missed Calls", "Missed Call", "Show less", "5G", "0123456789" }));
 
         [Test]
         public void InterBold_DrawsTheSheetTitle() => AssertDraws("Inter-Bold", new[] { "Messages" });
