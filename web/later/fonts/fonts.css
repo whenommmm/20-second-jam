@@ -1,4 +1,8 @@
-/* Bundled so the game looks the same everywhere on itch.io, with no runtime requests. Latin subsets. */
+/* Bundled so the game looks the same everywhere on itch.io, with no runtime requests. Latin subsets.
+   Inter is the phone's text, as in the Unity version (kerning only: the Unity version's text has no contextual alternates). */
 @font-face { font-family: "Anton"; font-style: normal; font-weight: 400; font-display: block; src: url("anton-latin.woff2") format("woff2"); }
 @font-face { font-family: "Archivo Black"; font-style: normal; font-weight: 400; font-display: block; src: url("archivo-black-latin.woff2") format("woff2"); }
 @font-face { font-family: "Newsreader"; font-style: italic; font-weight: 400; font-display: block; src: url("newsreader-italic-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: block; src: url("inter-regular-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: block; src: url("inter-semibold-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: block; src: url("inter-bold-latin.woff2") format("woff2"); }
