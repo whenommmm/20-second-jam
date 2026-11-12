@@ -59,5 +59,14 @@ namespace Later.Tests
 
         [Test]
         public void InterBold_DrawsTheSheetTitle() => AssertDraws("Inter-Bold", new[] { "Messages" });
+
+        // letter-spaced text ends in a zero-width space (Ending.Spaced), so every font that letter-spaces can draw one,
+        // through an explicit fallback where the font itself has none
+        [TestCase("ArchivoBlack"), TestCase("Anton"), TestCase("Inter-SemiBold"), TestCase("Newsreader19-Italic"), TestCase("Newsreader21-Italic")]
+        public void LetterSpacedText_CanEndInAZeroWidthSpace(string font)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<FontAsset>($"Assets/Later/Fonts/{font} SDF.asset");
+            Assert.IsTrue(asset.HasCharacters("\u200B", out uint[] _, true, true), $"{font} (and its fallbacks) can't draw U+200B");
+        }
     }
 }

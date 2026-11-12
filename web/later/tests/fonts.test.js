@@ -27,3 +27,11 @@ test("the phone's text is the bundled Inter, at the weights the Unity version ha
     assert.ok(rules.some(r => /"Inter"/.test(r)), `${sel} isn't Inter`);
   }
 });
+
+// the phone first shows at the ending, inside a hidden card: the page asks for its fonts up front, so the clock and its
+// text aren't blank while they load (font-display: block) as the lock screen fades in
+test("the page preloads the fonts the ending first uses", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  for (const file of ["inter-regular-latin.woff2", "inter-semibold-latin.woff2", "inter-bold-latin.woff2", "newsreader-italic-latin.woff2"])
+    assert.match(html, new RegExp(`<link rel="preload" href="fonts/${file.replace(".", "\\.")}" as="font" type="font/woff2" crossorigin>`), `${file} isn't preloaded`);
+});

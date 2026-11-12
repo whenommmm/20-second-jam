@@ -38,7 +38,7 @@
     var log = console.log;
     console.log = function () {
       var from = new Error().stack || "";
-      if (/_JS_Log_Dump|\.loader\.js/.test(from)) return;
+      if (/_JS_Log_Dump|\.loader\.js/.test(from) || /^Audio context (resumed|suspended)/.test(String(arguments[0]))) return;
       return log.apply(console, arguments);
     };
   })();

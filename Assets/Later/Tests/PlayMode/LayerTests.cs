@@ -69,6 +69,23 @@ namespace Later.Tests
             Assert.AreEqual(Overflow.Hidden, inner.style.overflow.value, "the clip didn't come back");
         }
 
+        // while the Messages card fades in (drawn K× inside its layer), its slivers stay under it and all of it takes taps
+        [UnityTest]
+        public IEnumerator TheMessagesCard_IsWholeWhileItFadesIn()
+        {
+            yield return Load(new Vector2Int(1920, 1080)); // the world drawn 2×
+            yield return Play(r => Bots.DodgeTarget(r, 340));
+            VisualElement card = null;
+            yield return WaitFor(() => (card = Q("items").Query(className: "tap").ToList().FirstOrDefault()) != null
+                && !card.ClassListContains("pending") && Layer.Alpha(card) < 0.9f, 15, "the Messages card mid-reveal");
+            yield return null;
+            var shadows = card.Q<CardShadows>();
+            Assert.AreEqual(card.Q(className: "card"), shadows.parent, "the slivers aren't drawn with the card");
+            var box = card.Q(className: "card").worldBound;
+            var picked = card.panel.Pick(new Vector2(box.xMin + 6, box.yMin + 6));
+            Assert.IsTrue(picked != null && card.Contains(picked), "a tap near the card's corner misses it mid-reveal");
+        }
+
         // the Messages sheet opens as one layer: the cards don't show through as patches mid-fade
         [UnityTest]
         public IEnumerator TheMessagesSheet_FadesInAsOneLayer()

@@ -42,7 +42,8 @@
   function over(b, e) { return !!b && e.clientX >= b.x && e.clientX < b.x + b.w && e.clientY >= b.y && e.clientY < b.y + b.h; }
   var pressed = null;
   addEventListener("pointerdown", function (e) {
-    pressed = e.button === 0 && over(page.buttons.fs, e) ? e.pointerId : null;
+    // only a press on the game itself: ROTATE YOUR DEVICE, over it, keeps every tap, as on the web
+    pressed = e.button === 0 && e.target && e.target.id === "unity-canvas" && over(page.buttons.fs, e) ? e.pointerId : null;
     page.focus = ""; // a click elsewhere takes focus off the buttons; a click on one doesn't give it focus either
   }, true);
   addEventListener("pointerup", function (e) {

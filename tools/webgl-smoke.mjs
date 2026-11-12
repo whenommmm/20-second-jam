@@ -12,7 +12,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const BUILD = join(ROOT, "Builds/LATER-webgl");
 // software WebGL (SwiftShader) is slow, and slower the more often the page is read, so look every 2 s and allow 10 minutes
 // (on a real GPU, LATER_GPU=1, the build runs at a steady 60 fps)
-const LIMIT_MS = 600_000, POLL_MS = 2000;
+const LIMIT_MS = 600_000, POLL_MS = 2000, STALL_MS = 60_000;
 
 const runs = (process.argv.length > 2 ? process.argv.slice(2) : ["boot@960x627", "dodge@960x627", "late@960x627", "dodge@844x477"])
   .map(arg => { const [mode, size = "960x627"] = arg.split("@"), [w, h] = size.split("x").map(Number); return { mode, w, h }; });
@@ -21,10 +21,15 @@ async function run({ mode, w, h }, site) {
   const started = Date.now();
   const page = await openChrome(`${site}/index.html#test-${mode}`, w, h);
   try {
-    let title = "";
+    let title = "", clock = null, movedAt = Date.now();
     for (const end = Date.now() + LIMIT_MS; Date.now() < end; await sleep(POLL_MS)) {
-      title = ((await page.eval("document.title")) || "").replace(/ t=[0-9.]+$/, ""); // the build adds its game clock
+      const raw = (await page.eval("document.title")) || "";
+      title = raw.replace(/ t=[0-9.]+$/, ""); // the build adds its game clock
       if (/^(OK|FAIL)\b/.test(title)) break;
+      // a build that has stopped (its game clock stands still for a minute) fails now, not at the limit
+      const t = (raw.match(/ t=([0-9.]+)$/) || [])[1];
+      if (t !== clock) { clock = t; movedAt = Date.now(); }
+      else if (Date.now() - movedAt > STALL_MS) { title = `stalled at t=${t ?? "?"} (no progress for ${STALL_MS / 1000} s)`; break; }
     }
     const secs = ((Date.now() - started) / 1000).toFixed(1);
     const ok = title === `OK ${mode}`;

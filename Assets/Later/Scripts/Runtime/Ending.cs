@@ -315,7 +315,10 @@ namespace Later
         {
             string raw = label.text;
             float applied = -1, top = 0, bottom = 0;
-            label.RegisterCallback<GeometryChangedEvent>(e =>
+            // one at a time: a label given new text (TURN BACK TIME's answer, each round) drops its old line height
+            if (label.userData is EventCallback<GeometryChangedEvent> old) label.UnregisterCallback(old);
+            EventCallback<GeometryChangedEvent> fit = null;
+            label.userData = fit = e =>
             {
                 float size = label.resolvedStyle.fontSize;
                 if (size == applied) return;
@@ -328,7 +331,8 @@ namespace Later
                 label.style.marginTop = top + half;
                 label.style.marginBottom = bottom + half;
                 then?.Invoke(lh, natural);
-            });
+            };
+            label.RegisterCallback(fit);
         }
 
         static string LineTag(float lh) => string.Format(CultureInfo.InvariantCulture, "<line-height={0:0.###}px>", lh);
@@ -384,18 +388,21 @@ namespace Later
         }
 
         // laid out but hidden until it's revealed
-        // (not under the pointer either, so it neither lights up nor takes a tap: pointer-events: none on the web)
+        // (not under the pointer either, so it neither lights up nor takes a tap: pointer-events: none on the web). The
+        // card, not the notification around it, takes the pointer: drawn K× inside its fading layer, it covers the
+        // whole card even mid-fade, and its taps and hover reach the notification.
         static VisualElement Pending(VisualElement n)
         {
             n.AddToClassList("pending");
             n.pickingMode = PickingMode.Ignore;
+            n.Q(className: "card").pickingMode = PickingMode.Ignore;
             return n;
         }
 
         void Reveal(VisualElement n)
         {
             n.RemoveFromClassList("pending");
-            n.pickingMode = PickingMode.Position;
+            n.Q(className: "card").pickingMode = PickingMode.Position;
             n.AddToClassList("in");
             var card = n.Q(className: "card");
             tl.Tween(0, 0.35, Ease.CubicBezier(.2, .8, .2, 1), p =>
@@ -424,7 +431,8 @@ namespace Later
             if (more > 0)
             {
                 msgs.AddToClassList("stacked");
-                msgs.Insert(0, new CardShadows()); // the rest of the thread, peeking out under it as the web's box-shadows
+                // the rest of the thread, peeking out under it as the web's box-shadows (drawn with the card, so they fade with it)
+                msgs.Q(className: "card").Insert(0, new CardShadows());
             }
             // not tappable until it has appeared
             msgs.RegisterCallback<ClickEvent>(e => { if (!msgs.ClassListContains("pending")) OpenThread(thread); });
@@ -595,6 +603,7 @@ namespace Later
             again.RemoveFromClassList("on"); again.RemoveFromClassList("tried");
             while (again.childCount > 1) again.RemoveAt(1);
             var loud = L("loud");
+            if (loud.userData is EventCallback<GeometryChangedEvent> fit) { loud.UnregisterCallback(fit); loud.userData = null; }
             loud.text = "TURN BACK TIME"; loud.style.maxWidth = StyleKeyword.Null;
             loud.style.marginTop = StyleKeyword.Null; loud.style.marginBottom = StyleKeyword.Null;
             Q("restartTap").RemoveFromClassList("on");
