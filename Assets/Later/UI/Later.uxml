@@ -62,7 +62,7 @@
                             <ui:VisualElement name="sheet">
                                 <ui:VisualElement class="sh">
                                     <ui:Label text="Messages" class="heading" />
-                                    <ui:VisualElement name="sheetClose"><ui:Label text="Show less" picking-mode="Ignore" /></ui:VisualElement>
+                                    <ui:VisualElement name="sheetClose" class="clicky"><ui:Label text="Show less" picking-mode="Ignore" /><ui:VisualElement class="ring" picking-mode="Ignore" /></ui:VisualElement>
                                 </ui:VisualElement>
                                 <ui:ScrollView name="sheetList" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden" touch-scroll-type="Clamped" />
                             </ui:VisualElement>
@@ -83,13 +83,14 @@
                 </ui:VisualElement>
                 <ui:Label name="timeov" text="TIME!" class="ov" />
                 <ui:VisualElement name="centre-top" class="centre" picking-mode="Ignore">
-                    <ui:VisualElement name="again"><ui:Label name="loud" text="TURN BACK TIME" class="loud" /></ui:VisualElement>
-                    <ui:VisualElement name="restartTap"><ui:Label name="restart" text="&lt;cspace=2px&gt;PLAY AGAIN&lt;/cspace&gt;" picking-mode="Ignore" /></ui:VisualElement>
+                    <ui:VisualElement name="again" class="clicky"><ui:Label name="loud" text="TURN BACK TIME" class="loud" /></ui:VisualElement>
+                    <ui:VisualElement name="restartTap" class="clicky"><ui:Label name="restart" text="&lt;cspace=2px&gt;PLAY AGAIN&lt;/cspace&gt;" picking-mode="Ignore" /></ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="fly" picking-mode="Ignore" />
-                <ui:VisualElement name="fs">
+                <ui:VisualElement name="fs" class="clicky">
                     <ui:VisualElement class="icon" picking-mode="Ignore" />
                     <ui:Label text="&lt;cspace=2px&gt;FULLSCREEN&lt;/cspace&gt;" picking-mode="Ignore" />
+                    <ui:VisualElement class="ring" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

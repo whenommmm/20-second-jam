@@ -21,5 +21,13 @@ mergeInto(LibraryManager.library, {
   },
   LaterSetPlaying: function (playing) { if (window.LaterPage) window.LaterPage.playing = !!playing; },
   // the time of the latest press, on the page's clock (ms)
-  LaterPointerTime: function () { return window.LaterPage ? window.LaterPage.lastDown : 0; }
+  LaterPointerTime: function () { return window.LaterPage ? window.LaterPage.lastDown : 0; },
+  // the cursor over the game: "pointer" over buttons, "none" over the stage in play, "" otherwise
+  LaterSetCursor: function (cursor) { Module.canvas.style.cursor = UTF8ToString(cursor); },
+  // where FULLSCREEN and Show less are (CSS px; zero size when hidden): later.js clicks and focuses them itself
+  LaterSetButtons: function (fx, fy, fw, fh, cx, cy, cw, ch) {
+    if (!window.LaterPage) return;
+    window.LaterPage.buttons = { fs: fw > 0 ? { x: fx, y: fy, w: fw, h: fh } : null, close: cw > 0 ? { x: cx, y: cy, w: cw, h: ch } : null };
+  },
+  LaterFocused: function () { var f = window.LaterPage && window.LaterPage.focus; return f === "close" ? 1 : f === "fs" ? 2 : 0; }
 });

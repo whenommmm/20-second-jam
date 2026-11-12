@@ -23,12 +23,17 @@ Label { white-space: nowrap; }
 /* fullscreen: a labelled button under the start text on the title screen, an icon in the empty top-left corner
    after TIME!, never during play, hidden where the browser can't do it */
 #fs { position: absolute; left: 20px; top: 16px; height: 44px; padding: 0 11px; flex-direction: row; align-items: center; opacity: 0.6; }
-#fs:hover { opacity: 1; }
+#fs:hover, #fs.hovered { opacity: 1; }
 #fs .icon { width: 22px; height: 22px; background-image: url("/Assets/Later/UI/Icons/fullscreen.svg"); -unity-background-image-tint-color: #141414; }
 #fs Label { display: none; margin-left: 9px; height: 20px; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 13px; -unity-text-align: middle-left; }
 #fs.ontitle { left: 50%; top: 336px; translate: -50% 0; opacity: 0.75; padding: 0 16px; }
 #fs.ontitle Label { display: flex; }
 #fs.hide { display: none; }
+/* keyboard focus (the page moves it with Tab, as between the web version's buttons): a browser's focus ring */
+.ring { position: absolute; display: none; border-width: 2px; border-color: #101010; }
+.focused > .ring { display: flex; }
+#fs .ring { left: -2px; top: -2px; right: -2px; bottom: -2px; }
+#sheetClose .ring { left: 8px; top: 12px; right: 8px; bottom: 12px; border-radius: 13px; border-color: #fff; }
 
 /* phones held upright: ask to rotate (play pauses meanwhile); LaterGame sizes the text like min(34px, 8vw) */
 #rotate { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; padding: 24px; background-color: #141414; }
@@ -118,6 +123,9 @@ Label { white-space: nowrap; }
 .n .sub.more { margin-top: 1px; margin-bottom: 0; }
 .n .vm { max-height: 39px; overflow: hidden; text-overflow: ellipsis; white-space: normal; font-size: 10px; }
 .n.pending { opacity: 0; }
+/* the Messages card lights up under the mouse */
+.n.tap { transition-property: background-color; transition-duration: 0.15s; transition-timing-function: ease; }
+.n.tap:hover { background-color: rgba(255, 255, 255, 0.19); }
 /* the Messages card sits on the rest of the thread: two slivers peek out under it */
 .n.stacked { margin-bottom: 10px; }
 .n .peek1, .n .peek2 { position: absolute; top: 100%; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }

@@ -40,6 +40,11 @@
     companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
     productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
     productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+    // as on the web: right-click opens the browser's menu, errors only reach the console (no alert), and the engine's
+    // own log lines stay out of it
+    disabledCanvasEvents: [],
+    errorHandler: function (error) { console.error(error); return true; },
+    print: function () {},
   }, function (progress) {
     bar.firstChild.style.width = (100 * progress) + "%";
   }).then(function () {

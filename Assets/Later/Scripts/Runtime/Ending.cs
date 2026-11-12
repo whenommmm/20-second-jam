@@ -39,7 +39,7 @@ namespace Later
 
             onAgain = e => TurnBack();
             onRestartTap = e => onRestart();
-            onSheetClose = e => { e.StopPropagation(); Q("sheet").RemoveFromClassList("on"); };
+            onSheetClose = e => { e.StopPropagation(); CloseSheet(); };
             Q("again").RegisterCallback(onAgain);
             Q("restartTap").RegisterCallback(onRestartTap);
             Q("sheetClose").RegisterCallback(onSheetClose);
@@ -59,6 +59,9 @@ namespace Later
             if (lines == null || captionDone) return;
             while (shown < lines.Count) ShowLine();
         }
+
+        // Show less: the sheet goes back down
+        public void CloseSheet() => Q("sheet").RemoveFromClassList("on");
 
         VisualElement Q(string name) => world.Q(name);
         Label L(string name) => world.Q<Label>(name);
@@ -334,15 +337,18 @@ namespace Later
         }
 
         // laid out but hidden until it's revealed
+        // (not under the pointer either, so it neither lights up nor takes a tap: pointer-events: none on the web)
         static VisualElement Pending(VisualElement n)
         {
             n.AddToClassList("pending");
+            n.pickingMode = PickingMode.Ignore;
             return n;
         }
 
         void Reveal(VisualElement n)
         {
             n.RemoveFromClassList("pending");
+            n.pickingMode = PickingMode.Position;
             n.AddToClassList("in");
             tl.Tween(0, 0.35, Ease.CubicBezier(.2, .8, .2, 1), p =>
             {
@@ -367,7 +373,7 @@ namespace Later
                 body.Add(sub);
             }
             var msgs = Pending(Note(items, "bubble", newest.Who, Rules.ShortDate(newest.Date), body.ToArray()));
-            msgs.AddToClassList("tap");
+            msgs.AddToClassList("tap"); msgs.AddToClassList("clicky");
             if (more > 0)
             {
                 msgs.AddToClassList("stacked");

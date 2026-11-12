@@ -135,6 +135,11 @@ namespace Later.Tests
             Assert.AreEqual(14, cards.Count);
             Assert.AreEqual("John", Plain(cards[0].Q<Label>(className: "title").text), "newest first");
             Assert.AreEqual("Mom", Plain(cards[13].Q<Label>(className: "title").text));
+            Assert.IsTrue(MessagesCard.ClassListContains("clicky"), "no hand cursor over the Messages card");
+            Browser.KeyEventsForTests.Enqueue("@close"); // Enter on a focused Show less
+            yield return null;
+            yield return null;
+            Assert.IsFalse(Shown(Q("sheet")), "Enter on Show less didn't close the sheet");
             Click(Q("sheetClose"));
             yield return Wait(0.2);
             Assert.IsFalse(Shown(Q("sheet")), "Show less didn't close the sheet");
@@ -199,6 +204,7 @@ namespace Later.Tests
             yield return DodgeAll();
             yield return WaitFor(() => MessagesCard != null, 12, "the Messages card, still hidden");
             Assert.IsFalse(Revealed(MessagesCard));
+            Assert.AreEqual(UnityEngine.UIElements.PickingMode.Ignore, MessagesCard.pickingMode, "the hidden card takes the pointer (and its hover)");
             Click(MessagesCard);
             yield return Wait(0.3);
             Assert.IsFalse(Shown(Q("sheet")), "a tap on the still-hidden Messages card opened the sheet");

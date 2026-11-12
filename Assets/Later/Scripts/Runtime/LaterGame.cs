@@ -36,6 +36,9 @@ namespace Later
         double scale = 1;
         Vector2 screen;
         double lastTap = -1;
+        Vector2? mouseAt; // the mouse, for the cursor
+        string cursor;
+        Rect fsReported = new Rect(-1, -1, 0, 0), closeReported = new Rect(-1, -1, 0, 0);
 
         void Awake() => Instance = this;
 
@@ -58,18 +61,17 @@ namespace Later
 
             // Mouse: the moon follows the pointer over the stage. Touch: the moon moves with one finger from wherever it
             // lands, anywhere on the screen (thumbs rest in the margins beside the stage on phones), so a thumb never covers it.
-            frame.RegisterCallback<PointerDownEvent>(e => PointerDown(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position));
+            frame.RegisterCallback<PointerDownEvent>(e => { fs.RemoveFromClassList("hovered"); PointerDown(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position); });
             frame.RegisterCallback<PointerMoveEvent>(e => PointerMove(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position));
             frame.RegisterCallback<PointerUpEvent>(e => PointerUp(e.pointerId));
             frame.RegisterCallback<PointerCancelEvent>(e => PointerUp(e.pointerId));
             world.RegisterCallback<ClickEvent>(e => StageClick(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position));
 
-            // Fullscreen, where the browser supports it; Unity asks the browser on the gesture that follows this press.
-            fs.RegisterCallback<PointerDownEvent>(e =>
-            {
-                e.StopPropagation();
-                Screen.fullScreen = !Screen.fullScreen;
-            });
+            // Fullscreen, where the browser supports it: the page toggles it itself on a real click (later.js), so here a
+            // press on the button is just not a press on the game. On a touch screen it keeps its hover look, as a
+            // browser's :hover sticks after a tap.
+            fs.RegisterCallback<PointerDownEvent>(e => { e.StopPropagation(); fs.RemoveFromClassList("hovered"); });
+            fs.RegisterCallback<PointerUpEvent>(e => { if (e.pointerType == UnityEngine.UIElements.PointerType.touch) fs.AddToClassList("hovered"); });
             fs.RegisterCallback<ClickEvent>(e => e.StopPropagation());
 
             view.Reset();
@@ -107,7 +109,40 @@ namespace Later
             title.EnableInClassList("on", State == "title");
             fs.EnableInClassList("ontitle", State == "title");
             fs.EnableInClassList("hide", State == "play" || !Browser.CanFullscreen);
-            UnityEngine.Cursor.visible = State != "play";
+        }
+
+        // the cursor, as the web's CSS sets it: a hand over what can be clicked, hidden only over the stage during play
+        void UpdateCursor()
+        {
+            string want = "";
+            if (mouseAt is Vector2 p)
+            {
+                if (State == "play" && stage.worldBound.Contains(p)) want = "none";
+                else
+                    for (var e = Root.panel.Pick(p); e != null; e = e.parent)
+                        if (e.ClassListContains("clicky")) { if (!e.ClassListContains("tried")) want = "pointer"; break; }
+            }
+            if (want != cursor) { cursor = want; Browser.SetCursor(want); }
+        }
+
+        // the page clicks and focuses FULLSCREEN and Show less itself, so it needs to know where they are
+        void ReportButtons()
+        {
+            Rect fsAt = Css(fs), closeAt = Css(Root.Q("sheetClose"));
+            if (fsAt != fsReported || closeAt != closeReported) { fsReported = fsAt; closeReported = closeAt; Browser.SetButtons(fsAt, closeAt); }
+            string focus = Browser.Focused;
+            fs.EnableInClassList("focused", focus == "fs");
+            Root.Q("sheetClose").EnableInClassList("focused", focus == "close");
+        }
+
+        // where an element is drawn, in CSS px, or nothing when it doesn't show
+        static Rect Css(VisualElement el)
+        {
+            for (var e = el; e != null; e = e.parent)
+                if (e.resolvedStyle.display == DisplayStyle.None || e.resolvedStyle.visibility == Visibility.Hidden) return Rect.zero;
+            var r = el.worldBound;
+            float k = (float)Browser.PixelRatio;
+            return new Rect(r.x / k, r.y / k, r.width / k, r.height / k);
         }
 
         public void PointerDown(int id, bool touch, Vector2 panelPos)
@@ -123,7 +158,11 @@ namespace Later
         public void PointerMove(int id, bool touch, Vector2 panelPos)
         {
             if (touch) drag.TouchMove(id, ToWorld(panelPos), Round);
-            else if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos));
+            else
+            {
+                mouseAt = panelPos;
+                if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos));
+            }
         }
 
         public void PointerUp(int id) => drag.TouchUp(id);
@@ -181,6 +220,7 @@ namespace Later
             foreach (var e in Browser.TakeKeyEvents())
             {
                 if (e == "!") keys.Clear();
+                else if (e == "@close") Ending?.CloseSheet(); // Enter or Space on a focused Show less
                 else if (e[0] == '+') { if (keys.Down(e.Substring(1), State == "play")) drag.ClearTarget(); }
                 else if (e[0] == '-') keys.Up(e.Substring(1));
             }
@@ -207,6 +247,8 @@ namespace Later
             view.Tick(dt);
             Ending?.Update(dt);
             if (State != "over") view.Draw(Round);
+            UpdateCursor();
+            ReportButtons();
         }
     }
 }

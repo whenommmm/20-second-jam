@@ -32,6 +32,8 @@ namespace Later.Tests
             Time.captureDeltaTime = 0;
             LaterGame.ScreenOverride = null;
             Browser.UprightOverride = null;
+            Browser.KeyEventsForTests.Clear();
+            Browser.FocusForTests = "";
         }
 
         public static IEnumerator Wait(double gameSeconds)
