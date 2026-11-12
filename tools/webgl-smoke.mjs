@@ -10,7 +10,9 @@ import { openChrome, serve, sleep } from "./chrome.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const BUILD = join(ROOT, "Builds/LATER-webgl");
-const LIMIT_MS = 120_000;
+// software WebGL (SwiftShader) is slow, and slower the more often the page is read, so look every 2 s and allow 10 minutes
+// (on a real GPU, LATER_GPU=1, the build runs at a steady 60 fps)
+const LIMIT_MS = 600_000, POLL_MS = 2000;
 
 const runs = (process.argv.length > 2 ? process.argv.slice(2) : ["boot@960x627", "dodge@960x627", "late@960x627", "dodge@844x477"])
   .map(arg => { const [mode, size = "960x627"] = arg.split("@"), [w, h] = size.split("x").map(Number); return { mode, w, h }; });
@@ -20,7 +22,7 @@ async function run({ mode, w, h }, site) {
   const page = await openChrome(`${site}/index.html#test-${mode}`, w, h);
   try {
     let title = "";
-    for (const end = Date.now() + LIMIT_MS; Date.now() < end; await sleep(500)) {
+    for (const end = Date.now() + LIMIT_MS; Date.now() < end; await sleep(POLL_MS)) {
       title = ((await page.eval("document.title")) || "").replace(/ t=[0-9.]+$/, ""); // the build adds its game clock
       if (/^(OK|FAIL)\b/.test(title)) break;
     }
