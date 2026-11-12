@@ -14,7 +14,7 @@
                 <ui:VisualElement name="centre" class="centre" picking-mode="Ignore">
                     <ui:VisualElement name="card">
                         <ui:VisualElement name="res">
-                            <ui:Label text="&lt;cspace=4px&gt;RESULTS&lt;/cspace&gt;" class="lbl" />
+                            <ui:Label text="&lt;cspace=4px&gt;RESULTS&#x200B;&lt;/cspace&gt;" class="lbl" />
                             <ui:Label name="resnum" text="0" class="num" />
                             <ui:VisualElement class="rows">
                                 <ui:VisualElement class="row"><ui:Label text="DODGED" /><ui:Label name="r1" /></ui:VisualElement>
@@ -36,7 +36,7 @@
                                     </ui:VisualElement>
                                 </ui:VisualElement>
                                 <ui:Label text="Thursday, April 2" class="date" />
-                                <ui:Label text="&lt;cspace=-1.5px&gt;7:12&lt;/cspace&gt;" class="clock" />
+                                <ui:Label text="&lt;cspace=-1.5px&gt;7:12&#x200B;&lt;/cspace&gt;" class="clock" />
                                 <ui:VisualElement class="focus">
                                     <ui:VisualElement name="focus"><ui:VisualElement name="focusIcon" /><ui:Label name="focusText" text="Later" /></ui:VisualElement>
                                 </ui:VisualElement>
@@ -78,22 +78,22 @@
                     <ui:VisualElement name="mewrap" picking-mode="Ignore">
                         <ui:VisualElement name="mesvg" picking-mode="Ignore" />
                         <ui:Label name="badge" text="0" class="zero" picking-mode="Ignore" />
-                        <ui:Label text="&lt;cspace=1.5px&gt;LATER&lt;/cspace&gt;" class="tag" picking-mode="Ignore" />
+                        <ui:Label text="&lt;cspace=1.5px&gt;LATER&#x200B;&lt;/cspace&gt;" class="tag" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="title" class="ov on">
-                    <ui:Label text="&lt;cspace=4px&gt;LATER&lt;/cspace&gt;" class="name" />
+                    <ui:Label text="&lt;cspace=4px&gt;LATER&#x200B;&lt;/cspace&gt;" class="name" />
                     <ui:Label name="go" text="CLICK TO START" class="go" />
                 </ui:VisualElement>
                 <ui:Label name="timeov" text="TIME!" class="ov" />
                 <ui:VisualElement name="centre-top" class="centre" picking-mode="Ignore">
                     <ui:VisualElement name="again" class="clicky"><ui:Label name="loud" text="TURN BACK TIME" class="loud" /></ui:VisualElement>
-                    <ui:VisualElement name="restartTap" class="clicky"><ui:Label name="restart" text="&lt;cspace=2px&gt;PLAY AGAIN&lt;/cspace&gt;" picking-mode="Ignore" /></ui:VisualElement>
+                    <ui:VisualElement name="restartTap" class="clicky"><ui:Label name="restart" text="&lt;cspace=2px&gt;PLAY AGAIN&#x200B;&lt;/cspace&gt;" picking-mode="Ignore" /></ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="fly" picking-mode="Ignore" />
                 <ui:VisualElement name="fs" class="clicky">
                     <ui:VisualElement class="icon" picking-mode="Ignore" />
-                    <ui:Label text="&lt;cspace=2px&gt;FULLSCREEN&lt;/cspace&gt;" picking-mode="Ignore" />
+                    <ui:Label text="&lt;cspace=2px&gt;FULLSCREEN&#x200B;&lt;/cspace&gt;" picking-mode="Ignore" />
                     <ui:VisualElement class="ring" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>

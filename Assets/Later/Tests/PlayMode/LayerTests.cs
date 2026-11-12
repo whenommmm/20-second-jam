@@ -72,5 +72,70 @@ namespace Later.Tests
             Assert.AreEqual(0, Q("sheet").resolvedStyle.filter.Count(), "the opened sheet still goes through a filter");
             Assert.AreEqual(1, Q("sheet").resolvedStyle.scale.value.x, 1e-5);
         }
+
+        // her words in Newsreader at the optical size the browser uses at 19 px: as wide as the web sets them
+        [UnityTest]
+        public IEnumerator HerWords_AreAsWideAsTheWebSetsThem()
+        {
+            yield return Load();
+            var line = new Label("I'm a bit tired, so I'll keep it short.");
+            line.AddToClassList("line");
+            Q("caption").Add(line);
+            Q("caption").AddToClassList("on");
+            yield return null;
+            yield return null;
+            float w = line.MeasureTextSize(line.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).x;
+            Assert.AreEqual(239, w, 0.01, "the web measures 238.34 px (Unity measures text to the next whole pixel)");
+        }
+
+        // CSS letter-spacing runs on past the last letter: PLAY AGAIN's underline is as long as the web's
+        [UnityTest]
+        public IEnumerator LetterSpacing_RunsPastTheLastLetter_LikeCss()
+        {
+            yield return Load();
+            Q("restartTap").AddToClassList("on");
+            yield return null;
+            yield return null;
+            Assert.AreEqual(102, Q("restart").resolvedStyle.width, 0.01, "the web's PLAY AGAIN is 101.44 px wide (to the next whole pixel)");
+        }
+
+        // Show less is as tall as the web's button: 10.5 px Inter's normal line (1.21) plus 5 px above and below
+        [UnityTest]
+        public IEnumerator ShowLess_IsAsTallAsTheWebsButton()
+        {
+            yield return Load();
+            foreach (var id in new[] { "card", "lock", "sheet" }) Q(id).style.display = DisplayStyle.Flex;
+            Q("lock").style.opacity = 1;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(22.71, Q("sheetClose").Q<Label>().resolvedStyle.height, 0.3, "layout snaps to whole pixels at this scale");
+        }
+
+        // the score as the browser writes numbers (toLocaleString), unless the font can't draw that: then 0–9 and commas
+        [UnityTest]
+        public IEnumerator TheScore_IsWrittenTheBrowsersWay_WhereTheFontCanDrawIt()
+        {
+            yield return Load();
+            var score = Q("score") as Label;
+            Browser.NumberFormatForTests = n => n.ToString("#,0", new System.Globalization.CultureInfo("de-DE"));
+            Assert.AreEqual("-1.400", PlayView.Format(score, -1400));
+            Browser.NumberFormatForTests = n => "\u0667\u0662\u0665"; // ٧٢٥, Arabic-Indic digits
+            Assert.AreEqual("725", PlayView.Format(score, 725));
+        }
+
+        // positions and angles to a tenth, as the web writes them (toFixed(1))
+        [UnityTest]
+        public IEnumerator Pills_AreDrawnToATenthOfAUnit()
+        {
+            yield return Load();
+            Game.StartRound();
+            yield return WaitFor(() => Q("pills").childCount > 0, 5, "a pill");
+            yield return null;
+            var t = Q("pills")[0].style.translate.value;
+            Assert.AreEqual(System.Math.Round(t.x.value * 10), t.x.value * 10, 1e-3);
+            Assert.AreEqual(System.Math.Round(t.y.value * 10), t.y.value * 10, 1e-3);
+            float a = Q("pills")[0].style.rotate.value.angle.value;
+            Assert.AreEqual(System.Math.Round(a * 10), a * 10, 1e-3);
+        }
     }
 }

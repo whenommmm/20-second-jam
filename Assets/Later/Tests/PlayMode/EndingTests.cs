@@ -343,5 +343,82 @@ namespace Later.Tests
             yield return null;
             Assert.IsFalse(Q("timeov").ClassListContains("on"), "the results weren't up a second after TIME!");
         }
+
+        // -webkit-line-clamp: three lines wrapped as usual, the last ending in "…" (letters come off only if it won't fit)
+        [UnityTest]
+        public IEnumerator Voicemail_IsClampedLikeLineClamp()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            var vm = Q("items").Q<Label>(className: "vm");
+            string shown = Plain(vm.text);
+            StringAssert.EndsWith("…", shown);
+            string kept = shown.Substring(0, shown.Length - 1);
+            StringAssert.StartsWith(kept, VOICEMAIL);
+            float lh = vm.resolvedStyle.fontSize * 1.3f, natural = vm.MeasureTextSize("Hg", 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
+            int Lines(string t) => (int)System.Math.Round((vm.MeasureTextSize($"<line-height={lh}px>{t}", vm.contentRect.width, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y - natural) / lh) + 1;
+            Assert.AreEqual(3, Lines(shown));
+            string next = VOICEMAIL.Substring(0, VOICEMAIL.IndexOf(' ', kept.Length + 1) is int i && i > 0 ? i : VOICEMAIL.Length);
+            Assert.That(Lines(next + "…"), Is.GreaterThan(3), "a word more would have fitted");
+        }
+
+        // the phone's text keeps the web's line spacing when the screen crosses into (or out of) the small-screen style
+        [UnityTest]
+        public IEnumerator LineHeights_FollowTheSmallScreenStyle()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            var text = MessagesCard.Q<Label>(className: "text");
+            StringAssert.StartsWith("<line-height=13.86px>", text.text);
+            Browser.FrameForTests = new Browser.Frame { W = 960, H = 400 };
+            for (var i = 0; i < 4; i++) yield return null;
+            StringAssert.StartsWith("<line-height=15.312px>", text.text, "11.6 px text at the web's 1.32");
+        }
+
+        // the badge flies to the count's own text box, as the web's getBoundingClientRect gives it, not the old count's
+        [UnityTest]
+        public IEnumerator TheBadge_LandsOnTheCountsText()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return WaitFor(() => Game.Ending.BadgeTarget.width > 0, 10, "the badge's flight");
+            yield return null;
+            yield return null;
+            var count = Q("gcount") as Label;
+            var box = Q("world").WorldToLocal(count.worldBound);
+            var text = count.MeasureTextSize(count.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined);
+            var target = Game.Ending.BadgeTarget;
+            Assert.AreEqual(box.x, target.x, 0.01);
+            Assert.AreEqual(text.x, target.width, 0.01, "landing on the width of another count");
+            Assert.AreEqual(box.center.y, target.center.y, 0.01);
+            Assert.AreEqual(text.y, target.height, 0.01);
+        }
+
+        // a notification's time sits on its title's baseline (align-items: baseline)
+        [UnityTest]
+        public IEnumerator NotificationTimes_SitOnTheTitlesBaseline()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            float title = MessagesCard.Q<Label>(className: "title").worldBound.y, when = MessagesCard.Q<Label>(className: "when").worldBound.y;
+            Assert.AreEqual(2.05, when - title, 0.3, "layout snaps to whole pixels at this scale"); // bottom-aligned, it was 2.64
+            Assert.AreEqual(1, MessagesCard.Q<Label>(className: "more").resolvedStyle.marginBottom, 0.001, "\"13 more messages\" lost its bottom margin");
+        }
+
+        // where the browser has no text-wrap: balance (Safari before 17.5), the answer wraps greedily, as there
+        [UnityTest]
+        public IEnumerator Balance_OnlyWhereTheBrowserBalances()
+        {
+            Browser.BalanceForTests = false;
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToTurnBack();
+            Click(Again);
+            yield return Wait(0.5);
+            Assert.AreEqual(StyleKeyword.None, Q("loud").resolvedStyle.maxWidth.keyword, "balanced where the browser wouldn't");
+        }
     }
 }

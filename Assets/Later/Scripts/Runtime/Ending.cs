@@ -30,6 +30,8 @@ namespace Later
         bool disposed, captionDone;
 
         public string Key { get; }
+        // where the missed-call badge flies to: the count's own text box (for the tests)
+        public Rect BadgeTarget { get; private set; }
 
         public Ending(Round round, VisualElement world, Sound sound, Action onRestart)
         {
@@ -92,7 +94,7 @@ namespace Later
 
             var resnum = L("resnum");
             resnum.text = "0";
-            tl.After(0.15, () => tl.Tween(0, 0.9, Ease.Linear, k => resnum.text = Rules.FormatScore((int)Rules.RoundHalfUp(round.Score * (1 - Math.Pow(1 - k, 3))))));
+            tl.After(0.15, () => tl.Tween(0, 0.9, Ease.Linear, k => resnum.text = PlayView.Format(resnum, (int)Rules.RoundHalfUp(round.Score * (1 - Math.Pow(1 - k, 3))))));
             L("r1").text = $"{round.Dodged} / {TotalPills}"; L("r2").text = round.CloseN.ToString(); L("r3").text = $"×{round.Best}";
             var rows = Q("res").Query(className: "row").ToList();
             for (var i = 0; i < rows.Count; i++)
@@ -202,7 +204,7 @@ namespace Later
             var pillBg = Flyer(pillBox, "pillbg"); // behind the moon and its name
             var moonF = Flyer(m, "moon");
             var tagF = Flyer(t0, "tag");
-            var was = FlyerText("<cspace=2.55px>LATER</cspace>", "was", 14 * 1.7f);
+            var was = FlyerText(Spaced("LATER", 2.55), "was", 14 * 1.7f);
             var now = FlyerText("Later", "now", 11 / textScale);
             tagF.Add(was); tagF.Add(now);
             bool hasBadge = round.Missed > 0;
@@ -262,14 +264,25 @@ namespace Later
                 var gcount = Q("gcount");
                 gcount.style.opacity = 0;
                 tl.Tween(1.5, 0.2, Ease.Linear, p => gcount.style.opacity = (float)p);
-                FlyBadge(badgeF, badgeBox, Box(gcount));
+                FlyBadge(badgeF, badgeBox, CountText((Label)gcount));
             }
             tl.After(2.6, EndingMessages);
+        }
+
+        // The count's text box, as the web's getBoundingClientRect gives it for the count's <span>: as wide as the new
+        // count (measured now: its label's own box is laid out later, still at the old count), as tall as the font's
+        // ascent and descent, centred on its line.
+        Rect CountText(Label count)
+        {
+            Rect line = Box(count);
+            var text = count.MeasureTextSize(count.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined);
+            return new Rect(line.x, line.center.y - text.y / 2, text.x, text.y);
         }
 
         // the badge glides along a gentle arc and shrinks into the group's count, landing exactly on it, then fades
         void FlyBadge(VisualElement f, Rect s, Rect e)
         {
+            BadgeTarget = e;
             Vector2 sc = s.center, ec = e.center, c = new Vector2(sc.x - 10, ec.y + 10);
             float end = e.height / s.height;
             tl.Tween(0.12, 1.5, Flight, p =>
@@ -295,26 +308,51 @@ namespace Later
             return l;
         }
 
-        // CSS line-height, which USS lacks. Once the label has its font: its lines go `factor` × the font size apart, and
-        // its box grows or shrinks by the leading, so it is as tall as CSS makes it, each line where CSS draws it.
-        // `then` gets the line height and the font's own line height.
+        // CSS line-height, which USS lacks. Once the label has its font, and again whenever its font size changes (the
+        // small-screen style): its lines go `factor` × the font size apart, and its box grows or shrinks by the leading,
+        // so it is as tall as CSS makes it, each line where CSS draws it. `then` gets the line height and the font's own.
         static void LineHeight(Label label, float factor, Action<float, float> then = null)
         {
             string raw = label.text;
-            EventCallback<GeometryChangedEvent> fit = null;
-            fit = e =>
+            float applied = -1, top = 0, bottom = 0;
+            label.RegisterCallback<GeometryChangedEvent>(e =>
             {
-                label.UnregisterCallback(fit);
-                float lh = label.resolvedStyle.fontSize * factor;
+                float size = label.resolvedStyle.fontSize;
+                if (size == applied) return;
+                if (applied < 0) { top = label.resolvedStyle.marginTop; bottom = label.resolvedStyle.marginBottom; }
+                applied = size;
+                float lh = size * factor;
                 float natural = label.MeasureTextSize("Hg", 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
                 float half = (lh - natural) / 2;
-                label.text = string.Format(CultureInfo.InvariantCulture, "<line-height={0:0.###}px>{1}", lh, raw);
-                label.style.marginTop = label.resolvedStyle.marginTop + half;
-                label.style.marginBottom = label.resolvedStyle.marginBottom + half;
+                label.text = LineTag(lh) + raw;
+                label.style.marginTop = top + half;
+                label.style.marginBottom = bottom + half;
                 then?.Invoke(lh, natural);
-            };
-            label.RegisterCallback(fit);
+            });
         }
+
+        static string LineTag(float lh) => string.Format(CultureInfo.InvariantCulture, "<line-height={0:0.###}px>", lh);
+
+        // -webkit-line-clamp: the text wrapped as usual and cut after `lines` lines, with "…" at the end of the last
+        // (letters come off its end only if the ellipsis wouldn't fit), as Chrome does
+        static void Clamp(Label label, string text, int lines, float lh, float natural)
+        {
+            string tag = LineTag(lh);
+            float width = label.contentRect.width;
+            int Lines(string t) => (int)Math.Round((label.MeasureTextSize(tag + t, width, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y - natural) / lh) + 1;
+            if (Lines(text) <= lines) { label.text = tag + text; return; }
+            var words = text.Split(' ');
+            int k = words.Length;
+            while (k > 0 && Lines(string.Join(" ", words.Take(k))) > lines) k--;
+            string shown = string.Join(" ", words.Take(k)).TrimEnd();
+            while (shown.Length > 0 && Lines(shown + "…") > lines) shown = shown.Substring(0, shown.Length - 1).TrimEnd();
+            label.text = tag + shown + "…";
+        }
+
+        // CSS letter-spacing, which runs on past the last letter: rich text's <cspace> only counts the spacing after the
+        // last letter when something follows it, so a zero-width space does (UI Toolkit measures no trailing whitespace)
+        public static string Spaced(string text, double px) =>
+            string.Format(CultureInfo.InvariantCulture, "<cspace={0}px>{1}\u200B</cspace>", px, text);
 
         // a notification: the card (icon, title and time, then its text) inside an element that fades it as one layer
         static VisualElement Note(VisualElement into, string icon, string title, string when, params VisualElement[] body)
@@ -386,7 +424,7 @@ namespace Later
             if (more > 0)
             {
                 msgs.AddToClassList("stacked");
-                foreach (var cls in new[] { "peek2", "peek1" }) { var p = new VisualElement { pickingMode = PickingMode.Ignore }; p.AddToClassList(cls); msgs.Insert(0, p); }
+                msgs.Insert(0, new CardShadows()); // the rest of the thread, peeking out under it as the web's box-shadows
             }
             // not tappable until it has appeared
             msgs.RegisterCallback<ClickEvent>(e => { if (!msgs.ClassListContains("pending")) OpenThread(thread); });
@@ -397,7 +435,7 @@ namespace Later
                 // three lines of her voicemail, or two if the cards would reach "Notifications silenced"
                 Label text = null;
                 text = Text(VOICEMAIL, "vm", 1.3f, (lh, natural) =>
-                    text.style.maxHeight = (Box(items).yMin < Box(Q("sil")).yMax + 6 ? 1 : 2) * lh + natural);
+                    Clamp(text, VOICEMAIL, Box(items).yMin < Box(Q("sil")).yMax + 6 ? 2 : 3, lh, natural));
                 vm = Pending(Note(items, "handset", "Mom", "Mar 28", Text("Voicemail · 0:18", "sub"), text));
             }
 
@@ -439,7 +477,7 @@ namespace Later
         {
             var caption = Q("caption");
             caption.Clear();
-            caption.Add(Text($"<cspace=2px>{header}</cspace>", "who"));
+            caption.Add(Text(Spaced(header, 2), "who"));
             caption.AddToClassList("on");
             lines = Sentences.Matches(text).Cast<Match>().Select(m => m.Value.Trim()).ToList();
             shown = 0;
@@ -491,7 +529,7 @@ namespace Later
             l.text = loud;
             LineHeight(l, 1.1f, (_, __) => Balance(l));
             tl.After(1.8, () => Answer(soft, "soft", 1.2f));
-            tl.After(3.6, () => Answer($"<cspace=0.5px>{LESSON}</cspace>", "lesson", 1.1f));
+            tl.After(3.6, () => Answer(Spaced(LESSON, 0.5), "lesson", 1.1f));
             tl.After(6.6, ShowRestart); // the way out, only once the lesson has sunk in
         }
 
@@ -506,6 +544,7 @@ namespace Later
         // text-wrap: balance — narrow the text to the least width that keeps its number of lines (as browsers do)
         static void Balance(Label label)
         {
+            if (!Browser.SupportsBalance) return; // where the browser doesn't balance, the web's lines wrap greedily
             const float max = 290;
             float Height(float w) => label.MeasureTextSize(label.text, w, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y;
             float h = Height(max);

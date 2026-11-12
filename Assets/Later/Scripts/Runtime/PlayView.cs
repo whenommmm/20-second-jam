@@ -85,12 +85,12 @@ namespace Later
             {
                 if (!pillEls.TryGetValue(p.Id, out var el)) continue;
                 double buzz = Math.Sin(r.T * 75 + p.Seed) * 1.3, lean = Math.Max(-14, Math.Min(14, Math.Atan(p.Vy / p.Vx) * 57.3 * 0.6));
-                el.style.translate = new Translate((float)(p.X - p.W / 2 + buzz), (float)(p.Y - p.H / 2));
-                el.style.rotate = new Rotate((float)lean);
+                el.style.translate = new Translate(Fixed(p.X - p.W / 2 + buzz, 1), Fixed(p.Y - p.H / 2, 1));
+                el.style.rotate = new Rotate(Fixed(lean, 1));
             }
-            me.style.translate = new Translate((float)r.Me.X, (float)r.Me.Y);
-            mesvg.style.rotate = new Rotate((float)r.Tilt);
-            if (r.Score != shownScore) { shownScore = r.Score; score.text = Rules.FormatScore(r.Score); }
+            me.style.translate = new Translate(Fixed(r.Me.X, 2), Fixed(r.Me.Y, 2));
+            mesvg.style.rotate = new Rotate(Fixed(r.Tilt, 1));
+            if (r.Score != shownScore) { shownScore = r.Score; score.text = Format(score, r.Score); }
             // names stay unreadable through most of the round; 5–6 answered calls clear them
             double blur = Math.Round((1 - Rules.Clarity(r.T, r.Bonus)) * 8, 2);
             if (blur != nb)
@@ -101,8 +101,20 @@ namespace Later
             // the paper is your month: vibrant at first, colder with every call you let ring out
             SetPaper(Rules.Paper(r.PaperK));
             play.style.translate = tl.Now < shakeUntil
-                ? new Translate((float)(random.NextDouble() * 14 - 7), (float)(random.NextDouble() * 14 - 7))
+                ? new Translate(Fixed(random.NextDouble() * 14 - 7, 1), Fixed(random.NextDouble() * 14 - 7, 1))
                 : new Translate(0, 0);
+        }
+
+        // a number to `digits` decimals, as the web writes it into a style (toFixed)
+        public static float Fixed(double v, int digits) => (float)Math.Round(v, digits, MidpointRounding.AwayFromZero);
+
+        // a score as the browser writes it (toLocaleString), unless `label`'s font can't draw that (digits of another
+        // script, say): then 0–9 and commas
+        public static string Format(Label label, int n)
+        {
+            string s = Browser.FormatNumber(n);
+            var font = label.resolvedStyle.unityFontDefinition.fontAsset;
+            return font == null || font.HasCharacters(s, out uint[] _, false, true) ? s : Rules.FormatScore(n);
         }
 
         // A pill: an outer element that moves (and fades as one layer), its body (the green capsule, its knob, the name).
@@ -164,8 +176,8 @@ namespace Later
             paper.AddToClassList("paper");
             paper.style.backgroundColor = world.resolvedStyle.backgroundColor;
             slip.Add(paper);
-            float x = (float)Math.Round(random.NextDouble() * 22 - 12, 1), y = (float)Math.Round(random.NextDouble() * 14 - 5, 1);
-            float rot = (float)Math.Round(random.NextDouble() * 13 - 6.5, 1);
+            float x = Fixed(random.NextDouble() * 22 - 12, 1), y = Fixed(random.NextDouble() * 14 - 5, 1);
+            float rot = Fixed(random.NextDouble() * 13 - 6.5, 1);
             // slap: dropped from a little above, turned and larger, in 0.17 s
             tl.Tween(0, 0.17, Ease.EaseOut, p =>
             {

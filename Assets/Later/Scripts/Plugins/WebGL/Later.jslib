@@ -40,6 +40,15 @@ mergeInto(LibraryManager.library, {
   // the tab came back into view since the last call
   LaterTakeResumed: function () { var page = window.LaterPage; if (!page || !page.resumed) return 0; page.resumed = false; return 1; },
 
+  // whether the browser balances wrapped lines (Safari before 17.5 doesn't)
+  LaterSupportsBalance: function () { return window.CSS && CSS.supports && CSS.supports("text-wrap", "balance") ? 1 : 0; },
+  // a number as the web writes it: toLocaleString, in the player's own language
+  LaterFormatNumber: function (n) {
+    var s = n.toLocaleString(), size = lengthBytesUTF8(s) + 1, buffer = _malloc(size);
+    stringToUTF8(s, buffer, size);
+    return buffer;
+  },
+
   // the rate the browser's audio context runs at (0 if there's no audio)
   LaterAudioRate: function () { return typeof WEBAudio !== "undefined" && WEBAudio.audioContext ? WEBAudio.audioContext.sampleRate : 0; },
   // Sound as main.js handles it: a hidden tab suspends the audio context, and coming back resumes it where it stopped

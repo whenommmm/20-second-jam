@@ -38,6 +38,8 @@ namespace Later.Tests
             Browser.PillWidthsForTests = null;
             Browser.ResumedForTests = false;
             LaterGame.WallSecondsForTests = null;
+            Browser.BalanceForTests = true;
+            Browser.NumberFormatForTests = null;
         }
 
         public static IEnumerator Wait(double gameSeconds)
@@ -84,7 +86,7 @@ namespace Later.Tests
         }
 
         // What a text element reads, without its rich-text tags (letter-spaced text carries <cspace>).
-        public static string Plain(string text) => System.Text.RegularExpressions.Regex.Replace(text ?? "", "<[^>]+>", "");
+        public static string Plain(string text) => System.Text.RegularExpressions.Regex.Replace(text ?? "", "<[^>]+>|\u200B", "");
         public static string Text(string name) => Plain(((TextElement)Q(name)).text);
     }
 }

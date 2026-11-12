@@ -38,9 +38,12 @@ namespace Later.Tests
         public void ArchivoBlack_DrawsNamesAndLabels() =>
             AssertDraws("ArchivoBlack", Callers.Concat(new[] { "LATER", "RESULTS", "FULLSCREEN", "PLAY AGAIN", "0123456789" }).Concat(CAPTION_HEADERS.Values));
 
+        // Newsreader at the optical sizes the browser picks for her words (19 px) and the soft answer (21 px)
         [Test]
-        public void NewsreaderItalic_DrawsHerWords() =>
-            AssertDraws("Newsreader-Italic", new[] { VOICEMAIL, LAST_CALL }.Concat(TURN_BACK.Values.Select(v => v[1])));
+        public void Newsreader19_DrawsHerWords() => AssertDraws("Newsreader19-Italic", new[] { VOICEMAIL, LAST_CALL });
+
+        [Test]
+        public void Newsreader21_DrawsTheSoftAnswers() => AssertDraws("Newsreader21-Italic", TURN_BACK.Values.Select(v => v[1]));
 
         // the phone's own text is regular weight, as on the web; titles, the clock and the pill are semibold
         [Test]

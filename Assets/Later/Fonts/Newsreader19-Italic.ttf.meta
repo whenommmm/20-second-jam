@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d279d149c8c76443f920eb8def111ff3
+guid: eecd529ff41564dd7beac3a90d47827d
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Newsreader
+  - Newsreader 19 16pt
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

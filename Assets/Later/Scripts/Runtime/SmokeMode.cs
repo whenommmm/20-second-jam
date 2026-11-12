@@ -48,7 +48,7 @@ namespace Later
                         Expect(Plain(Q("title").Q<Label>(className: "name").text) == "LATER", "no LATER on the title screen");
                         // every bundled font can draw: the build carries the font files the dynamic atlases fill from
                         var fonts = Resources.FindObjectsOfTypeAll<UnityEngine.TextCore.Text.FontAsset>();
-                        foreach (var name in new[] { "Anton SDF", "ArchivoBlack SDF", "Newsreader-Italic SDF", "Inter-Regular SDF", "Inter-SemiBold SDF", "Inter-Bold SDF" })
+                        foreach (var name in new[] { "Anton SDF", "ArchivoBlack SDF", "Newsreader19-Italic SDF", "Newsreader21-Italic SDF", "Inter-Regular SDF", "Inter-SemiBold SDF", "Inter-Bold SDF" })
                         {
                             var font = fonts.FirstOrDefault(f => f.name == name);
                             Expect(font != null && font.HasCharacters("LATERlater0123…×·", out uint[] _, false, true), $"font {name} {(font == null ? "missing" : "can't draw")}");
@@ -148,7 +148,7 @@ namespace Later
 
         VisualElement Q(string name) => game.Root.Q(name);
 
-        static string Plain(string text) => Regex.Replace(text ?? "", "<[^>]+>", "");
+        static string Plain(string text) => Regex.Replace(text ?? "", "<[^>]+>|\u200B", "");
 
         // displayed and not hidden, like the web harness's visible() (a fade still under way counts as shown)
         static bool Shown(VisualElement el)

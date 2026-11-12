@@ -24,6 +24,9 @@ namespace Later
         public static IReadOnlyDictionary<string, double> PillWidthsForTests;
         // tests bring the tab back with this
         public static bool ResumedForTests;
+        // tests stand in for a browser without text-wrap: balance, and for the browser's number format
+        public static bool BalanceForTests = true;
+        public static Func<int, string> NumberFormatForTests;
 
         // what the game last told the page: the paper colour, the cursor, where the buttons it handles itself are (CSS px)
         public static string Paper { get; private set; } = "";
@@ -71,6 +74,13 @@ namespace Later
         [DllImport("__Internal")] static extern int LaterTakeResumed();
         [DllImport("__Internal")] static extern double LaterAudioRate();
         [DllImport("__Internal")] static extern void LaterInitAudio();
+        [DllImport("__Internal")] static extern int LaterSupportsBalance();
+        [DllImport("__Internal")] static extern string LaterFormatNumber(int n);
+
+        // whether the browser balances wrapped lines (text-wrap: balance), as the web's answer lines ask it to
+        public static bool SupportsBalance => LaterSupportsBalance() != 0;
+        // a number as the browser writes it (toLocaleString: the player's own separators and digits)
+        public static string FormatNumber(int n) => LaterFormatNumber(n);
 
         // the rate the browser's audio runs at, so the game's sounds are made at it and nothing is resampled
         public static int? AudioRate => LaterAudioRate() > 0 ? (int)LaterAudioRate() : (int?)null;
@@ -163,6 +173,8 @@ namespace Later
 
         public static int? AudioRate => null;
         public static void InitAudio() { }
+        public static bool SupportsBalance => BalanceForTests;
+        public static string FormatNumber(int n) => NumberFormatForTests?.Invoke(n) ?? Rules.FormatScore(n);
 
         public static bool TakeResumed()
         {

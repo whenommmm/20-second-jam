@@ -16,7 +16,7 @@ namespace Later.Editor
     {
         static readonly (string Ttf, string Name)[] Fonts =
         {
-            ("Anton-Regular", "Anton"), ("ArchivoBlack-Regular", "ArchivoBlack"), ("Newsreader-Italic", "Newsreader-Italic"),
+            ("Anton-Regular", "Anton"), ("ArchivoBlack-Regular", "ArchivoBlack"), ("Newsreader19-Italic", "Newsreader19-Italic"), ("Newsreader21-Italic", "Newsreader21-Italic"),
             ("Inter-Regular", "Inter-Regular"), ("Inter-SemiBold", "Inter-SemiBold"), ("Inter-Bold", "Inter-Bold")
         };
 

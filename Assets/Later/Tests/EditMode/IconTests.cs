@@ -21,5 +21,15 @@ namespace Later.Tests
             Assert.AreEqual(24, image.width, 0.01);
             Assert.AreEqual(24, image.height, 0.01);
         }
+
+        // the web's icon is stroked with square caps and sharp corners; the vector importer rounds strokes off, so this
+        // one is the same shape as filled outlines
+        [Test]
+        public void TheFullscreenIcon_IsFilledOutlines_NotAStroke()
+        {
+            string svg = System.IO.File.ReadAllText("Assets/Later/UI/Icons/fullscreen.svg");
+            StringAssert.DoesNotContain("stroke", svg);
+            StringAssert.Contains("M2.8 10.2V2.8h7.4v2.4H5.2v5z", svg);
+        }
     }
 }

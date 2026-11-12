@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19001, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: Newsreader-Italic SDF
+  m_Name: Newsreader21-Italic SDF
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.TextCore.Text.FontAsset
   m_Version: 1.1.0
-  m_Material: {fileID: 10664055009500587}
-  m_SourceFontFileGUID: d279d149c8c76443f920eb8def111ff3
+  m_Material: {fileID: 7386841243934412010}
+  m_SourceFontFileGUID: bea6f40c746c64d12a530d1f5e258ebd
   m_fontAssetCreationEditorSettings:
     sourceFontFileGUID: 
     faceIndex: 0
@@ -33,14 +33,14 @@ MonoBehaviour:
     fontStyleModifier: 0
     renderMode: 0
     includeFontFeatures: 0
-  m_SourceFontFile: {fileID: 12800000, guid: d279d149c8c76443f920eb8def111ff3, type: 3}
+  m_SourceFontFile: {fileID: 12800000, guid: bea6f40c746c64d12a530d1f5e258ebd, type: 3}
   m_SourceFontFilePath: 
   m_AtlasPopulationMode: 1
   InternalDynamicOS: 0
   IsEditorFont: 0
   m_FaceInfo:
     m_FaceIndex: 0
-    m_FamilyName: Newsreader
+    m_FamilyName: Newsreader 21 16pt
     m_StyleName: Italic
     m_PointSize: 90
     m_Scale: 1
@@ -48,7 +48,7 @@ MonoBehaviour:
     m_LineHeight: 90
     m_AscentLine: 66.15
     m_CapLine: 61
-    m_MeanLine: 41
+    m_MeanLine: 40
     m_Baseline: 0
     m_DescentLine: -23.85
     m_SuperscriptOffset: 66.15
@@ -57,13 +57,13 @@ MonoBehaviour:
     m_SubscriptSize: 0.5
     m_UnderlineOffset: -13.635
     m_UnderlineThickness: 4.32
-    m_StrikethroughOffset: 16.4
+    m_StrikethroughOffset: 16
     m_StrikethroughThickness: 4.32
-    m_TabWidth: 21
+    m_TabWidth: 20
   m_GlyphTable: []
   m_CharacterTable: []
   m_AtlasTextures:
-  - {fileID: 755889688536781794}
+  - {fileID: 9130708956128100882}
   m_AtlasTextureIndex: 0
   m_IsMultiAtlasTexturesEnabled: 1
   m_GetFontFeatures: 1
@@ -113,14 +113,14 @@ MonoBehaviour:
   m_BoldStyleSpacing: 7
   m_ItalicStyleSlant: 35
   m_TabMultiple: 10
---- !u!21 &10664055009500587
+--- !u!21 &7386841243934412010
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Newsreader-Italic SDF Material
+  m_Name: Newsreader21-Italic SDF Material
   m_Shader: {fileID: 19011, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -137,7 +137,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 755889688536781794}
+        m_Texture: {fileID: 9130708956128100882}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -170,13 +170,13 @@ Material:
     - _UnderlayColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!28 &755889688536781794
+--- !u!28 &9130708956128100882
 Texture2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Newsreader-Italic SDF Atlas
+  m_Name: Newsreader21-Italic SDF Atlas
   m_ImageContentsHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
