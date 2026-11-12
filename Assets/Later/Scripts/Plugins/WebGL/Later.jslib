@@ -38,5 +38,23 @@ mergeInto(LibraryManager.library, {
   // a name's pill width in the page's own font, or 0 until the font has loaded
   LaterPillWidth: function (who) { return window.LaterPage ? window.LaterPage.pillWidth(UTF8ToString(who)) : 0; },
   // the tab came back into view since the last call
-  LaterTakeResumed: function () { var page = window.LaterPage; if (!page || !page.resumed) return 0; page.resumed = false; return 1; }
+  LaterTakeResumed: function () { var page = window.LaterPage; if (!page || !page.resumed) return 0; page.resumed = false; return 1; },
+
+  // the rate the browser's audio context runs at (0 if there's no audio)
+  LaterAudioRate: function () { return typeof WEBAudio !== "undefined" && WEBAudio.audioContext ? WEBAudio.audioContext.sampleRate : 0; },
+  // Sound as main.js handles it: a hidden tab suspends the audio context, and coming back resumes it where it stopped
+  // (Unity's player would move each sound on by the time away, so that time is taken off its count); every press
+  // wakes it, and a tap or click unlocks it on phones, inside the gesture.
+  LaterInitAudio: function () {
+    if (typeof WEBAudio === "undefined" || !WEBAudio.audioContext) return;
+    var ctx = WEBAudio.audioContext, hiddenAt = 0;
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { hiddenAt = performance.now(); ctx.suspend(); return; }
+      if (hiddenAt) WEBAudio.audioContextSuspendedTime += (performance.now() - hiddenAt) / 1000;
+      hiddenAt = 0;
+      ctx.resume();
+    });
+    var wake = function () { if (!document.hidden && ctx.state === "suspended") ctx.resume(); };
+    ["pointerdown", "touchend", "click"].forEach(function (t) { window.addEventListener(t, wake, true); });
+  }
 });

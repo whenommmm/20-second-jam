@@ -69,6 +69,13 @@ namespace Later
         [DllImport("__Internal")] static extern void LaterSetPaper(string rgb);
         [DllImport("__Internal")] static extern double LaterPillWidth(string who);
         [DllImport("__Internal")] static extern int LaterTakeResumed();
+        [DllImport("__Internal")] static extern double LaterAudioRate();
+        [DllImport("__Internal")] static extern void LaterInitAudio();
+
+        // the rate the browser's audio runs at, so the game's sounds are made at it and nothing is resampled
+        public static int? AudioRate => LaterAudioRate() > 0 ? (int)LaterAudioRate() : (int?)null;
+        // a hidden tab suspends the sound and it carries on where it stopped; every press wakes it, as main.js does
+        public static void InitAudio() => LaterInitAudio();
 
         // the tab has come back into view since the last call (main.js restarts its clock then)
         public static bool TakeResumed() => LaterTakeResumed() != 0;
@@ -153,6 +160,9 @@ namespace Later
         static void SetPaperOnPage(string rgb) { }
         public static Frame ViewFrame(Vector2 screen) => FrameForTests ?? new Frame { W = screen.x, H = screen.y };
         public static IReadOnlyDictionary<string, double> PillWidths(IEnumerable<string> names) => PillWidthsForTests;
+
+        public static int? AudioRate => null;
+        public static void InitAudio() { }
 
         public static bool TakeResumed()
         {

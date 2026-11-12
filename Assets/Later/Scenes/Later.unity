@@ -333,26 +333,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 580bfb87d8dc54b9a88f5c6081c619c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Later.Runtime::Later.Sound
-  buzz: {fileID: 8300000, guid: c23f40c280ed64601894ab988250d59b, type: 3}
-  close: {fileID: 8300000, guid: 58f61306f6903450c98a992e3353f554, type: 3}
-  thud: {fileID: 8300000, guid: a9f62c195c55b4e3d82b3ba6dcd30bb8, type: 3}
-  ring: {fileID: 8300000, guid: fccf01dbd550c47fa99cd9b0516fba13, type: 3}
-  blips:
-  - {fileID: 8300000, guid: 15b3feeab7d9043fd8cfdef68e43ff04, type: 3}
-  - {fileID: 8300000, guid: 13595e454065f464e9fbb16b6927cc0f, type: 3}
-  - {fileID: 8300000, guid: 49116c20753d144738dc5c3971d39ca6, type: 3}
-  - {fileID: 8300000, guid: ddad11386fa19492f9aa5b409cb0df10, type: 3}
-  - {fileID: 8300000, guid: ad663bed1618b4a08a3dcb8e2b9b42c8, type: 3}
-  - {fileID: 8300000, guid: 06e154ae656044fb9a02161deb11eb1a, type: 3}
-  - {fileID: 8300000, guid: 03aa529aa253b4f9f90c0a8c61318401, type: 3}
-  - {fileID: 8300000, guid: b83e6d23a5bac4292939f1c2ca17ce84, type: 3}
-  - {fileID: 8300000, guid: 76daa5ea5fc254d23a98c9187ffa4f26, type: 3}
-  - {fileID: 8300000, guid: 4cf95124cffbd4a65a5176613fc8aa78, type: 3}
-  - {fileID: 8300000, guid: 91cb8359cca994f9faad649c1d824086, type: 3}
-  - {fileID: 8300000, guid: 45014bd62966646cf956c9d070ee5280, type: 3}
-  - {fileID: 8300000, guid: 3143da3a0cf6141808975d8b935c0709, type: 3}
-  - {fileID: 8300000, guid: 348d6d22398bd494cb9a29dbefe5ba32, type: 3}
-  - {fileID: 8300000, guid: 7f7572c01de0f495f915e039c8bfc784, type: 3}
 --- !u!114 &1006244337
 MonoBehaviour:
   m_ObjectHideFlags: 0

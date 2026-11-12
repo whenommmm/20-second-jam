@@ -80,10 +80,7 @@ namespace Later.Editor
             var doc = later.AddComponent<UIDocument>();
             doc.panelSettings = panel;
             doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{Ui}/Later.uxml");
-            var sound = later.AddComponent<Sound>();
-            AudioClip Clip(string name) => AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/Later/Audio/{name}.wav");
-            sound.buzz = Clip("buzz"); sound.close = Clip("close"); sound.thud = Clip("thud"); sound.ring = Clip("ring");
-            sound.blips = Enumerable.Range(0, 15).Select(i => Clip($"blip{i:00}")).ToArray();
+            later.AddComponent<Sound>(); // makes its sounds at startup (Core/Synth)
             later.AddComponent<LaterGame>();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
