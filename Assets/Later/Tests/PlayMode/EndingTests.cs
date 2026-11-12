@@ -77,7 +77,8 @@ namespace Later.Tests
             yield return Wait(0.7);
             var lines = Q("caption").Query<Label>(className: "line").ToList();
             float s = Q("world").worldBound.height / (float)H;
-            Assert.AreEqual(19 * 1.25 + 4, (lines[1].worldBound.yMin - lines[0].worldBound.yMin) / s, 0.5, "her lines aren't spaced as on the web");
+            // two lines on (UI Toolkit lays out in whole units, so one line's edge can move by up to one)
+            Assert.AreEqual(2 * (19 * 1.25 + 4), (lines[2].worldBound.yMin - lines[0].worldBound.yMin) / s, 1.0, "her lines aren't spaced as on the web");
             Assert.AreEqual(19 * 1.25 + 4, (lines[2].worldBound.yMin - lines[1].worldBound.yMin) / s, 0.5);
             Assert.AreEqual("Inter-Regular SDF", Q("sil").resolvedStyle.unityFontDefinition.fontAsset.name);
             Assert.AreEqual("Inter-Regular SDF", MessagesCard.Q<Label>(className: "text").resolvedStyle.unityFontDefinition.fontAsset.name);
@@ -419,6 +420,35 @@ namespace Later.Tests
             Click(Again);
             yield return Wait(0.5);
             Assert.AreEqual(StyleKeyword.None, Q("loud").resolvedStyle.maxWidth.keyword, "balanced where the browser wouldn't");
+        }
+
+        // each line of a notification is one 13.86 px line box (10.5 px at the web's 1.32), however the text is sized
+        [UnityTest]
+        public IEnumerator NotificationLines_AreTheWebsLineBoxes()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            var text = MessagesCard.Q<Label>(className: "text");
+            float box = text.resolvedStyle.height + text.resolvedStyle.marginTop + text.resolvedStyle.marginBottom;
+            Assert.AreEqual(13.86, box, 0.3, "one line of text isn't one line box");
+        }
+
+        // the opened Messages sheet stacks its cards where the web does (the web's tops, in world units, at 960 × 540), to
+        // the whole unit UI Toolkit lays out in, with no drift down the list
+        [UnityTest]
+        public IEnumerator TheSheetsCards_SitWhereTheWebsDo()
+        {
+            double[] web = { 99.5, 150.88, 216.11, 267.48, 318.86, 384.09, 435.47, 500.7, 565.94, 631.17, 696.41, 761.64, 826.88, 892.11 };
+            yield return Load();
+            yield return DodgeAll();
+            yield return ToHerWords();
+            Click(MessagesCard);
+            yield return Wait(0.6);
+            var cards = Q("sheetList").Query(className: "n").ToList();
+            var world = Q("world");
+            var tops = cards.Select(c => (double)world.WorldToLocal(c.worldBound).y).ToList();
+            for (var i = 0; i < web.Length; i++) Assert.AreEqual(web[i], tops[i], 1.0, $"card {i + 1}");
         }
     }
 }

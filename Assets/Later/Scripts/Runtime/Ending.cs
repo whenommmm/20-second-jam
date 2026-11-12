@@ -315,26 +315,40 @@ namespace Later
         static void LineHeight(Label label, float factor, Action<float, float> then = null)
         {
             string raw = label.text;
-            float applied = -1, top = 0, bottom = 0;
+            float applied = -1, lh = 0, natural = 0, height = -1;
             // one at a time: a label given new text (TURN BACK TIME's answer, each round) drops its old line height
             if (label.userData is EventCallback<GeometryChangedEvent> old) label.UnregisterCallback(old);
             EventCallback<GeometryChangedEvent> fit = null;
             label.userData = fit = e =>
             {
                 float size = label.resolvedStyle.fontSize;
-                if (size == applied) return;
-                if (applied < 0) { top = label.resolvedStyle.marginTop; bottom = label.resolvedStyle.marginBottom; }
-                applied = size;
-                float lh = size * factor;
-                float natural = label.MeasureTextSize(ExactSize.Wrap("Hg", size), 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
-                float half = (lh - natural) / 2;
-                label.text = LineTag(lh) + ExactSize.Wrap(raw, size); // at its exact size: UI Toolkit rounds font sizes
-                label.style.marginTop = top + half;
-                label.style.marginBottom = bottom + half;
-                then?.Invoke(lh, natural);
+                if (size != applied)
+                {
+                    applied = size;
+                    lh = size * factor;
+                    // the font's own line, measured as the label lays its text out (tags and all)
+                    natural = label.MeasureTextSize(LineTag(lh) + ExactSize.Wrap("Hg", size), 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
+                    label.text = LineTag(lh) + ExactSize.Wrap(raw, size); // at its exact size: UI Toolkit rounds font sizes
+                    label.style.unityTextAlign = Middle(label.resolvedStyle.unityTextAlign);
+                    then?.Invoke(lh, natural);
+                }
+                // the label is exactly its lines' line boxes with the text centred in them (the half-leading above and
+                // below), as CSS lays it out; one height, so UI Toolkit's whole-unit layout rounds it once, not three times
+                int lines = (int)Math.Round((label.MeasureTextSize(label.text, label.contentRect.width, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y - natural) / lh) + 1;
+                float h = Math.Max(1, lines) * lh;
+                if (Math.Abs(h - height) > 0.001f) { height = h; label.style.height = h; }
             };
             label.RegisterCallback(fit);
         }
+
+        // the same horizontal alignment, centred vertically
+        static TextAnchor Middle(TextAnchor a) => a switch
+        {
+            TextAnchor.UpperLeft or TextAnchor.LowerLeft => TextAnchor.MiddleLeft,
+            TextAnchor.UpperRight or TextAnchor.LowerRight => TextAnchor.MiddleRight,
+            TextAnchor.UpperCenter or TextAnchor.LowerCenter => TextAnchor.MiddleCenter,
+            _ => a
+        };
 
         static string LineTag(float lh) => string.Format(CultureInfo.InvariantCulture, "<line-height={0:0.###}px>", lh);
 
@@ -607,6 +621,7 @@ namespace Later
             var loud = L("loud");
             if (loud.userData is EventCallback<GeometryChangedEvent> fit) { loud.UnregisterCallback(fit); loud.userData = null; }
             loud.text = "TURN BACK TIME"; loud.style.maxWidth = StyleKeyword.Null;
+            loud.style.height = StyleKeyword.Null; loud.style.unityTextAlign = StyleKeyword.Null;
             loud.style.marginTop = StyleKeyword.Null; loud.style.marginBottom = StyleKeyword.Null;
             Q("restartTap").RemoveFromClassList("on");
             Q("restart").style.opacity = StyleKeyword.Null; Q("restart").style.translate = StyleKeyword.Null;
