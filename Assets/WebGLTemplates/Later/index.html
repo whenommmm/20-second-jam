@@ -31,6 +31,18 @@
 <div id="bar"><i></i></div>
 <div id="frame"></div>
 <div id="rotate"><p>ROTATE YOUR DEVICE</p></div>
+<script>
+  // as on the web, the console stays quiet: the engine's start-up lines and the loader's notes are dropped (warnings and
+  // errors still go through)
+  (function () {
+    var log = console.log;
+    console.log = function () {
+      var from = new Error().stack || "";
+      if (/_JS_Log_Dump|\.loader\.js/.test(from)) return;
+      return log.apply(console, arguments);
+    };
+  })();
+</script>
 <script src="later.js"></script>
 <script src="Build/{{{ LOADER_FILENAME }}}"></script>
 <script>
