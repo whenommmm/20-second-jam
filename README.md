@@ -4,7 +4,7 @@ This README is the starting point for any new chat or agent working on the user'
 
 **Read it first, then read `docs/missed-calls-design.md` before working on LATER.**
 
-Last updated: 2026-11-10. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed and is out of date.
+Last updated: 2026-11-13. This copy, in the Unity project at `~/Unity/20-Second-Jam/`, is the current one. The older copy in `~/20-Second-Jam/jam/` was written before this project existed and is out of date.
 
 ---
 
@@ -16,7 +16,8 @@ Last updated: 2026-11-10. This copy, in the Unity project at `~/Unity/20-Second-
   - The playable reference is `docs/reference/later-mockup.html`. Build "exactly like the showcase": that's the user's instruction.
   - **The Unity version is the jam entry.** A web version (`web/later/`) was built first from the mockup and is the reference the Unity version is checked against.
   - **The web version is finished** (`docs/superpowers/plans/2026-10-30-later-web.md`).
-  - **The Unity version is built** on the branch `later-unity` (`docs/superpowers/plans/2026-10-30-later-unity.md`): it plays and reads like the web version, its WebGL zip is 9.3 MB, and it passes every check (section 7). Not yet merged to `main` or uploaded to itch.io: both wait for the user.
+  - **The Unity version is built** on the branch `later-unity` (`docs/superpowers/plans/2026-10-30-later-unity.md`), and on 2026-11-12 was made to match the web build in every detail a player can see, hear or do (`docs/superpowers/plans/2026-11-12-later-unity-parity.md`): its WebGL zip is 9.2 MB and it passes every check (section 7). Not yet merged to `main` or uploaded to itch.io: both wait for the user.
+  - **The phone's font is Inter in both versions** (the user's choice, 2026-11-11), so they look the same on every device.
 - **Keep the Beat and Unsent:** only the idea exists (section 4). No design yet.
 - **Unity project:** this folder. LATER lives in `Assets/Later/`.
 - **Git:** a private GitHub repo, `github.com/whenommmm/20-second-jam`. Work happens on branches; `main` holds reviewed work.
@@ -120,15 +121,17 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 ### The Unity version of LATER (`Assets/Later/`)
 - **A faithful port of `web/later/`**, file by file: `Rules.cs` ← `rules.js`, `Round.cs` ← `round.js`, `PlayView.cs` ← `view.js`, `Ending.cs` ← `ending.js`, `LaterGame.cs` ← `main.js`, `Later.uxml`/`Later.uss` ← `index.html`/`style.css`. Everything on screen is UI Toolkit.
 - **Every number and line of text comes from `web/later/src/data.js`**, through the generated `Assets/Later/Scripts/Core/LaterData.g.cs`. Never edit that file: change `data.js`, then run `npm run export-unity` in `web/later/`. `npm test` fails if the two drift apart.
-- **Fonts:** the web version's Anton, Archivo Black and Newsreader Italic, plus Inter (Regular, SemiBold, Bold) standing in for the iPhone's own font on the lock screen.
-- **Sounds** are baked to WAVs from the web version's synthesis (`Editor/Synth.cs`, `tools/unity.sh run Later.Editor.SoundBaker.Bake`).
+- **Fonts:** the web version's Anton and Archivo Black; Newsreader Italic instanced at the optical sizes the browser picks for 19 and 21 px (the web's font is variable); and Inter (Regular, SemiBold, Bold) for the phone. The web version bundles the same Inter files (kerning only), so the phone looks the same in both, on every device.
+- **Sounds** are made at startup by `Core/Synth.cs`, the web version's synthesis sample by sample, at the browser's own audio rate. No audio files ship.
+- **The page around the game** (`Assets/WebGLTemplates/Later/`): `later.js` does what `main.js` does with the browser itself (keys by the browser's key names, FULLSCREEN as a real button, Tab focus, the safe area, pill widths measured in the page's fonts, audio suspended in a hidden tab), and the page draws ROTATE YOUR DEVICE itself, as the web's CSS does. The game reaches it through `Plugins/WebGL/Later.jslib`.
+- **Matching the web exactly** was checked side by side in the browser (2026-11-12). What can't match: Unity draws text with SDF fonts rather than the browser's rasteriser (slightly lighter at 9–11 px), it's a 9 MB download with a loading bar where the web starts at once, and screen readers, find-in-page and auto-translate can't read a canvas.
 - **Close the Unity Editor before testing or building:** everything runs in batch mode, which can't open a project the Editor has open. `tools/unity.sh` says so if it is.
 - **Checks** (run from the project folder):
   - `tools/unity.sh test editmode`: the rules, the round, and replays of rounds recorded from the JavaScript simulation (same events, same positions), fonts, icons, sounds.
   - `tools/unity.sh test playmode`: the game itself, from the title screen through all three endings, restarts and the wide-phone layout.
   - `cd web/later && npm test`: the web version's checks, and that the Unity data still matches `data.js`.
-- **Build:** `tools/unity.sh build` makes `Builds/LATER-webgl/` and `Builds/LATER-webgl.zip` (it fails if the zip is over 10 MB). Then `node tools/webgl-smoke.mjs` plays the build in headless Chrome, served the way itch.io serves it.
-- **Side by side with the web version:** `node tools/compare-shots.mjs` writes screenshots of both at the same moments to `Builds/shots/` (`*-pair.png`: web above, Unity below). They match apart from the lock screen's font (Inter) and how the voicemail preview wraps because of it.
+- **Build:** `tools/unity.sh build` makes `Builds/LATER-webgl/` and `Builds/LATER-webgl.zip` (it fails if the zip is over 10 MB). Then `node tools/webgl-smoke.mjs` plays the build in headless Chrome, served the way itch.io serves it. It uses software WebGL, which is slow (a few minutes); `LATER_GPU=1` uses the real GPU.
+- **Side by side with the web version:** `node tools/compare-shots.mjs` writes screenshots of both at the same moments to `Builds/shots/` (`*-pair.png`: web above, Unity below). Note its web side runs in the web's test mode, which turns CSS transitions off, so compare still moments with it, not motion.
 
 ### Uploading to itch.io
 - Upload `Builds/LATER-webgl.zip` as an **HTML** project and tick **"This file will be played in the browser"**.
@@ -149,7 +152,7 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 ### Controlling the editor
 - **Checked on 2026-10-29 and 2026-10-30:** the editor was open on this project, `unity pipeline list` showed it reachable (Pipeline server on port 7800), and the `unity-editor-mcp` tools could read the live scene. So the editor **can be controlled**.
 - **In a new chat, check again before relying on it:** run `unity pipeline list`, and confirm the Unity MCP tools are present. If they aren't, say so honestly, and don't pretend to have editor control.
-- **Unity CLI:** `~/.unity/bin/unity`, version 1.0.0-beta.12. A newer version, **1.0.0-beta.14**, is available. Ask the user before running `unity self-update`. The CLI can make headless builds (`unity build`), but not while this project is open in the editor.
+- **Unity CLI:** `~/.unity/bin/unity`, version 1.0.0-beta.12. A newer version, **1.0.0-beta.17**, is available. Ask the user before running `unity self-update`. The CLI can make headless builds (`unity build`), but not while this project is open in the editor.
 - **Other MCP servers:** `unityMCP` (the "MCP for Unity" package's HTTP server on `127.0.0.1:8080`) belongs to the Handshake project and isn't needed here. `blender` isn't relevant.
 
 ### WebGL for itch.io (Unity version)
@@ -157,7 +160,7 @@ All of LATER's decisions live in `docs/missed-calls-design.md` (with the user's 
 
 ### Audio
 - Browsers block audio until the player clicks or taps, so every game starts with a click-to-start screen.
-- Sounds are generated in code (Web Audio on the web; baked to WAVs at edit time in Unity).
+- Sounds are generated in code (Web Audio on the web; in Unity, rendered sample by sample at startup into PCM clips at the browser's own rate).
 - Unity's audio filter components don't work on WebGL.
 
 ---
