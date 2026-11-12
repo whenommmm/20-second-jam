@@ -47,6 +47,41 @@
     pressed = null;
   }, true);
 
+  // ---- the viewport and its safe-area insets (CSS px), measured as main.js's fit() measures #frame
+  page.frame = [innerWidth, innerHeight, 0, 0, 0, 0];
+  page.readFrame = function () {
+    var f = document.getElementById("frame");
+    if (!f) return;
+    var cs = getComputedStyle(f);
+    page.frame = [f.clientWidth, f.clientHeight, parseFloat(cs.paddingTop), parseFloat(cs.paddingRight), parseFloat(cs.paddingBottom), parseFloat(cs.paddingLeft)];
+  };
+
+  // ---- each name's pill, as wide as the web draws it (main.js measures them once the fonts are in): .pill with its
+  // knob and name, rule for rule. 0 until Archivo Black has loaded.
+  var fontsIn = false, widths = {};
+  document.fonts.load('16px "Archivo Black"').then(function () { return document.fonts.ready; }).then(function () { fontsIn = true; });
+  page.pillWidth = function (who) {
+    if (!fontsIn) return 0;
+    if (widths[who]) return widths[who];
+    var el = document.createElement("div"), knob = document.createElement("i"), name = document.createElement("span");
+    el.style.cssText = "position:absolute;left:0;top:0;visibility:hidden;box-sizing:border-box;height:42px;padding:0 17px 0 7px;border:2px solid #141414;border-radius:21px;display:flex;align-items:center;gap:7px;margin:0;";
+    knob.style.cssText = "width:28px;height:28px;display:block;margin:0;padding:0;";
+    name.style.cssText = "font-family:'Archivo Black',sans-serif;font-size:16px;white-space:nowrap;margin:0;padding:0;";
+    name.textContent = who;
+    el.appendChild(knob); el.appendChild(name);
+    document.body.appendChild(el);
+    widths[who] = el.offsetWidth;
+    el.remove();
+    return widths[who];
+  };
+
+  // ---- ROTATE YOUR DEVICE sits over the game, as on the web: touches on it never reach the game
+  addEventListener("DOMContentLoaded", function () {
+    var rotate = document.getElementById("rotate");
+    ["pointerdown", "pointermove", "pointerup", "pointercancel", "mousedown", "mousemove", "mouseup", "touchstart", "touchmove", "touchend", "click", "wheel"]
+      .forEach(function (t) { rotate.addEventListener(t, function (e) { e.stopPropagation(); }); });
+  });
+
   // ---- keyboard focus: Tab moves between the buttons that show (Show less comes first in the web page's order),
   // then off them; Enter (on press) and Space (on release) activate the focused one
   function focusKeys(e) {

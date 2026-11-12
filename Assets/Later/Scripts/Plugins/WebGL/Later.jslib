@@ -29,5 +29,12 @@ mergeInto(LibraryManager.library, {
     if (!window.LaterPage) return;
     window.LaterPage.buttons = { fs: fw > 0 ? { x: fx, y: fy, w: fw, h: fh } : null, close: cw > 0 ? { x: cx, y: cy, w: cw, h: ch } : null };
   },
-  LaterFocused: function () { var f = window.LaterPage && window.LaterPage.focus; return f === "close" ? 1 : f === "fs" ? 2 : 0; }
+  LaterFocused: function () { var f = window.LaterPage && window.LaterPage.focus; return f === "close" ? 1 : f === "fs" ? 2 : 0; },
+  // the viewport and its safe-area insets (CSS px), measured as main.js's fit() measures #frame; read once a frame
+  LaterReadFrame: function () { if (window.LaterPage) window.LaterPage.readFrame(); },
+  LaterFrame: function (i) { return window.LaterPage ? window.LaterPage.frame[i] : 0; },
+  // the paper colour, for the page's own ROTATE YOUR DEVICE (var(--paper), as on the web)
+  LaterSetPaper: function (rgb) { document.documentElement.style.setProperty("--paper", UTF8ToString(rgb)); },
+  // a name's pill width in the page's own font, or 0 until the font has loaded
+  LaterPillWidth: function (who) { return window.LaterPage ? window.LaterPage.pillWidth(UTF8ToString(who)) : 0; }
 });

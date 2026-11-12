@@ -35,10 +35,7 @@ Label { white-space: nowrap; }
 #fs .ring { left: -2px; top: -2px; right: -2px; bottom: -2px; }
 #sheetClose .ring { left: 8px; top: 12px; right: 8px; bottom: 12px; border-radius: 13px; border-color: #fff; }
 
-/* phones held upright: ask to rotate (play pauses meanwhile); LaterGame sizes the text like min(34px, 8vw) */
-#rotate { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; padding: 24px; background-color: #141414; }
-#rotate.on { display: flex; }
-#rotate Label { white-space: normal; -unity-font-definition: url("/Assets/Later/Fonts/Anton SDF.asset"); color: rgb(253, 220, 172); -unity-text-align: middle-center; }
+/* phones held upright: the page shows ROTATE YOUR DEVICE itself (the WebGL template), as the web's CSS does */
 
 /* dates: paper slips put down by hand */
 #dates { position: absolute; right: 40px; top: 26px; width: 150px; height: 80px; }

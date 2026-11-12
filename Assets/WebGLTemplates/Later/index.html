@@ -7,18 +7,30 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' fill='%23141414'/%3E%3C/svg%3E">
 <style>
   /* the page is the game: paper behind it, no scrolling, zooming or selecting */
-  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: rgb(253,220,172); touch-action: none; overscroll-behavior: none;
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: var(--paper, rgb(253,220,172)); touch-action: none; overscroll-behavior: none;
                -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
   #unity-canvas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; outline: none; background: rgb(253,220,172); }
   /* loading: a thin ink bar */
   #bar { position: fixed; left: 50%; top: 50%; width: 160px; height: 3px; margin: -1.5px 0 0 -80px; background: rgba(20,20,20,.15); }
   #bar i { display: block; width: 0; height: 100%; background: #141414; }
+  /* the web version's own fonts: ROTATE YOUR DEVICE is drawn by the page, and pills are measured in Archivo Black */
+  @font-face { font-family: "Anton"; font-style: normal; font-weight: 400; font-display: block; src: url("fonts/anton-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Archivo Black"; font-style: normal; font-weight: 400; font-display: block; src: url("fonts/archivo-black-latin.woff2") format("woff2"); }
+  /* main.js fits the world inside #frame, padded by the safe area; this stand-in is measured the same way */
+  #frame { position: fixed; inset: 0; box-sizing: border-box; visibility: hidden; pointer-events: none;
+           padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  /* phones held upright: ask to rotate (play pauses meanwhile) — the web version's #rotate, rule for rule */
+  #rotate { display: none; position: fixed; inset: 0; z-index: 20; box-sizing: border-box; background: #141414; color: var(--paper, rgb(253,220,172)); place-items: center; text-align: center; font-family: "Anton", sans-serif; font-size: min(34px, 8vw); line-height: 1.5; letter-spacing: 2px; padding: 24px; }
+  #rotate p { margin: 0; }
+  @media (orientation: portrait) and (max-width: 900px) { #rotate { display: grid; } }
   #bar.failed { width: 80vw; height: auto; margin-left: -40vw; background: none; font: 14px/1.4 sans-serif; color: #141414; text-align: center; }
 </style>
 </head>
 <body>
 <canvas id="unity-canvas" tabindex="-1"></canvas>
 <div id="bar"><i></i></div>
+<div id="frame"></div>
+<div id="rotate"><p>ROTATE YOUR DEVICE</p></div>
 <script src="later.js"></script>
 <script src="Build/{{{ LOADER_FILENAME }}}"></script>
 <script>

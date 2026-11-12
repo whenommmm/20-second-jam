@@ -30,11 +30,11 @@ namespace Later
         readonly System.Collections.Generic.Dictionary<int, Vector2> pressedAt = new System.Collections.Generic.Dictionary<int, Vector2>();
         Sound sound;
         PlayView view;
-        VisualElement frame, stage, world, title, fs, rotate;
+        VisualElement frame, stage, world, title, fs;
         VisualElement[] centred;
-        Label rotateText;
         double scale = 1;
         Vector2 screen;
+        Browser.Frame viewport;
         double lastTap = -1;
         Vector2? mouseAt; // the mouse, for the cursor
         string cursor;
@@ -53,7 +53,7 @@ namespace Later
             sound = GetComponent<Sound>();
             Root = GetComponent<UIDocument>().rootVisualElement;
             frame = Root.Q("frame"); stage = Root.Q("stage"); world = Root.Q("world");
-            title = Root.Q("title"); fs = Root.Q("fs"); rotate = Root.Q("rotate"); rotateText = rotate.Q<Label>();
+            title = Root.Q("title"); fs = Root.Q("fs");
             centred = new[] { Root.Q("centre"), Root.Q("centre-top") };
             view = new PlayView(world, sound);
 
@@ -87,7 +87,8 @@ namespace Later
             sound.Unlock();
             sound.RingStart(); // the phone rings softly under play
             Fit(true);
-            Round = RoundSim.Create(DEFAULT_PILL_W, WorldW);
+            // each name's pill as wide as the page draws it (the defaults until its font has loaded), as main.js does
+            Round = RoundSim.Create(Browser.PillWidths(DEFAULT_PILL_W.Keys) ?? DEFAULT_PILL_W, WorldW);
             view.Reset();
             drag.Reset(); ForcedTarget = null;
             State = "play";
@@ -192,27 +193,30 @@ namespace Later
             return new Vec(p.x, p.y);
         }
 
-        // One world 540 tall, scaled to fit. On wide screens (phones on their side) the world is wider (up to W_MAX)
-        // so play fills the screen instead of leaving dead bars at the sides. Its width only changes between rounds.
+        // One world 540 tall, scaled to fit inside the safe area (notches, home bars), worked out in CSS px exactly as
+        // main.js's fit() does. On wide screens (phones on their side) the world is wider (up to W_MAX) so play fills the
+        // screen instead of leaving dead bars at the sides. Its width only changes between rounds.
         void Fit(bool widen)
         {
-            screen = ScreenOverride is Vector2Int o ? new Vector2(o.x, o.y) : new Vector2(Screen.width, Screen.height);
-            if (widen) WorldW = Rules.WorldWidth(screen.x, screen.y);
-            scale = Math.Min(screen.x / WorldW, screen.y / H);
+            screen = ScreenSize();
+            viewport = Browser.ViewFrame(screen);
+            double k = screen.x / viewport.W; // canvas px per CSS px
+            double w = viewport.W - viewport.Left - viewport.Right, h = viewport.H - viewport.Top - viewport.Bottom;
+            if (widen) WorldW = Rules.WorldWidth(w, h);
+            double s = Math.Min(w / WorldW, h / H);
+            scale = s * k;
             frame.style.width = screen.x; frame.style.height = screen.y;
-            float sw = (float)(WorldW * scale), sh = (float)(H * scale);
-            stage.style.left = (screen.x - sw) / 2; stage.style.top = (screen.y - sh) / 2;
-            stage.style.width = sw; stage.style.height = sh;
+            stage.style.left = (float)((viewport.Left + (w - WorldW * s) / 2) * k);
+            stage.style.top = (float)((viewport.Top + (h - H * s) / 2) * k);
+            stage.style.width = (float)(WorldW * scale); stage.style.height = (float)(H * scale);
             world.style.width = (float)WorldW;
             world.style.scale = new Scale(new Vector2((float)scale, (float)scale));
             foreach (var c in centred) c.style.left = (float)((WorldW - W) / 2);
-            // min(34px, 8vw), in CSS pixels
             // landscape phones: the phone's text a touch larger (the web version's @media (max-height: 460px))
-            frame.EnableInClassList("small", screen.y / Browser.PixelRatio <= 460);
-            double dpr = Browser.PixelRatio, size = Math.Min(34, 0.08 * screen.x / dpr) * dpr;
-            rotateText.style.fontSize = (float)size;
-            rotateText.text = $"<cspace={2 * dpr:0.##}px>ROTATE YOUR DEVICE</cspace>";
+            frame.EnableInClassList("small", viewport.H <= 460);
         }
+
+        static Vector2 ScreenSize() => ScreenOverride is Vector2Int o ? new Vector2(o.x, o.y) : new Vector2(Screen.width, Screen.height);
 
         // keys as main.js reads them; every keydown during play (repeats too) leaves the moon to the keys
         void ReadKeys()
@@ -228,10 +232,10 @@ namespace Later
 
         void Update()
         {
-            var size = ScreenOverride is Vector2Int o ? new Vector2(o.x, o.y) : new Vector2(Screen.width, Screen.height);
-            if (size != screen) Fit(State == "title");
+            var size = ScreenSize();
+            if (size != screen || !Browser.ViewFrame(size).Equals(viewport)) Fit(State == "title");
+            // an upright phone pauses play; the page shows ROTATE YOUR DEVICE itself, as the web's CSS does
             bool upright = Browser.Upright;
-            rotate.EnableInClassList("on", upright);
             ReadKeys();
 
             double dt = Math.Min(0.1, Math.Max(0, Time.deltaTime));

@@ -34,6 +34,8 @@ namespace Later.Tests
             Browser.UprightOverride = null;
             Browser.KeyEventsForTests.Clear();
             Browser.FocusForTests = "";
+            Browser.FrameForTests = null;
+            Browser.PillWidthsForTests = null;
         }
 
         public static IEnumerator Wait(double gameSeconds)

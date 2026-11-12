@@ -17,7 +17,23 @@ namespace Later
         // tests give a button keyboard focus with this ("fs", "close" or "")
         public static string FocusForTests = "";
 
-        // what the game last told the page: the cursor, and where the buttons the page handles itself are (CSS px)
+        // The browser's viewport and its safe-area insets (notches, home bars), in CSS px: what main.js fits the world into.
+        public struct Frame { public double W, H, Top, Right, Bottom, Left; }
+        public static Frame? FrameForTests;
+        // tests stand in for the widths the page measures
+        public static IReadOnlyDictionary<string, double> PillWidthsForTests;
+
+        // what the game last told the page: the paper colour, the cursor, where the buttons it handles itself are (CSS px)
+        public static string Paper { get; private set; } = "";
+
+        public static void SetPaper(int r, int g, int b)
+        {
+            string paper = $"rgb({r},{g},{b})";
+            if (paper == Paper) return;
+            Paper = paper;
+            SetPaperOnPage(paper);
+        }
+
         public static string Cursor { get; private set; } = "";
         public static Rect FullscreenButton { get; private set; }
         public static Rect CloseButton { get; private set; }
@@ -46,6 +62,10 @@ namespace Later
         [DllImport("__Internal")] static extern void LaterSetCursor(string cursor);
         [DllImport("__Internal")] static extern void LaterSetButtons(float fx, float fy, float fw, float fh, float cx, float cy, float cw, float ch);
         [DllImport("__Internal")] static extern int LaterFocused();
+        [DllImport("__Internal")] static extern void LaterReadFrame();
+        [DllImport("__Internal")] static extern double LaterFrame(int i);
+        [DllImport("__Internal")] static extern void LaterSetPaper(string rgb);
+        [DllImport("__Internal")] static extern double LaterPillWidth(string who);
 
         public static bool CanFullscreen => LaterCanFullscreen() != 0;
         public static bool CoarsePointer => LaterCoarsePointer() != 0;
@@ -70,6 +90,28 @@ namespace Later
         public static string Focused => LaterFocused() switch { 1 => "close", 2 => "fs", _ => "" };
         static void SetCursorOnPage(string cursor) => LaterSetCursor(cursor);
         static void SetButtonsOnPage(Rect f, Rect c) => LaterSetButtons(f.x, f.y, f.width, f.height, c.x, c.y, c.width, c.height);
+        static void SetPaperOnPage(string rgb) => LaterSetPaper(rgb);
+
+        public static Frame ViewFrame(Vector2 screen)
+        {
+            if (FrameForTests is Frame f) return f;
+            LaterReadFrame();
+            return new Frame { W = LaterFrame(0), H = LaterFrame(1), Top = LaterFrame(2), Right = LaterFrame(3), Bottom = LaterFrame(4), Left = LaterFrame(5) };
+        }
+
+        // each name's pill, as wide as the page draws it in its own font (main.js's measurePillWidths), once fonts are in
+        public static IReadOnlyDictionary<string, double> PillWidths(IEnumerable<string> names)
+        {
+            if (PillWidthsForTests != null) return PillWidthsForTests;
+            var widths = new Dictionary<string, double>();
+            foreach (var who in names)
+            {
+                double w = LaterPillWidth(who);
+                if (w <= 0) return null;
+                widths[who] = w;
+            }
+            return widths;
+        }
 #else
         public static bool CanFullscreen => true;
         public static bool CoarsePointer => false;
@@ -102,6 +144,9 @@ namespace Later
         public static string Focused => FocusForTests;
         static void SetCursorOnPage(string cursor) { }
         static void SetButtonsOnPage(Rect f, Rect c) { }
+        static void SetPaperOnPage(string rgb) { }
+        public static Frame ViewFrame(Vector2 screen) => FrameForTests ?? new Frame { W = screen.x, H = screen.y };
+        public static IReadOnlyDictionary<string, double> PillWidths(IEnumerable<string> names) => PillWidthsForTests;
 #endif
 
         // The page's #hash, like "#test-dodge", or "".

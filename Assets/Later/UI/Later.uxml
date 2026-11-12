@@ -94,8 +94,5 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="rotate">
-            <ui:Label text="ROTATE YOUR DEVICE" />
-        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

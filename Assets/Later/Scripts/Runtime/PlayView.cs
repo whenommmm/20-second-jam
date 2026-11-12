@@ -131,6 +131,7 @@ namespace Later
         void SetPaper((int R, int G, int B) rgb)
         {
             var c = (Color)new Color32((byte)rgb.R, (byte)rgb.G, (byte)rgb.B, 255);
+            Browser.SetPaper(rgb.R, rgb.G, rgb.B);
             world.style.backgroundColor = c;
             var page = world.parent?.parent;
             if (page != null) page.style.backgroundColor = c;

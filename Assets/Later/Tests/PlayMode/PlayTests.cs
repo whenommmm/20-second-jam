@@ -112,11 +112,9 @@ namespace Later.Tests
             double t = Game.Round.T;
             yield return Wait(1);
             Assert.AreEqual(t, Game.Round.T, "play went on with the phone upright");
-            Assert.IsTrue(Shown(Q("rotate")));
             Browser.UprightOverride = false;
             yield return Wait(1);
             Assert.That(Game.Round.T, Is.GreaterThan(t + 0.9));
-            Assert.IsFalse(Shown(Q("rotate")));
         }
     
         // the player switches apps mid-drag, so the finger's lift never arrives: the next finger must still steer
@@ -189,6 +187,47 @@ namespace Later.Tests
             double x1 = Game.Round.Me.X;
             yield return Wait(0.5);
             Assert.That(Game.Round.Me.X - x1, Is.LessThan(moved / 2), "the key stayed held after the window lost focus");
+        }
+
+        // a notched phone on its side: the web pads the frame by the safe area and fits the world inside it (main.js fit)
+        [UnityTest]
+        public IEnumerator NotchedPhone_FitsTheWorldInsideTheSafeArea()
+        {
+            Browser.FrameForTests = new Browser.Frame { W = 844, H = 390, Top = 0, Right = 47, Bottom = 21, Left = 47 };
+            yield return Load(new Vector2Int(844, 390));
+            yield return null;
+            Assert.AreEqual(1098, Game.WorldW, "the world's width, from the 750 × 369 inside the insets");
+            var stage = Q("stage").worldBound;
+            Assert.AreEqual(47, stage.x, 0.01);
+            Assert.AreEqual(750, stage.width, 0.01);
+            Assert.AreEqual(369 * 0.5 - stage.height / 2, stage.y, 0.01);
+        }
+
+        // the page's own ROTATE YOUR DEVICE is in the paper colour, as #rotate uses var(--paper)
+        [UnityTest]
+        public IEnumerator ThePaperColour_IsGivenToThePage()
+        {
+            yield return Load();
+            Assert.AreEqual("rgb(253,220,172)", Browser.Paper);
+            yield return Play(r => r.Me); // stay put and let calls ring out: the paper goes cold
+            var (pr, pg, pb) = Rules.Paper(Game.Round.PaperK);
+            Assert.AreEqual($"rgb({pr},{pg},{pb})", Browser.Paper);
+            Assert.AreNotEqual("rgb(253,220,172)", Browser.Paper);
+        }
+
+        // the web measures each name's pill in the page's own font before the round, and plays with those widths
+        [UnityTest]
+        public IEnumerator PillWidths_ComeFromThePage()
+        {
+            Browser.PillWidthsForTests = new System.Collections.Generic.Dictionary<string, double> { ["Mom"] = 108, ["Dad"] = 99, ["Aunt"] = 104, ["John"] = 106, ["Jessie"] = 121 };
+            yield return Load();
+            Game.StartRound();
+            Assert.AreEqual(108, Game.Round.PillW["Mom"]);
+            yield return WaitFor(() => Q("pills").childCount > 0, 5, "a pill");
+            yield return null;
+            var pill = Q("pills")[0];
+            var who = Game.Round.Pills.First(p => true).Who;
+            Assert.AreEqual(Browser.PillWidthsForTests[who], pill.resolvedStyle.width, 0.01);
         }
     }
 }
