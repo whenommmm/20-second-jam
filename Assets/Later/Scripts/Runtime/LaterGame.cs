@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using static Later.LaterData;
 
@@ -23,13 +22,12 @@ namespace Later
         // like the web version's __later.setTarget: steers the moon over the pointer and keys
         public Vec? ForcedTarget;
 
-        static readonly (Key Key, int X, int Y)[] KeyMap =
-        {
-            (Key.LeftArrow, -1, 0), (Key.A, -1, 0), (Key.RightArrow, 1, 0), (Key.D, 1, 0),
-            (Key.UpArrow, 0, -1), (Key.W, 0, -1), (Key.DownArrow, 0, 1), (Key.S, 0, 1)
-        };
+        // a browser only clicks for a finger that moved less than this (CSS px) between press and lift
+        const double TapSlop = 10;
 
         readonly DragInput drag = new DragInput();
+        readonly KeyState keys = new KeyState();
+        readonly System.Collections.Generic.Dictionary<int, Vector2> pressedAt = new System.Collections.Generic.Dictionary<int, Vector2>();
         Sound sound;
         PlayView view;
         VisualElement frame, stage, world, title, fs, rotate;
@@ -37,7 +35,6 @@ namespace Later
         Label rotateText;
         double scale = 1;
         Vector2 screen;
-        int keysX, keysY;
         double lastTap = -1;
 
         void Awake() => Instance = this;
@@ -65,7 +62,7 @@ namespace Later
             frame.RegisterCallback<PointerMoveEvent>(e => PointerMove(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position));
             frame.RegisterCallback<PointerUpEvent>(e => PointerUp(e.pointerId));
             frame.RegisterCallback<PointerCancelEvent>(e => PointerUp(e.pointerId));
-            world.RegisterCallback<ClickEvent>(e => { if (State == "title") StartRound(); });
+            world.RegisterCallback<ClickEvent>(e => StageClick(e.pointerId, e.pointerType == UnityEngine.UIElements.PointerType.touch, e.position));
 
             // Fullscreen, where the browser supports it; Unity asks the browser on the gesture that follows this press.
             fs.RegisterCallback<PointerDownEvent>(e =>
@@ -106,6 +103,7 @@ namespace Later
         // the title, the fullscreen button and the cursor follow the state
         void ShowChrome()
         {
+            Browser.SetPlaying(State == "play");
             title.EnableInClassList("on", State == "title");
             fs.EnableInClassList("ontitle", State == "title");
             fs.EnableInClassList("hide", State == "play" || !Browser.CanFullscreen);
@@ -114,21 +112,29 @@ namespace Later
 
         public void PointerDown(int id, bool touch, Vector2 panelPos)
         {
-            // double-tap (or double-click) during the ending shows the rest of her words at once
-            double now = Time.unscaledTimeAsDouble;
+            // double-tap (or double-click) during the ending shows the rest of her words at once; timed by the browser
+            double now = Browser.PointerTime ?? Time.unscaledTimeAsDouble;
             if (State == "over" && Ending != null && now - lastTap < 0.35) Ending.TapTwice();
             lastTap = now;
-            if (touch) drag.TouchDown(id, ToWorld(panelPos), Round, now);
+            pressedAt[id] = panelPos;
+            if (touch) drag.TouchDown(id, ToWorld(panelPos), Round);
         }
 
         public void PointerMove(int id, bool touch, Vector2 panelPos)
         {
-            double now = Time.unscaledTimeAsDouble;
-            if (touch) drag.TouchMove(id, ToWorld(panelPos), Round, now);
-            else if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos), now);
+            if (touch) drag.TouchMove(id, ToWorld(panelPos), Round);
+            else if (stage.worldBound.Contains(panelPos)) drag.MouseMove(ToWorld(panelPos));
         }
 
-        public void PointerUp(int id) => drag.TouchUp(id, Time.unscaledTimeAsDouble);
+        public void PointerUp(int id) => drag.TouchUp(id);
+
+        // a click on the stage starts the round from the title; for a finger, only a tap counts, as in a browser
+        public void StageClick(int id, bool touch, Vector2 panelPos)
+        {
+            if (State != "title") return;
+            if (touch && pressedAt.TryGetValue(id, out var at) && (panelPos - at).magnitude / Browser.PixelRatio > TapSlop) return;
+            StartRound();
+        }
 
         // a finger down when the game loses focus (another app, the notification shade) never sends its lift
         void OnApplicationFocus(bool focused)
@@ -169,20 +175,15 @@ namespace Later
             rotateText.text = $"<cspace={2 * dpr:0.##}px>ROTATE YOUR DEVICE</cspace>";
         }
 
+        // keys as main.js reads them; every keydown during play (repeats too) leaves the moon to the keys
         void ReadKeys()
         {
-            keysX = keysY = 0;
-            var kb = Keyboard.current;
-            if (kb == null) return;
-            bool pressed = false;
-            foreach (var (key, x, y) in KeyMap)
+            foreach (var e in Browser.TakeKeyEvents())
             {
-                var k = kb[key];
-                if (k.isPressed) { keysX += x; keysY += y; }
-                pressed |= k.wasPressedThisFrame;
+                if (e == "!") keys.Clear();
+                else if (e[0] == '+') { if (keys.Down(e.Substring(1), State == "play")) drag.ClearTarget(); }
+                else if (e[0] == '-') keys.Up(e.Substring(1));
             }
-            keysX = Math.Sign(keysX); keysY = Math.Sign(keysY);
-            if (pressed && State == "play") drag.ClearTarget();
         }
 
         void Update()
@@ -197,7 +198,7 @@ namespace Later
             // an upright phone pauses play (a hidden tab already pauses: the game doesn't run in the background)
             if (State == "play" && !upright)
             {
-                var events = RoundSim.Step(Round, dt, new RoundInput { Target = ForcedTarget ?? drag.Target, KeysX = keysX, KeysY = keysY });
+                var events = RoundSim.Step(Round, dt, new RoundInput { Target = ForcedTarget ?? drag.Target, KeysX = keys.X, KeysY = keys.Y });
                 view.Handle(events, Round);
                 // once every call has come and gone, the phone stops ringing: the last seconds are quiet
                 if (sound.Ringing && Round.NextCall == CALLS.Length && Round.Pills.Count == 0) sound.RingStop();

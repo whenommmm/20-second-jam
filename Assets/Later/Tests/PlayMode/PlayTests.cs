@@ -136,5 +136,59 @@ namespace Later.Tests
             yield return Wait(1);
             Assert.That(Game.Round.Me.X - x0, Is.GreaterThan(40), "touch stayed locked to the lost finger");
         }
+
+        // click CLICK TO START, then move the mouse: the moon follows at once, as on the web (no pause after a click)
+        [UnityTest]
+        public IEnumerator TheMouse_SteersStraightAfterTheStartClick()
+        {
+            yield return Load();
+            var p = Q("world").worldBound.center;
+            Game.PointerDown(0, false, p);
+            Game.StageClick(0, false, p);
+            Game.PointerUp(0);
+            Assert.AreEqual("play", Game.State);
+            double x0 = Game.Round.Me.X;
+            Game.PointerMove(0, false, p + new Vector2(250, 0));
+            yield return Wait(0.5);
+            Assert.That(Game.Round.Me.X - x0, Is.GreaterThan(60), "the moon ignored the mouse after the click");
+        }
+
+        // a browser only clicks for a finger that stayed put: a swipe across the title doesn't start the round
+        [UnityTest]
+        public IEnumerator ASwipeAcrossTheTitle_DoesntStartTheRound()
+        {
+            yield return Load();
+            var p = Q("world").worldBound.center;
+            Game.PointerDown(3, true, p);
+            Game.PointerUp(3);
+            Game.StageClick(3, true, p + new Vector2(60, 0));
+            Assert.AreEqual("title", Game.State, "a swipe started the round");
+            Game.PointerDown(4, true, p);
+            Game.PointerUp(4);
+            Game.StageClick(4, true, p + new Vector2(5, 0));
+            Assert.AreEqual("play", Game.State, "a tap didn't start the round");
+        }
+
+        // keys as main.js reads them: one held on the title screen only counts from its next keydown (its auto-repeat);
+        // and losing focus lets go of it
+        [UnityTest]
+        public IEnumerator TheKeys_Steer_AndAKeyHeldBeforeTheRound_WaitsForItsRepeat()
+        {
+            yield return Load();
+            Browser.KeyEventsForTests.Enqueue("+ArrowRight");
+            yield return null;
+            Game.StartRound();
+            double x0 = Game.Round.Me.X;
+            yield return Wait(0.5);
+            Assert.AreEqual(x0, Game.Round.Me.X, 1e-6, "a key pressed before play moved the moon");
+            Browser.KeyEventsForTests.Enqueue("+ArrowRight");
+            yield return Wait(0.5);
+            double moved = Game.Round.Me.X - x0;
+            Assert.That(moved, Is.GreaterThan(100), "the key's repeat didn't steer");
+            Browser.KeyEventsForTests.Enqueue("!");
+            double x1 = Game.Round.Me.X;
+            yield return Wait(0.5);
+            Assert.That(Game.Round.Me.X - x1, Is.LessThan(moved / 2), "the key stayed held after the window lost focus");
+        }
     }
 }
