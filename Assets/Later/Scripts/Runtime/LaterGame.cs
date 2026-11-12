@@ -58,6 +58,8 @@ namespace Later
             title = Root.Q("title"); fs = Root.Q("fs");
             centred = new[] { Root.Q("centre"), Root.Q("centre-top") };
             view = new PlayView(world, sound);
+            // the phone's text at its exact half-pixel sizes, as the browser sets it (UI Toolkit rounds font sizes)
+            foreach (var label in Root.Q("lockbody").Query<Label>().ToList()) ExactSize.Keep(label);
 
             if (Browser.CoarsePointer) title.Q<Label>("go").text = "TAP TO START";
 

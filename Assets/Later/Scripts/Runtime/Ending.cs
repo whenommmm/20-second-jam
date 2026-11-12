@@ -143,7 +143,7 @@ namespace Later
 
         static Label FlyerText(string text, string cls, float size)
         {
-            var l = new Label(text) { pickingMode = PickingMode.Ignore };
+            var l = new Label(ExactSize.Wrap(text, size)) { pickingMode = PickingMode.Ignore };
             l.AddToClassList(cls);
             l.style.fontSize = size; l.style.height = size; // line-height 1
             return l;
@@ -190,10 +190,10 @@ namespace Later
         {
             // fill in the missed-calls group now so the badge has somewhere to land
             var missedCalls = round.Calls.Where(c => c.MissedN > 0).ToList();
-            L("gcount").text = round.Missed.ToString();
-            L("gword").text = round.Missed == 1 ? "Missed Call" : "Missed Calls";
-            L("gnames").text = string.Join(", ", missedCalls.AsEnumerable().Reverse().Select(c => c.Def.Who).Distinct());
-            L("gdate").text = missedCalls.Count > 0 ? Rules.ShortDate(missedCalls[missedCalls.Count - 1].Def.Date) : "";
+            ExactSize.SetText(L("gcount"), round.Missed.ToString());
+            ExactSize.SetText(L("gword"), round.Missed == 1 ? "Missed Call" : "Missed Calls");
+            ExactSize.SetText(L("gnames"), string.Join(", ", missedCalls.AsEnumerable().Reverse().Select(c => c.Def.Who).Distinct()));
+            ExactSize.SetText(L("gdate"), missedCalls.Count > 0 ? Rules.ShortDate(missedCalls[missedCalls.Count - 1].Def.Date) : "");
 
             // swap the real moon, tag and badge for stand-ins, then fly each one home. The moon and its name travel with
             // a pill that grows out around them, and LATER turns into "Later" on the way: together they become "☾ Later".
@@ -305,6 +305,7 @@ namespace Later
             var l = new Label(text) { pickingMode = PickingMode.Ignore };
             l.AddToClassList(cls);
             if (lineHeight > 0) LineHeight(l, lineHeight, then);
+            else ExactSize.Keep(l); // the phone's half-pixel sizes, exact
             return l;
         }
 
@@ -325,9 +326,9 @@ namespace Later
                 if (applied < 0) { top = label.resolvedStyle.marginTop; bottom = label.resolvedStyle.marginBottom; }
                 applied = size;
                 float lh = size * factor;
-                float natural = label.MeasureTextSize("Hg", 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
+                float natural = label.MeasureTextSize(ExactSize.Wrap("Hg", size), 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).y;
                 float half = (lh - natural) / 2;
-                label.text = LineTag(lh) + raw;
+                label.text = LineTag(lh) + ExactSize.Wrap(raw, size); // at its exact size: UI Toolkit rounds font sizes
                 label.style.marginTop = top + half;
                 label.style.marginBottom = bottom + half;
                 then?.Invoke(lh, natural);
@@ -341,16 +342,17 @@ namespace Later
         // (letters come off its end only if the ellipsis wouldn't fit), as Chrome does
         static void Clamp(Label label, string text, int lines, float lh, float natural)
         {
+            float size = label.resolvedStyle.fontSize;
             string tag = LineTag(lh);
             float width = label.contentRect.width;
-            int Lines(string t) => (int)Math.Round((label.MeasureTextSize(tag + t, width, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y - natural) / lh) + 1;
-            if (Lines(text) <= lines) { label.text = tag + text; return; }
+            int Lines(string t) => (int)Math.Round((label.MeasureTextSize(tag + ExactSize.Wrap(t, size), width, VisualElement.MeasureMode.AtMost, 0, VisualElement.MeasureMode.Undefined).y - natural) / lh) + 1;
+            if (Lines(text) <= lines) { label.text = tag + ExactSize.Wrap(text, size); return; }
             var words = text.Split(' ');
             int k = words.Length;
             while (k > 0 && Lines(string.Join(" ", words.Take(k))) > lines) k--;
             string shown = string.Join(" ", words.Take(k)).TrimEnd();
             while (shown.Length > 0 && Lines(shown + "…") > lines) shown = shown.Substring(0, shown.Length - 1).TrimEnd();
-            label.text = tag + shown + "…";
+            label.text = tag + ExactSize.Wrap(shown + "…", size);
         }
 
         // CSS letter-spacing, which runs on past the last letter: rich text's <cspace> only counts the spacing after the

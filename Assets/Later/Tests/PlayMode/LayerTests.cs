@@ -186,5 +186,25 @@ namespace Later.Tests
             float a = Q("pills")[0].style.rotate.value.angle.value;
             Assert.AreEqual(System.Math.Round(a * 10), a * 10, 1e-3);
         }
+
+        // UI Toolkit rounds a label's font size to whole pixels (10.5 px is set as 11, 5% wider); the phone's half-pixel
+        // sizes are kept exact, so its text is as wide as the web's and wraps where the web's does
+        [UnityTest]
+        public IEnumerator HalfPixelFontSizes_AreKeptExact()
+        {
+            yield return Load();
+            var line = new Label("They're saying weeks, maybe less.");
+            line.style.unityFontDefinition = Q("sil").resolvedStyle.unityFontDefinition;
+            line.style.fontSize = 10.5f;
+            Game.Root.Add(line);
+            ExactSize.Keep(line);
+            yield return null;
+            yield return null;
+            float w = line.MeasureTextSize(line.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).x;
+            Assert.AreEqual(174, w, 0.01, "the web sets it 173.23 px wide, kerned (to the next whole pixel); rounded to 11 px it was 182");
+            StringAssert.Contains("They're saying weeks, maybe less.", Plain(line.text));
+            ExactSize.SetText(line, "Funeral's on Saturday.");
+            Assert.AreEqual("Funeral's on Saturday.", Plain(line.text));
+        }
     }
 }
