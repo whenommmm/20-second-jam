@@ -54,6 +54,21 @@ namespace Later.Tests
             Layer.K = 1;
         }
 
+        // an opacity filter draws rounded clipping (overflow: hidden with corners) as a solid slab, so the lock screen's
+        // body stops clipping while it fades (nothing on it reaches its corners then) and clips again once it's in
+        [Test]
+        public void AFadingLayer_LetsGoOfItsRoundedClip_UntilItsIn()
+        {
+            var outer = new VisualElement();
+            var inner = new VisualElement();
+            inner.style.overflow = Overflow.Hidden;
+            outer.Add(inner);
+            Layer.Opacity(outer, inner, 0.3f);
+            Assert.AreEqual(Overflow.Visible, inner.style.overflow.value, "the clip stays on through the filter");
+            Layer.Opacity(outer, inner, 1);
+            Assert.AreEqual(Overflow.Hidden, inner.style.overflow.value, "the clip didn't come back");
+        }
+
         // the Messages sheet opens as one layer: the cards don't show through as patches mid-fade
         [UnityTest]
         public IEnumerator TheMessagesSheet_FadesInAsOneLayer()

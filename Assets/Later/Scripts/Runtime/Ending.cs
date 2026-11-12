@@ -182,7 +182,7 @@ namespace Later
             });
             // the lock screen fades in as one layer, as CSS fades #lock
             VisualElement lockEl = Q("lock"), lockBody = Q("lockbody");
-            tl.After(1.0, () => tl.Tween(0, 0.45, Ease.CssEase, p => Layer.Opacity(lockEl, lockBody, (float)p)));
+            tl.After(1.0, () => tl.Tween(0, 0.45, Ease.CssEase, p => Layer.Opacity(lockEl, lockBody, (float)p, clipped: true)));
             tl.After(1.25, Flights);
         }
 
@@ -578,6 +578,7 @@ namespace Later
                 s.display = StyleKeyword.Null; s.filter = StyleKeyword.Null;
             }
             Q("me").style.visibility = StyleKeyword.Null;
+            Layer.Release(Q("lockbody"));
 
             Q("again").UnregisterCallback(onAgain);
             Q("restartTap").UnregisterCallback(onRestartTap);
