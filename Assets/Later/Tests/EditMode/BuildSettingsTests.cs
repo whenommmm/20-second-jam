@@ -13,6 +13,11 @@ namespace Later.Tests
         [Test]
         public void ColorSpace_IsGamma_LikeTheBrowser() => Assert.AreEqual(ColorSpace.Gamma, PlayerSettings.colorSpace);
 
+        // the web keeps playing when the window merely loses focus (a click on the itch.io page around the game);
+        // only a hidden tab pauses it, which the browser does to the build too by stopping its frames
+        [Test]
+        public void TheBuild_KeepsRunningWhenTheWindowLosesFocus() => Assert.IsTrue(PlayerSettings.runInBackground);
+
         // browsers antialias the phone's rounded corners where they clip the Messages list; so does the build's canvas
         [Test]
         public void TheWebGLQualityLevel_Antialiases()

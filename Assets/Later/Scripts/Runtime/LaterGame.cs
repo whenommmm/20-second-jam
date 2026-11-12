@@ -21,6 +21,8 @@ namespace Later
         public VisualElement Root { get; private set; }
         // like the web version's __later.setTarget: steers the moon over the pointer and keys
         public Vec? ForcedTarget;
+        // tests pass this much wall-clock time in the next frame (as if the tab had been hidden that long)
+        public static double? WallSecondsForTests;
 
         // a browser only clicks for a finger that moved less than this (CSS px) between press and lift
         const double TapSlop = 10;
@@ -35,7 +37,7 @@ namespace Later
         double scale = 1;
         Vector2 screen;
         Browser.Frame viewport;
-        double lastTap = -1;
+        double lastTap = -1, lastWall = -1;
         Vector2? mouseAt; // the mouse, for the cursor
         string cursor;
         Rect fsReported = new Rect(-1, -1, 0, 0), closeReported = new Rect(-1, -1, 0, 0);
@@ -231,6 +233,16 @@ namespace Later
             }
         }
 
+        // the wall-clock time since the last frame (in tests, which fix each frame's time, that fixed time)
+        double WallClockStep()
+        {
+            double now = Time.realtimeSinceStartupAsDouble, step = lastWall < 0 ? 0 : now - lastWall;
+            lastWall = now;
+            if (Time.captureDeltaTime > 0) step = Time.deltaTime;
+            if (WallSecondsForTests is double forced) { step = forced; WallSecondsForTests = null; }
+            return Math.Max(0, step);
+        }
+
         void Update()
         {
             var size = ScreenSize();
@@ -239,18 +251,24 @@ namespace Later
             bool upright = Browser.Upright;
             ReadKeys();
 
-            double dt = Math.Min(0.1, Math.Max(0, Time.deltaTime));
-            // an upright phone pauses play (a hidden tab already pauses: the game doesn't run in the background)
+            // Two clocks, as on the web. The round steps by the frame's time, capped at 0.1 s, and not at all on the first
+            // frame after the tab comes back (main.js restarts its clock then). Everything else (the ending's timers, the
+            // view's animations, as setTimeout and CSS run) goes by the wall clock, time away included.
+            double wall = WallClockStep();
+            double dt = Browser.TakeResumed() ? 0 : Math.Min(0.1, Math.Max(0, Time.deltaTime));
+            bool ended = false;
+            // an upright phone pauses play (a hidden tab pauses everything: the browser stops sending frames)
             if (State == "play" && !upright)
             {
                 var events = RoundSim.Step(Round, dt, new RoundInput { Target = ForcedTarget ?? drag.Target, KeysX = keys.X, KeysY = keys.Y });
                 view.Handle(events, Round);
                 // once every call has come and gone, the phone stops ringing: the last seconds are quiet
                 if (sound.Ringing && Round.NextCall == CALLS.Length && Round.Pills.Count == 0) sound.RingStop();
-                if (events.Any(e => e.Type == RoundEventType.Time)) EndRound();
+                if (events.Any(e => e.Type == RoundEventType.Time)) { EndRound(); ended = true; }
             }
-            view.Tick(dt);
-            Ending?.Update(dt);
+            view.Tick(wall);
+            // the ending's clock starts from the frame the round ended in, as the web's timers do
+            if (!ended) Ending?.Update(wall);
             if (State != "over") view.Draw(Round);
             UpdateCursor();
             ReportButtons();

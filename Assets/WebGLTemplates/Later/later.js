@@ -26,6 +26,9 @@
   // unlike the web version, a key released while another window has focus doesn't stay held
   addEventListener("blur", function () { page.keys.push("!"); });
 
+  // ---- a hidden tab: the browser stops the game's frames; when it comes back, play picks up with no jump
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) page.resumed = true; });
+
   // ---- presses: when the browser saw each one, for the double-tap's 350 ms
   addEventListener("pointerdown", function (e) { page.lastDown = e.timeStamp; }, true);
 

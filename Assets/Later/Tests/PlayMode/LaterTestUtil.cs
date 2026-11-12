@@ -36,6 +36,8 @@ namespace Later.Tests
             Browser.FocusForTests = "";
             Browser.FrameForTests = null;
             Browser.PillWidthsForTests = null;
+            Browser.ResumedForTests = false;
+            LaterGame.WallSecondsForTests = null;
         }
 
         public static IEnumerator Wait(double gameSeconds)

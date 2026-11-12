@@ -229,5 +229,21 @@ namespace Later.Tests
             var who = Game.Round.Pills.First(p => true).Who;
             Assert.AreEqual(Browser.PillWidthsForTests[who], pill.resolvedStyle.width, 0.01);
         }
+
+        // main.js restarts its clock when the tab comes back, so play picks up with no jump
+        [UnityTest]
+        public IEnumerator BackFromAHiddenTab_PlayPicksUpWithoutAJump()
+        {
+            yield return Load();
+            Game.StartRound();
+            yield return Wait(1);
+            double t = Game.Round.T;
+            Browser.ResumedForTests = true; // the tab is visible again
+            LaterGame.WallSecondsForTests = 4; // after four seconds away
+            yield return null;
+            Assert.AreEqual(t, Game.Round.T, 1e-9, "the round jumped on the first frame back");
+            yield return null;
+            Assert.That(Game.Round.T, Is.GreaterThan(t));
+        }
     }
 }

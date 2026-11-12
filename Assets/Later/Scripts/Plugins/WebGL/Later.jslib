@@ -36,5 +36,7 @@ mergeInto(LibraryManager.library, {
   // the paper colour, for the page's own ROTATE YOUR DEVICE (var(--paper), as on the web)
   LaterSetPaper: function (rgb) { document.documentElement.style.setProperty("--paper", UTF8ToString(rgb)); },
   // a name's pill width in the page's own font, or 0 until the font has loaded
-  LaterPillWidth: function (who) { return window.LaterPage ? window.LaterPage.pillWidth(UTF8ToString(who)) : 0; }
+  LaterPillWidth: function (who) { return window.LaterPage ? window.LaterPage.pillWidth(UTF8ToString(who)) : 0; },
+  // the tab came back into view since the last call
+  LaterTakeResumed: function () { var page = window.LaterPage; if (!page || !page.resumed) return 0; page.resumed = false; return 1; }
 });

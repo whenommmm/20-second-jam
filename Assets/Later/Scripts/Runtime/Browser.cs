@@ -22,6 +22,8 @@ namespace Later
         public static Frame? FrameForTests;
         // tests stand in for the widths the page measures
         public static IReadOnlyDictionary<string, double> PillWidthsForTests;
+        // tests bring the tab back with this
+        public static bool ResumedForTests;
 
         // what the game last told the page: the paper colour, the cursor, where the buttons it handles itself are (CSS px)
         public static string Paper { get; private set; } = "";
@@ -66,6 +68,10 @@ namespace Later
         [DllImport("__Internal")] static extern double LaterFrame(int i);
         [DllImport("__Internal")] static extern void LaterSetPaper(string rgb);
         [DllImport("__Internal")] static extern double LaterPillWidth(string who);
+        [DllImport("__Internal")] static extern int LaterTakeResumed();
+
+        // the tab has come back into view since the last call (main.js restarts its clock then)
+        public static bool TakeResumed() => LaterTakeResumed() != 0;
 
         public static bool CanFullscreen => LaterCanFullscreen() != 0;
         public static bool CoarsePointer => LaterCoarsePointer() != 0;
@@ -147,6 +153,13 @@ namespace Later
         static void SetPaperOnPage(string rgb) { }
         public static Frame ViewFrame(Vector2 screen) => FrameForTests ?? new Frame { W = screen.x, H = screen.y };
         public static IReadOnlyDictionary<string, double> PillWidths(IEnumerable<string> names) => PillWidthsForTests;
+
+        public static bool TakeResumed()
+        {
+            bool resumed = ResumedForTests;
+            ResumedForTests = false;
+            return resumed;
+        }
 #endif
 
         // The page's #hash, like "#test-dodge", or "".

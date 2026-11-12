@@ -49,8 +49,9 @@ namespace Later.Editor
             PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.showUnityLogo = false;
-            // a hidden tab pauses the game, as on the web
-            PlayerSettings.runInBackground = false;
+            // keep running when the window merely loses focus (a click on the page around the game), as the web does;
+            // a hidden tab still pauses it, since the browser stops sending it frames
+            PlayerSettings.runInBackground = true;
             // blend colours as browsers do: in linear space everything see-through comes out lighter than the web version
             PlayerSettings.colorSpace = ColorSpace.Gamma;
             AssetDatabase.SaveAssets();

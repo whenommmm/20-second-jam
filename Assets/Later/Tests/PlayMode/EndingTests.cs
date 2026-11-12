@@ -320,5 +320,28 @@ namespace Later.Tests
             Assert.That(R("items").yMin, Is.GreaterThanOrEqualTo(R("sil").yMax - 1), "notifications overlap 'Notifications silenced'");
             Assert.IsTrue(Q("frame").ClassListContains("small"), "a 390 px tall screen didn't get the larger phone text");
         }
+
+        // TIME! stays up 800 ms, as the web's timer counts from the frame the round ended in, not from inside it
+        [UnityTest]
+        public IEnumerator TimeStaysUp800ms()
+        {
+            yield return Load();
+            yield return DodgeAll(); // returns in the frame the round ended
+            int frames = 0;
+            while (Q("timeov").ClassListContains("on")) { frames++; yield return null; }
+            Assert.AreEqual(48, frames, "frames of TIME! at 60 fps");
+        }
+
+        // the ending runs on the page's clock, like the web's timers: time away (a hidden tab) still counts
+        [UnityTest]
+        public IEnumerator TheEnding_RunsOnTheWallClock()
+        {
+            yield return Load();
+            yield return DodgeAll();
+            yield return null;
+            LaterGame.WallSecondsForTests = 1; // a second passes in one frame (the tab was hidden)
+            yield return null;
+            Assert.IsFalse(Q("timeov").ClassListContains("on"), "the results weren't up a second after TIME!");
+        }
     }
 }
