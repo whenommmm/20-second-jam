@@ -26,7 +26,7 @@ namespace Later.Tests
         static string AgainText => string.Concat(Again.Query<Label>().ToList().Select(l => Plain(l.text)));
         static int CaptionLines => Q("caption").Query<Label>(className: "line").ToList().Count;
         static string CaptionHeader => Plain(Q("caption").Q<Label>(className: "who")?.text);
-        static bool Revealed(VisualElement n) => n != null && !n.ClassListContains("pending") && n.resolvedStyle.opacity > 0.99f;
+        static bool Revealed(VisualElement n) => n != null && !n.ClassListContains("pending") && Layer.Alpha(n) > 0.99f;
         static Rect R(string name) => Q(name).worldBound;
 
         static IEnumerator ToHerWords() => WaitFor(() => Revealed(MessagesCard), 15, "the Messages card");
@@ -158,8 +158,7 @@ namespace Later.Tests
             for (var open = 0; open < 2; open++)
             {
                 Click(MessagesCard);
-                var o = Q("sheet").style.opacity;
-                Assert.IsTrue(o.keyword == StyleKeyword.Undefined && o.value == 0, $"the sheet shows before its fade (opening {open + 1})");
+                Assert.AreEqual(0, Layer.Alpha(Q("sheet")), $"the sheet shows before its fade (opening {open + 1})");
                 yield return Wait(0.5);
                 Assert.IsTrue(Shown(Q("sheet")));
                 Click(Q("sheetClose"));

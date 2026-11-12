@@ -53,16 +53,7 @@ namespace Later
                         Slip(e.Date);
                         break;
                     case RoundEventType.Spawn:
-                        var el = new VisualElement { pickingMode = PickingMode.Ignore };
-                        el.AddToClassList("pill");
-                        el.style.width = (float)e.Pill.W;
-                        var knob = new VisualElement { pickingMode = PickingMode.Ignore };
-                        knob.AddToClassList("knob");
-                        knob.style.backgroundColor = PaperColor(r.PaperK);
-                        var name = new Label(e.Pill.Who) { pickingMode = PickingMode.Ignore };
-                        if (nb >= 0) name.style.filter = Blur(nb);
-                        el.Add(knob); el.Add(name);
-                        pills.Add(el); pillEls[e.Pill.Id] = el;
+                        pills.Add(pillEls[e.Pill.Id] = Pill(e.Pill, r));
                         if (e.Pill.First) sound.Buzz(); // one buzz per call, not per pill
                         break;
                     case RoundEventType.Pass:
@@ -81,7 +72,7 @@ namespace Later
                         if (pillEls.TryGetValue(e.Pill.Id, out var gone))
                         {
                             pillEls.Remove(e.Pill.Id);
-                            tl.Tween(0, 0.2, Ease.CssEase, p => gone.style.opacity = (float)(1 - p));
+                            tl.Tween(0, 0.2, Ease.CssEase, p => Layer.Opacity(gone, gone[0], (float)(1 - p)));
                             tl.After(0.25, gone.RemoveFromHierarchy);
                         }
                         break;
@@ -105,7 +96,7 @@ namespace Later
             if (blur != nb)
             {
                 nb = blur;
-                foreach (var el in pillEls.Values) el.Q<Label>().style.filter = Blur(nb);
+                foreach (var el in pillEls.Values) { var name = el.Q<Label>(); name.style.filter = Layer.Blur(nb, (int)name.userData); }
             }
             // the paper is your month: vibrant at first, colder with every call you let ring out
             SetPaper(Rules.Paper(r.PaperK));
@@ -114,11 +105,29 @@ namespace Later
                 : new Translate(0, 0);
         }
 
-        static StyleList<FilterFunction> Blur(double px)
+        // A pill: an outer element that moves (and fades as one layer), its body (the green capsule, its knob, the name).
+        // The name is drawn Layer.K× larger and shrunk back, so its blur is as sharp as the screen, not the world.
+        VisualElement Pill(Pill p, Round r)
         {
-            var blur = new FilterFunction(FilterFunctionType.Blur);
-            blur.AddParameter(new FilterParameter((float)px));
-            return new StyleList<FilterFunction>(new List<FilterFunction> { blur });
+            var el = new VisualElement { pickingMode = PickingMode.Ignore };
+            el.AddToClassList("pill");
+            el.style.width = (float)p.W;
+            var body = new VisualElement { pickingMode = PickingMode.Ignore };
+            body.AddToClassList("body");
+            var knob = new VisualElement { pickingMode = PickingMode.Ignore };
+            knob.AddToClassList("knob");
+            knob.style.backgroundColor = PaperColor(r.PaperK);
+            int k = Layer.K;
+            var box = new VisualElement { pickingMode = PickingMode.Ignore };
+            box.AddToClassList("namebox");
+            box.style.scale = new Scale(Vector2.one / k);
+            var name = new Label(p.Who) { pickingMode = PickingMode.Ignore, userData = k };
+            name.style.width = (float)(p.W - 63) * k; name.style.height = 38 * k; name.style.fontSize = 16 * k;
+            name.style.filter = Layer.Blur(nb < 0 ? 6 : nb, k); // the web's --nb starts at 6px until the first frame sets it
+            box.Add(name);
+            body.Add(knob); body.Add(box);
+            el.Add(body);
+            return el;
         }
 
         public static Color PaperColor(double k)
@@ -136,7 +145,8 @@ namespace Later
             var page = world.parent?.parent;
             if (page != null) page.style.backgroundColor = c;
             foreach (var slip in dates.Children()) slip[0].style.backgroundColor = c;
-            foreach (var el in pillEls.Values) el[0].style.backgroundColor = c;
+            // every pill's knob, the fading ones too (the web's knobs all read var(--paper))
+            foreach (var el in pills.Children()) el[0][0].style.backgroundColor = c;
         }
 
         void SetBadge(int missed)
@@ -159,12 +169,11 @@ namespace Later
             // slap: dropped from a little above, turned and larger, in 0.17 s
             tl.Tween(0, 0.17, Ease.EaseOut, p =>
             {
-                slip.style.opacity = (float)p;
+                Layer.Opacity(slip, paper, (float)p, 1.25f - 0.25f * (float)p); // fading in as one card
                 slip.style.translate = new Translate(x, y - 12 * (float)(1 - p));
                 slip.style.rotate = new Rotate(rot + 7 * (float)(1 - p));
-                slip.style.scale = new Scale(Vector2.one * (1.25f - 0.25f * (float)p));
             });
-            slip.style.opacity = 0;
+            Layer.Opacity(slip, paper, 0, 1.25f);
             dates.Add(slip);
             while (dates.childCount > 9) dates.RemoveAt(0);
         }

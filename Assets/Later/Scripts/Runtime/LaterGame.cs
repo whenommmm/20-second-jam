@@ -205,6 +205,7 @@ namespace Later
             if (widen) WorldW = Rules.WorldWidth(w, h);
             double s = Math.Min(w / WorldW, h / H);
             scale = s * k;
+            Layer.K = Layer.KFor(scale); // filtered things are drawn this much larger, to be sharp at this scale
             frame.style.width = screen.x; frame.style.height = screen.y;
             stage.style.left = (float)((viewport.Left + (w - WorldW * s) / 2) * k);
             stage.style.top = (float)((viewport.Top + (h - H * s) / 2) * k);

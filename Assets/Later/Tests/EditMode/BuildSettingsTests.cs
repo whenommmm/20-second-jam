@@ -12,6 +12,28 @@ namespace Later.Tests
         // "Later" pill, her words fading in) comes out lighter than the web version
         [Test]
         public void ColorSpace_IsGamma_LikeTheBrowser() => Assert.AreEqual(ColorSpace.Gamma, PlayerSettings.colorSpace);
+
+        // browsers antialias the phone's rounded corners where they clip the Messages list; so does the build's canvas
+        [Test]
+        public void TheWebGLQualityLevel_Antialiases()
+        {
+            var settings = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0]);
+            int level = settings.FindProperty("m_PerPlatformDefaultQuality").FindPropertyRelative("Array").arraySize >= 0
+                ? QualityLevelFor(settings, "WebGL") : 0;
+            int aa = settings.FindProperty("m_QualitySettings").GetArrayElementAtIndex(level).FindPropertyRelative("antiAliasing").intValue;
+            Assert.AreEqual(4, aa);
+        }
+
+        static int QualityLevelFor(SerializedObject settings, string platform)
+        {
+            var map = settings.FindProperty("m_PerPlatformDefaultQuality");
+            for (int i = 0; i < map.arraySize; i++)
+            {
+                var entry = map.GetArrayElementAtIndex(i);
+                if (entry.FindPropertyRelative("first").stringValue == platform) return entry.FindPropertyRelative("second").intValue;
+            }
+            return 0;
+        }
     
         // browsers without dvh (Safari before 15.4, Chrome before 108) drop that height and draw the canvas 150 px tall
         [Test]

@@ -26,7 +26,7 @@ namespace Later
         readonly Timeline tl = new Timeline();
         readonly EventCallback<ClickEvent> onAgain, onRestartTap, onSheetClose;
         List<string> lines;
-        int shown;
+        int shown, sheetOpens;
         bool disposed, captionDone;
 
         public string Key { get; }
@@ -61,7 +61,11 @@ namespace Later
         }
 
         // Show less: the sheet goes back down
-        public void CloseSheet() => Q("sheet").RemoveFromClassList("on");
+        public void CloseSheet()
+        {
+            sheetOpens++; // its fade, if still running, stops with it
+            Q("sheet").RemoveFromClassList("on");
+        }
 
         VisualElement Q(string name) => world.Q(name);
         Label L(string name) => world.Q<Label>(name);
@@ -174,7 +178,9 @@ namespace Later
                     card.style.backgroundColor = Color.Lerp(from, PhoneBody, e);
                 });
             });
-            tl.After(1.0, () => FadeTo(Q("lock"), 0, 1, 0.45));
+            // the lock screen fades in as one layer, as CSS fades #lock
+            VisualElement lockEl = Q("lock"), lockBody = Q("lockbody");
+            tl.After(1.0, () => tl.Tween(0, 0.45, Ease.CssEase, p => Layer.Opacity(lockEl, lockBody, (float)p)));
             tl.After(1.25, Flights);
         }
 
@@ -247,10 +253,10 @@ namespace Later
 
             if (hasBadge)
             {
-                var group = Q("group");
+                VisualElement group = Q("group"), groupBody = Q("groupbody");
                 tl.Tween(1.05, 0.38, Ease.EaseOut, p =>
                 {
-                    group.style.opacity = (float)p;
+                    Layer.Opacity(group, groupBody, (float)p);
                     group.style.translate = new Translate(0, 8 * (1 - (float)p));
                 });
                 var gcount = Q("gcount");
@@ -310,11 +316,13 @@ namespace Later
             label.RegisterCallback(fit);
         }
 
-        // a notification card: icon, title and time, then its text
+        // a notification: the card (icon, title and time, then its text) inside an element that fades it as one layer
         static VisualElement Note(VisualElement into, string icon, string title, string when, params VisualElement[] body)
         {
             var n = new VisualElement();
             n.AddToClassList("n");
+            var card = new VisualElement { pickingMode = PickingMode.Ignore };
+            card.AddToClassList("card");
             var ic = new VisualElement { pickingMode = PickingMode.Ignore };
             ic.AddToClassList("ic");
             var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -330,7 +338,8 @@ namespace Later
             tt.Add(b); tt.Add(Text(when, "when"));
             col.Add(tt);
             foreach (var el in body) col.Add(el);
-            n.Add(ic); n.Add(col);
+            card.Add(ic); card.Add(col);
+            n.Add(card);
             if (into.childCount > 0) n.style.marginTop = 6; // the list's gap
             into.Add(n);
             return n;
@@ -350,11 +359,11 @@ namespace Later
             n.RemoveFromClassList("pending");
             n.pickingMode = PickingMode.Position;
             n.AddToClassList("in");
+            var card = n.Q(className: "card");
             tl.Tween(0, 0.35, Ease.CubicBezier(.2, .8, .2, 1), p =>
             {
-                n.style.opacity = (float)p;
+                Layer.Opacity(n, card, (float)p, 0.97f + 0.03f * (float)p);
                 n.style.translate = new Translate(0, -12 * (1 - (float)p));
-                n.style.scale = new Scale(Vector2.one * (0.97f + 0.03f * (float)p));
             });
         }
 
@@ -407,13 +416,17 @@ namespace Later
             foreach (var m in thread.AsEnumerable().Reverse())
                 Note(list.contentContainer, "bubble", m.Who, Rules.ShortDate(m.Date), Text(m.Text, "text", 1.32f));
             list.scrollOffset = Vector2.zero;
-            // it opens from a tap, outside the timeline: start it invisible, so no frame shows it before its fade
-            sheet.style.opacity = 0;
+            // it opens from a tap, outside the timeline: start it invisible, so no frame shows it before its fade; it fades
+            // in as one layer, and opening it again restarts the fade, as the web's animation restarts
+            var body = Q("sheetbody");
+            int mine = ++sheetOpens;
+            Layer.Opacity(sheet, body, 0);
             sheet.style.translate = new Translate(0, 16);
             sheet.AddToClassList("on");
             tl.Tween(0, 0.28, Ease.CubicBezier(.2, .8, .2, 1), p =>
             {
-                sheet.style.opacity = (float)p;
+                if (mine != sheetOpens) return;
+                Layer.Opacity(sheet, body, (float)p);
                 sheet.style.translate = new Translate(0, 16 * (1 - (float)p));
             });
         }
@@ -519,11 +532,11 @@ namespace Later
             card.style.borderBottomLeftRadius = StyleKeyword.Null; card.style.borderBottomRightRadius = StyleKeyword.Null;
             card.style.backgroundColor = StyleKeyword.Null;
             foreach (var row in Q("res").Query(className: "row").ToList()) { row.style.opacity = StyleKeyword.Null; row.style.translate = StyleKeyword.Null; }
-            foreach (var id in new[] { "res", "lock", "rank", "doubt", "sil", "sbMoon", "focus", "focusText", "group", "gcount" })
+            foreach (var id in new[] { "res", "lock", "lockbody", "rank", "doubt", "sil", "sbMoon", "focus", "focusText", "group", "groupbody", "gcount", "sheetbody" })
             {
                 var s = Q(id).style;
                 s.opacity = StyleKeyword.Null; s.translate = StyleKeyword.Null; s.rotate = StyleKeyword.Null; s.scale = StyleKeyword.Null;
-                s.display = StyleKeyword.Null;
+                s.display = StyleKeyword.Null; s.filter = StyleKeyword.Null;
             }
             Q("me").style.visibility = StyleKeyword.Null;
 
@@ -537,6 +550,7 @@ namespace Later
             var sheet = Q("sheet");
             sheet.RemoveFromClassList("on");
             sheet.style.opacity = StyleKeyword.Null; sheet.style.translate = StyleKeyword.Null;
+            sheet.style.filter = StyleKeyword.Null; sheet.style.scale = StyleKeyword.Null;
             var again = Q("again");
             again.RemoveFromClassList("on"); again.RemoveFromClassList("tried");
             while (again.childCount > 1) again.RemoveAt(1);

@@ -72,11 +72,11 @@ namespace Later.Tests
             el.SendEvent(e);
         }
 
-        // The element and every parent are displayed, visible and mostly opaque.
+        // The element and every parent are displayed, visible and mostly opaque (a layer fading by its filter counts as it's drawn).
         public static bool Shown(VisualElement el)
         {
             for (var e = el; e != null; e = e.parent)
-                if (e.resolvedStyle.display == DisplayStyle.None || e.resolvedStyle.visibility == Visibility.Hidden || e.resolvedStyle.opacity <= 0.5f)
+                if (e.resolvedStyle.display == DisplayStyle.None || e.resolvedStyle.visibility == Visibility.Hidden || Layer.Alpha(e) <= 0.5f)
                     return false;
             return true;
         }

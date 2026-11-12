@@ -43,9 +43,12 @@ Label { white-space: nowrap; }
 .paper { height: 48px; border-width: 3px; border-color: #141414; padding: 5px 12px 7px 12px; font-size: 30px; -unity-text-align: middle-center; background-color: rgb(253, 220, 172); }
 
 /* pills: drawn exactly DEFAULT_PILL_W wide (the widths the fairness tests use), the name centred where the web version puts it */
-.pill { position: absolute; left: 0; top: 0; height: 42px; border-radius: 21px; border-width: 2px; border-color: #141414; background-color: #34C759; }
+.pill { position: absolute; left: 0; top: 0; height: 42px; }
+.pill > .body { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 21px; border-width: 2px; border-color: #141414; background-color: #34C759; }
 .pill .knob { position: absolute; left: 7px; top: 5px; width: 28px; height: 28px; border-radius: 14px; background-color: rgb(253, 220, 172); }
-.pill Label { position: absolute; left: 42px; right: 17px; top: 0; bottom: 0; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 16px; color: #fff; -unity-text-align: middle-center; }
+/* the name, drawn K× larger (PlayView sizes it) inside a box shrunk back by 1/K, centred where the web puts it */
+.pill .namebox { position: absolute; left: 42px; right: 17px; top: 0; bottom: 0; transform-origin: left top; }
+.pill Label { position: absolute; left: 0; top: 0; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); color: #fff; -unity-text-align: middle-center; }
 
 /* the moon: its centre (the point calls must miss) is the middle of moon + tag, as on the web */
 #me { position: absolute; left: 0; top: 0; }
@@ -78,7 +81,9 @@ Label { white-space: nowrap; }
 #res .doubt { position: absolute; left: 640px; top: 452px; height: 30px; font-size: 30px; rotate: -9deg; opacity: 0; -unity-text-align: middle-left; }
 
 /* the phone: plain and real (Inter stands in for the iPhone's own font, at the web version's weights) */
-#lock { position: absolute; left: 6px; top: 6px; right: 6px; bottom: 6px; border-radius: 37px; overflow: hidden; opacity: 0; background-color: #1d2025; color: #fff;
+/* #lock fades in as one layer (Layer); #lockbody is the screen itself */
+#lock { position: absolute; left: 6px; top: 6px; right: 6px; bottom: 6px; opacity: 0; }
+#lockbody { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 37px; overflow: hidden; background-color: #1d2025; color: #fff;
         -unity-font-definition: url("/Assets/Later/Fonts/Inter-Regular SDF.asset"); }
 /* weight 600 (and the notifications' 650 titles) on the web: Inter SemiBold; everything else on the phone is regular */
 #lock .g5, #lock .date, #lock .clock, #focusText, .n .tt .b Label, #sheetClose Label { -unity-font-definition: url("/Assets/Later/Fonts/Inter-SemiBold SDF.asset"); }
@@ -105,8 +110,8 @@ Label { white-space: nowrap; }
 #lock .list { position: absolute; left: 9px; right: 9px; bottom: 62px; }
 #group { margin-top: 6px; opacity: 0; }
 
-/* a notification card (.n): icon, then title and time, then text */
-.n { flex-direction: row; align-items: flex-start; padding: 8px 10px 9px 8px; border-radius: 15px; background-color: rgba(255, 255, 255, 0.13); }
+/* a notification (.n, which fades in as one layer) and its card: icon, then title and time, then text */
+.n > .card { flex-direction: row; align-items: flex-start; padding: 8px 10px 9px 8px; border-radius: 15px; background-color: rgba(255, 255, 255, 0.13); }
 .n .ic { flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; align-items: center; justify-content: center; background-color: #34C759; }
 .n .ic .icon { width: 13px; height: 13px; }
 .n .body { flex-grow: 1; flex-shrink: 1; margin-left: 8px; }
@@ -121,8 +126,8 @@ Label { white-space: nowrap; }
 .n .vm { max-height: 39px; overflow: hidden; text-overflow: ellipsis; white-space: normal; font-size: 10px; }
 .n.pending { opacity: 0; }
 /* the Messages card lights up under the mouse */
-.n.tap { transition-property: background-color; transition-duration: 0.15s; transition-timing-function: ease; }
-.n.tap:hover { background-color: rgba(255, 255, 255, 0.19); }
+.n.tap > .card { transition-property: background-color; transition-duration: 0.15s; transition-timing-function: ease; }
+.n.tap:hover > .card { background-color: rgba(255, 255, 255, 0.19); }
 /* the Messages card sits on the rest of the thread: two slivers peek out under it */
 .n.stacked { margin-bottom: 10px; }
 .n .peek1, .n .peek2 { position: absolute; top: 100%; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
@@ -145,7 +150,9 @@ Label { white-space: nowrap; }
 .small .n .vm { max-height: 42.9px; font-size: 11px; }
 .small #lock .sil { height: 15.75px; font-size: 10.5px; }
 
-#sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; display: none; padding: 4px 9px 0 9px; background-color: #1d2025; }
+/* the sheet fades in as one layer (Layer); #sheetbody is the sheet itself */
+#sheet { position: absolute; left: 0; right: 0; top: 38px; bottom: 0; display: none; }
+#sheetbody { position: absolute; left: 0; top: 0; right: 0; bottom: 0; padding: 4px 9px 0 9px; background-color: #1d2025; }
 #sheet.on { display: flex; }
 #sheet .sh { flex-shrink: 0; flex-direction: row; justify-content: space-between; align-items: center; padding: 4px 2px 10px 2px; }
 #sheet .heading { height: 25.5px; -unity-font-definition: url("/Assets/Later/Fonts/Inter-Bold SDF.asset"); font-size: 17px; -unity-text-align: middle-left; }
