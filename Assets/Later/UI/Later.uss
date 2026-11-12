@@ -46,9 +46,7 @@ Label { white-space: nowrap; }
 .pill { position: absolute; left: 0; top: 0; height: 42px; }
 .pill > .body { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 21px; border-width: 2px; border-color: #141414; background-color: #34C759; }
 .pill .knob { position: absolute; left: 7px; top: 5px; width: 28px; height: 28px; border-radius: 14px; background-color: rgb(253, 220, 172); }
-/* the name, drawn K× larger (PlayView sizes it) inside a box shrunk back by 1/K, centred where the web puts it */
-.pill .namebox { position: absolute; left: 42px; right: 17px; top: 0; bottom: 0; transform-origin: left top; }
-.pill Label { position: absolute; left: 0; top: 0; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); color: #fff; -unity-text-align: middle-center; }
+.pill Label { position: absolute; left: 42px; right: 17px; top: 0; bottom: 0; -unity-font-definition: url("/Assets/Later/Fonts/ArchivoBlack SDF.asset"); font-size: 16px; color: #fff; -unity-text-align: middle-center; }
 
 /* the moon: its centre (the point calls must miss) is the middle of moon + tag, as on the web */
 #me { position: absolute; left: 0; top: 0; }

@@ -96,7 +96,7 @@ namespace Later
             if (blur != nb)
             {
                 nb = blur;
-                foreach (var el in pillEls.Values) { var name = el.Q<Label>(); name.style.filter = Layer.Blur(nb, (int)name.userData); }
+                foreach (var el in pillEls.Values) el.Q<Label>().style.filter = Layer.Blur(nb);
             }
             // the paper is your month: vibrant at first, colder with every call you let ring out
             SetPaper(Rules.Paper(r.PaperK));
@@ -118,7 +118,6 @@ namespace Later
         }
 
         // A pill: an outer element that moves (and fades as one layer), its body (the green capsule, its knob, the name).
-        // The name is drawn Layer.K× larger and shrunk back, so its blur is as sharp as the screen, not the world.
         VisualElement Pill(Pill p, Round r)
         {
             var el = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -129,15 +128,9 @@ namespace Later
             var knob = new VisualElement { pickingMode = PickingMode.Ignore };
             knob.AddToClassList("knob");
             knob.style.backgroundColor = PaperColor(r.PaperK);
-            int k = Layer.K;
-            var box = new VisualElement { pickingMode = PickingMode.Ignore };
-            box.AddToClassList("namebox");
-            box.style.scale = new Scale(Vector2.one / k);
-            var name = new Label(p.Who) { pickingMode = PickingMode.Ignore, userData = k };
-            name.style.width = (float)(p.W - 63) * k; name.style.height = 38 * k; name.style.fontSize = 16 * k;
-            name.style.filter = Layer.Blur(nb < 0 ? 6 : nb, k); // the web's --nb starts at 6px until the first frame sets it
-            box.Add(name);
-            body.Add(knob); body.Add(box);
+            var name = new Label(p.Who) { pickingMode = PickingMode.Ignore };
+            name.style.filter = Layer.Blur(nb < 0 ? 6 : nb); // the web's --nb starts at 6px until the first frame sets it
+            body.Add(knob); body.Add(name);
             el.Add(body);
             return el;
         }

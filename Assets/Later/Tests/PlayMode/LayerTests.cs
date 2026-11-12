@@ -15,21 +15,22 @@ namespace Later.Tests
     {
         [TearDown] public void TearDown() => Unload();
 
+        // the names' blur is a filter, which UI Toolkit draws at the world's own resolution: once the names are sharp the
+        // filter comes off, so on a 2–3× screen they're as crisp as the web's (drawing them larger instead would have the
+        // stage's edge clip them at their enlarged size)
         [UnityTest]
-        public IEnumerator BlurredNames_AreDrawnAtTheScreensResolution_AndUnblurredWhenSharp()
+        public IEnumerator BlurredNames_LoseTheirFilterOnceSharp()
         {
             yield return Load(new Vector2Int(2880, 1620)); // the world drawn 3×
-            Assert.AreEqual(3, Layer.K);
             Game.StartRound();
             yield return WaitFor(() => Q("pills").childCount > 0, 5, "a pill");
             yield return null;
             var name = Q("pills")[0].Q<Label>();
-            Assert.AreEqual(48, name.resolvedStyle.fontSize, 0.01, "the name isn't drawn 3× larger");
-            Assert.AreEqual(1 / 3f, name.parent.resolvedStyle.scale.value.x, 1e-4, "the name isn't shrunk back");
+            Assert.AreEqual(16, name.resolvedStyle.fontSize, 0.01);
             var blur = name.resolvedStyle.filter.ToList();
             Assert.AreEqual(1, blur.Count);
             double nb = System.Math.Round((1 - Rules.Clarity(Game.Round.T, Game.Round.Bonus)) * 8, 2);
-            Assert.AreEqual(nb * 3, blur[0].GetParameter(0).floatValue, 0.05, "the blur isn't scaled with the name");
+            Assert.AreEqual(nb, blur[0].GetParameter(0).floatValue, 0.05);
             yield return WaitFor(() => Game.Round.T > 16.2 && Q("pills").childCount > 0, 20, "sharp names on a pill");
             yield return null;
             Assert.AreEqual(0, Q("pills")[0].Q<Label>().resolvedStyle.filter.Count(), "a sharp name still goes through a filter");
@@ -41,16 +42,31 @@ namespace Later.Tests
             var outer = new VisualElement();
             var inner = new VisualElement();
             outer.Add(inner);
-            Layer.K = 2;
+            Layer.K = 1;
             Layer.Opacity(outer, inner, 0.4f, 1.1f);
             Assert.AreEqual(0.4f, Layer.Alpha(outer), 1e-5);
-            Assert.AreEqual(1.1f / 2, outer.style.scale.value.value.x, 1e-5);
-            Assert.AreEqual(2, inner.style.scale.value.value.x, 1e-5);
+            Assert.AreEqual(1.1f, outer.style.scale.value.value.x, 1e-5);
             Layer.Opacity(outer, inner, 1);
             var filter = outer.style.filter;
             Assert.IsTrue(filter.value == null || filter.value.Count == 0, "the filter stays on an opaque layer");
-            Assert.AreEqual(new VisualElement().style.scale, inner.style.scale);
             Assert.AreEqual(1, Layer.Alpha(outer));
+        }
+
+        // where the world is drawn 2–3×, a filter would draw the fading text at a third of the screen's resolution (or,
+        // drawn larger, be clipped by the phone's edges), so there each part fades on its own and the text stays crisp
+        [Test]
+        public void OnA2xScreen_AFadeIsPlainOpacity()
+        {
+            var outer = new VisualElement();
+            var inner = new VisualElement();
+            outer.Add(inner);
+            Layer.K = 2;
+            Layer.Opacity(outer, inner, 0.4f, 1.1f);
+            var filter = outer.style.filter;
+            Assert.IsTrue(filter.value == null || filter.value.Count == 0, "a filter on a 2× screen");
+            Assert.AreEqual(0.4f, outer.style.opacity.value, 1e-5);
+            Assert.AreEqual(1.1f, outer.style.scale.value.value.x, 1e-5);
+            Assert.AreEqual(0.4f, Layer.Alpha(outer), 1e-5);
             Layer.K = 1;
         }
 
@@ -63,6 +79,7 @@ namespace Later.Tests
             var inner = new VisualElement();
             inner.style.overflow = Overflow.Hidden;
             outer.Add(inner);
+            Layer.K = 1;
             Layer.Opacity(outer, inner, 0.3f);
             Assert.AreEqual(Overflow.Visible, inner.style.overflow.value, "the clip stays on through the filter");
             Layer.Opacity(outer, inner, 1);
